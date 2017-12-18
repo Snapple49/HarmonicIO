@@ -91,8 +91,8 @@ class Setting(object):
     @staticmethod
     def read_cfg_from_file():
         from harmonicIO.general.services import Services
-        if not Services.is_file_exist('worker/configuration.json'):
-            SysOut.terminate_string('worker/configuration.json does not exist')
+        if not Services.is_file_exist('harmonicIO/worker/configuration.json'):
+            SysOut.terminate_string('harmonicIO/worker/configuration.json does not exist')
         else:
             with open('worker/configuration.json', 'rt') as t:
                 import json

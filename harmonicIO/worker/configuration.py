@@ -94,7 +94,7 @@ class Setting(object):
         if not Services.is_file_exist('harmonicIO/worker/configuration.json'):
             SysOut.terminate_string('harmonicIO/worker/configuration.json does not exist')
         else:
-            with open('worker/configuration.json', 'rt') as t:
+            with open('harmonicIO/worker/configuration.json', 'rt') as t:
                 import json
                 cfg = json.loads(t.read())
 

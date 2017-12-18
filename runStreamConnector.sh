@@ -1,3 +1,3 @@
 #!/usr/bin/env bash
 
-python3.5 -m harmonicIO/stream_connector
+python3.5 -m harmonicIO.stream_connector

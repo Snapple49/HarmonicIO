@@ -4,7 +4,7 @@ Worker entry point.
 import threading
 import urllib3
 from .configuration import Setting
-from general.services import SysOut, Services
+from harmonicIO.general.services import SysOut, Services
 from harmonicIO.general.definition import Definition, CRole
 
 

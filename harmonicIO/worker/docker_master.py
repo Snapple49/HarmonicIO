@@ -96,14 +96,19 @@ class DockerMaster(object):
 
             res = self.__client.containers.run(container_name,
                                                detach=True,
+                                               stderr=True,
+                                               stdout=True,
                                                ports=get_ports_setting(expose_port, port),
                                                environment=get_env_setting(expose_port, port))
             import time
-            time.sleep(1)
+            time.sleep(10)
             print(res.logs())
+            print('hi!')
 
             if res:
                 SysOut.out_string("Container " + container_name + " is created!")
+                SysOut.out_string("Container " + container_name + " is " + res.status + " ")
+                res.wait()
                 return True
             else:
                 SysOut.out_string("Container " + container_name + " cannot be created!")

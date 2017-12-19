@@ -51,8 +51,9 @@ class Services(object):
     @staticmethod
     def get_host_name_i(order=0):
         import subprocess
+        return '192.168.0.84'
         # get hostname as IP address (-i)
-        return subprocess.check_output(["hostname", "-I"]).decode('utf-8').strip().split()[order]
+        #return subprocess.check_output(["hostname", "-I"]).decode('utf-8').strip().split()[order]
 
     @staticmethod
     def get_current_timestamp():

@@ -20,7 +20,7 @@ Setup with master and worker on a single node:
 
 * Clone and Install:
 ```
-$ git clone https://github.com/benblamey/HarmonicIO.git
+$ git clone https://github.com/HASTE-project/HarmonicIO.git
 $ cd HarmonicIO
 $ pip3 install -e .
 ```
@@ -63,7 +63,7 @@ message was bytes: 125
 ```
 
 * Create your own processing container running the HarmonicPE processing daemon:
-https://github.com/benblamey/HarmonicPE
+https://github.com/HASTE-project/HarmonicPE
 
 ## Install the Streaming Connector only
 
@@ -71,7 +71,7 @@ https://github.com/benblamey/HarmonicPE
 
 * Clone and Install:
 ```
-$ git clone https://github.com/benblamey/HarmonicIO.git
+$ git clone https://github.com/HASTE-project/HarmonicIO.git
 $ cd HarmonicIO
 $ pip3 install -e .
 ```

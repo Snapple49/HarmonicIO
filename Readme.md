@@ -13,6 +13,7 @@ Forked from https://github.com/beirbear/HarmonicIO
 
 ## Quickstart
 
+
 Setup with master and worker on a single node:
 
 * Install Docker
@@ -34,6 +35,8 @@ $ sudo ./runWorker.sh
 ```
 
 * Start an (example) processing container on the worker (localhost) node (replacing `<local-ip>`):
+
+We use the example container `benblamey/hio-example:latest`, which can be built from https://github.com/HASTE-project/HarmonicPE
 ```
 $ curl -X POST "http://<local-ip>:8081/docker?token=None&command=create" --data '{"c_name" : "benblamey/hio-example:latest", "num" : 1}'
 ```

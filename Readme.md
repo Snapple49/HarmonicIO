@@ -13,6 +13,7 @@ Forked from https://github.com/beirbear/HarmonicIO
 
 ## Quickstart
 
+
 Setup with master and worker on a single node:
 
 * Install Docker
@@ -20,7 +21,7 @@ Setup with master and worker on a single node:
 
 * Clone and Install:
 ```
-$ git clone https://github.com/benblamey/HarmonicIO.git
+$ git clone https://github.com/HASTE-project/HarmonicIO.git
 $ cd HarmonicIO
 $ pip3 install -e .
 ```
@@ -34,6 +35,8 @@ $ sudo ./runWorker.sh
 ```
 
 * Start an (example) processing container on the worker (localhost) node (replacing `<local-ip>`):
+
+We use the example container `benblamey/hio-example:latest`, which can be built from https://github.com/HASTE-project/HarmonicPE
 ```
 $ curl -X POST "http://<local-ip>:8081/docker?token=None&command=create" --data '{"c_name" : "benblamey/hio-example:latest", "num" : 1}'
 ```
@@ -63,7 +66,7 @@ message was bytes: 125
 ```
 
 * Create your own processing container running the HarmonicPE processing daemon:
-https://github.com/benblamey/HarmonicPE
+https://github.com/HASTE-project/HarmonicPE
 
 ## Install the Streaming Connector only
 
@@ -71,7 +74,7 @@ https://github.com/benblamey/HarmonicPE
 
 * Clone and Install:
 ```
-$ git clone https://github.com/benblamey/HarmonicIO.git
+$ git clone https://github.com/HASTE-project/HarmonicIO.git
 $ cd HarmonicIO
 $ pip3 install -e .
 ```

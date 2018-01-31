@@ -64,7 +64,6 @@ class StreamConnector(object):
         self.__std_idle_time = std_idle_time
         self.__max_try = max_try
 
-
         if source_name:
             self.__source_name = source_name
         else:
@@ -109,17 +108,17 @@ class StreamConnector(object):
         try:
 
             url = self.__str_push_request + Definition.Master.get_str_push_req_container_ext(container_name,
-                                                                                                 container_os, priority,
-                                                                                                 self.__source_name,
-                                                                                                 digest)
+                                                                                             container_os, priority,
+                                                                                             self.__source_name,
+                                                                                             digest)
 
             print('Sending request..')
             print(url)
 
             response = self.__connector.request('GET',
                                                 url)
-            #print(response.status)
-            #print(response.text)
+            # print(response.status)
+            # print(response.text)
 
             if response.status == 406:
                 # Messages in queue is full. Result in queue lock.
@@ -251,7 +250,7 @@ class StreamConnector(object):
 
         digest = hashlib.md5(data).hexdigest()
 
-        end_point = self.__get_stream_end_point(container_name, container_os, priority, digest)
+        end_point = None
 
         counter = self.__max_try
         while not end_point:
@@ -261,6 +260,7 @@ class StreamConnector(object):
                 SysOut.err_string("Cannot contact server. Exceed maximum retry {0}!".format(self.__max_try))
                 return False
 
+        # Send data to worker for processing directly
         counter = self.__max_try
         if end_point[Definition.get_str_node_role()] == CRole.WORKER:
             while not self.__push_stream_end_point(end_point[Definition.get_str_node_addr()],
@@ -272,11 +272,12 @@ class StreamConnector(object):
                     SysOut.err_string("Cannot contact server. Exceed maximum retry {0}!".format(self.__max_try))
                     return False
 
+        # Send data to master for queuing (?)
         elif end_point[Definition.get_str_node_role()] == CRole.MESSAGING_SYSTEM:
-            while not self.__push_stream_end_point_MS(  end_point[Definition.get_str_node_addr()],
-                                                        end_point[Definition.get_str_node_port()],
-                                                        data,
-                                                        container_name):
+            while not self.__push_stream_end_point_MS(end_point[Definition.get_str_node_addr()],
+                                                      end_point[Definition.get_str_node_port()],
+                                                      data,
+                                                      container_name):
                 time.sleep(self.__std_idle_time)
                 counter -= 1
                 if counter == 0:
@@ -286,18 +287,21 @@ class StreamConnector(object):
             return False
 
         if end_point[Definition.get_str_node_role()] == CRole.WORKER:
-            SysOut.out_string("Push data to worker ({0}:{1}>{2}) successful.".format(end_point[Definition.get_str_node_addr()],
-                                                                                     end_point[Definition.get_str_node_port()],
-                                                                                     container_name))
+            SysOut.out_string(
+                "Push data to worker ({0}:{1}>{2}) successful.".format(end_point[Definition.get_str_node_addr()],
+                                                                       end_point[Definition.get_str_node_port()],
+                                                                       container_name))
         elif end_point[Definition.get_str_node_role()] == CRole.MESSAGING_SYSTEM:
-            SysOut.out_string("Push data to messaging system ({0}:{1}>{2}) successful.".format(end_point[Definition.get_str_node_addr()],
-                                                                                               end_point[Definition.get_str_node_port()],
-                                                                                               container_name))
+            SysOut.out_string("Push data to messaging system ({0}:{1}>{2}) successful.".format(
+                end_point[Definition.get_str_node_addr()],
+                end_point[Definition.get_str_node_port()],
+                container_name))
         else:
-            SysOut.out_string("Push data to unknown ({0}:{1}>{2}) successful.".format(end_point[Definition.get_str_node_addr()],
-                                                                                      end_point[Definition.get_str_node_port()],
-                                                                                      container_name))
+            SysOut.out_string(
+                "Push data to unknown ({0}:{1}>{2}) successful.".format(end_point[Definition.get_str_node_addr()],
+                                                                        end_point[Definition.get_str_node_port()],
+                                                                        container_name))
 
-    def get_data_contaner(self):
+    def get_data_container(self):
         # Can be override to byte array with pre-defined header.
         return bytearray()

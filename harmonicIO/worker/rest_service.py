@@ -54,7 +54,7 @@ class ContainerService(object):
         if req.params[Definition.Docker.get_str_command()] == Definition.Docker.get_str_create():
             # Unpack the posted data
             raw = str(req.stream.read(), 'UTF-8')
-            data = eval(raw)
+            data = eval(raw) ## should change eval to something else maybe? if req.content_length:doc = json.load(req.stream)
 
             if not data[Definition.Container.get_str_con_image_name()]:
                 res.body = "Required parameters are not supplied!"

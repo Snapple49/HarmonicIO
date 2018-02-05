@@ -1,4 +1,4 @@
-# Harmonic IO Streaming Framework
+# Harmonic IO Streaming Framework -
 
 Framework for distributed task execution, key components:
 
@@ -58,7 +58,7 @@ $ python3 example_stream_connector.py
 
 * Print the logs of the container to check the output of the executed task (`message was bytes ...`):
 ```
-$ docker logs happy_jepsen 
+$ docker logs happy_jepsen
 Listening for tasks...
 attempting to open local port: 0.0.0.0:80
 Streaming from  172.17.0.1 : 40742

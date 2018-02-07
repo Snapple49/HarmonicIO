@@ -5,6 +5,8 @@ from .messaging_system import MessagesQueue
 from harmonicIO.general.services import SysOut, Services as LService
 from .meta_table import LookUpTable
 
+from urllib.request import urlopen
+from urllib3.request import urlencode
 
 class RequestStatus(object):
 
@@ -237,6 +239,89 @@ class MessagesQuery(object):
             res.content_type = "String"
             res.status = falcon.HTTP_200
 
+class ClientManager(object):
+    def __init__(self):
+        pass
+
+    def on_get(self, req, res):
+        # check token and request type is provided
+        if not Definition.get_str_token() in req.params:
+            res.body = "Token is required."
+            res.content_type = "String"
+            res.status = falcon.HTTP_401
+            return
+
+        if not "type" in req.params:
+            res.body = "No command specified."
+            res.content_type = "String"
+            res.status = falcon.HTTP_406
+            return
+
+        # get status of job
+        #if req.params['type'] == 'jobStatus':
+
+
+
+        return
+
+    def on_post(self, req, res):
+        # check token and request type is provided
+        if not Definition.get_str_token() in req.params:
+            res.body = "Token is required."
+            res.content_type = "String"
+            res.status = falcon.HTTP_401
+            return
+
+        if not "type" in req.params:
+            res.body = "No command specified."
+            res.content_type = "String"
+            res.status = falcon.HTTP_406
+            return
+
+        # request to create new job - create ID for job, look for available container (prio 1 - worker with container available, prio 2 - worker with lowest cpu load),
+        if req.params['type'] == 'newJob':
+
+            # create job ID
+            print("Requested new job!")
+            job_data = json.loads(req.stream)
+            print("Data provided: \n" + str(data))
+            jobID = str(randrange(100,999))
+            job_status = "INIT"
+
+            # prepare response
+            res.body = "Request received, allocating resources for job - Job ID: {}".format(jobID)
+            res.content_type = "String"
+            res.status = falcon.HTTP_200
+            print(job_status)
+            ## THIS PART SHOULD BE ASYNCHRONOUS
+
+            # get server data
+            data = LookUpTable.verbose()
+            data['MSG'] = MessagesQueue.verbose()
+            candidates = []
+            target_container = jobdata[Definition.Container.get_str_con_image_name()]
+
+            # find suitable worker by prio 1
+            if target_container in data["CONTAINERS"]:
+                print("Looking for container called " + target_container)
+                for container in data["CONTAINERS"][target_container]:
+                    print("Found one at addr " + container["batch_addr"])
+                    candidates.append((container["batch_addr"], container["batch_port"], data["WORKERS"][container["batch_addr"]]["load5"])) # create tuple with IP, port and load on worker with container
+
+                candidates.sort(key=lambda index: index[2]) # sort candidate workers on load (avg. load last 5 minutes)
+                print(candidates[0] + " has least load, sending request here!")
+
+            # send request to worker
+            worker_url = "http://{}:8081/docker?token=None&command=create".format(candidates[0][0])
+            with urlopen(worker_url, req.params) as response:
+                html = response.read()
+
+            worker_response = html.decode('UTF-8')
+            print(worker_response)
+            job_status = "ACTIVE"
+            print(job_status)
+        return
+
 class RESTService(object):
     def __init__(self):
         # Initialize REST Services
@@ -251,6 +336,9 @@ class RESTService(object):
 
         # Add route for msg query
         api.add_route('/' + Definition.REST.get_str_msg_query(), MessagesQuery())
+
+        # Add route for client manager
+        api.add_route('/' + 'clientManagement', ClientManager())
 
         # Establishing a REST server
         self.__server = make_server(Setting.get_node_addr(), Setting.get_node_port(), api)

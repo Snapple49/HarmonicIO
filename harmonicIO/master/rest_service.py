@@ -7,6 +7,7 @@ from .meta_table import LookUpTable
 
 from urllib.request import urlopen
 from urllib3.request import urlencode
+from random import randrange
 
 class RequestStatus(object):
 

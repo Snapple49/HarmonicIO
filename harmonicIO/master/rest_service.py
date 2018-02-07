@@ -284,7 +284,7 @@ class ClientManager(object):
 
             # create job ID
             print("Requested new job!")
-            job_data = req.stream#json.loads(req.stream)
+            job_data = req.stream.read(req.content_length or 0)#json.loads(req.stream)
 
             print("Data provided: \n" + str(job_data))
             jobID = str(randrange(100,999))

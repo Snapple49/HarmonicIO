@@ -286,7 +286,7 @@ class ClientManager(object):
             print("Requested new job!")
             job_data = req.stream#json.loads(req.stream)
 
-            print("Data provided: \n" + str(job_data))
+            print("Data provided: \n" + str(job_data, 'UTF-8'))
             jobID = str(randrange(100,999))
             job_status = "INIT"
 
@@ -301,7 +301,7 @@ class ClientManager(object):
             data = LookUpTable.verbose()
             data['MSG'] = MessagesQueue.verbose()
             candidates = []
-            target_container = jobdata[Definition.Container.get_str_con_image_name()]
+            target_container = job_data[Definition.Container.get_str_con_image_name()]
 
             # find suitable worker by prio 1
             if target_container in data["CONTAINERS"]:

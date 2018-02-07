@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(name='harmonicIO',
       version='0.2.0',
-      install_requires=['falcon', 'urllib3', 'docker'],
+      install_requires=['falcon', 'urllib3>=1.22', 'docker'],
       packages=['harmonicIO',
                 'harmonicIO.stream_connector',
                 'harmonicIO.master',

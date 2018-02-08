@@ -316,7 +316,7 @@ class ClientManager(object):
 
             # send request to worker
             worker_url = "http://{}:8081/docker?token=None&command=create".format(candidates[0][0])
-            with urlopen(worker_url, job_data) as response:
+            with urlopen(worker_url, urlencode(job_data)) as response:
                 html = response.read()
 
             worker_response = html.decode('UTF-8')

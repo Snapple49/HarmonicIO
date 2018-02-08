@@ -312,7 +312,7 @@ class ClientManager(object):
                     candidates.append((container["batch_addr"], container["batch_port"], data["WORKERS"][container["batch_addr"]]["load5"])) # create tuple with IP, port and load on worker with container
 
                 candidates.sort(key=lambda index: index[2]) # sort candidate workers on load (avg. load last 5 minutes)
-                print(candidates[0] + " has least load, sending request here!")
+                print(str(candidates[0]) + " has least load, sending request here!")
 
             # send request to worker
             worker_url = "http://{}:8081/docker?token=None&command=create".format(candidates[0][0])

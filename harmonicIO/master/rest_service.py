@@ -285,7 +285,7 @@ class ClientManager(object):
 
             # create job ID
             print("Requested new job!")
-            job_data = json.loads(str(req.stream.read(req.content_length or 0), 'utf-8'))#json.loads(req.stream)
+            job_data = json.loads(str(req.stream.read(req.content_length or 0), 'utf-8')) # create dict of parameters if they exist
 
             print("Data provided: \n", (job_data))
             jobID = str(randrange(100,999))
@@ -316,7 +316,7 @@ class ClientManager(object):
 
             # send request to worker
             worker_url = "http://{}:8081/docker?token=None&command=create".format(candidates[0][0])
-            with urlopen(worker_url, bytes(urlencode(job_data), 'utf-8')) as response:
+            with urlopen(worker_url, bytes(str(job_data), 'utf-8')) as response:
                 html = response.read()
 
             worker_response = html.decode('UTF-8')

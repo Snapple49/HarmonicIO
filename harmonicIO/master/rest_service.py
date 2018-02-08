@@ -287,7 +287,7 @@ class ClientManager(object):
             print("Requested new job!")
             job_data = json.loads(str(req.stream.read(req.content_length or 0), 'utf-8'))#json.loads(req.stream)
 
-            print("Data provided: \n" + str(job_data))
+            print("Data provided: \n", (job_data))
             jobID = str(randrange(100,999))
             job_status = "INIT"
 

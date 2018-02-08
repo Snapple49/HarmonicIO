@@ -3,7 +3,7 @@ from .configuration import Setting
 from harmonicIO.general.services import SysOut, Services
 from .docker_service import DockerService
 from harmonicIO.general.definition import Definition, CRole
-from json import loads
+import json
 
 class ContainerService(object):
     def __init__(self):

@@ -25,6 +25,7 @@ class LookUpTable(object):
 
         @staticmethod
         def del_worker(worker_addr):
+            # TODO: implement actual worker termination?
             del LookUpTable.Workers.__workers[worker_addr]
 
     class Containers(object):
@@ -94,6 +95,19 @@ class LookUpTable(object):
         def verbose():
             return LookUpTable.Tuples.__tuples
 
+    class Jobs(object):
+        __jobs = {}
+
+        @staticmethod
+        def new_job(request):
+            new_item = {}
+            new_item['job_id'] = request.get('job_id')
+            new_item['job_status'] = request.get('job_status')
+            new_item['container'] = request
+            new_item[''] = request['']
+            new_item[''] = request['']
+            new_item[''] = request['']
+
     @staticmethod
     def update_worker(dict_input):
         LookUpTable.Workers.add_worker(dict_input)
@@ -110,4 +124,3 @@ class LookUpTable(object):
         ret['TUPLES'] = LookUpTable.Tuples.verbose()
 
         return ret
-

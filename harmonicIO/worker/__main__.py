@@ -29,6 +29,7 @@ def update_worker_status():
 
     s_content = Services.get_machine_status(Setting, CRole.WORKER)
     s_content[Definition.REST.get_str_docker()] = DockerService.get_containers_status()
+    s_content[Definition.REST.get_str_local_imgs()] = DockerService.get_local_images()
 
     html = urllib3.PoolManager()
     try:

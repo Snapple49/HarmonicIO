@@ -7,8 +7,9 @@ from .meta_table import LookUpTable
 
 from urllib.request import urlopen
 from urllib3.request import urlencode
-from random import randrange
+from random.SystemRandom import choice
 import json
+import string
 
 class RequestStatus(object):
 
@@ -285,45 +286,27 @@ class ClientManager(object):
 
             # create job ID
             print("Requested new job!")
-            job_data = json.loads(str(req.stream.read(req.content_length or 0), 'utf-8')) # create dict of parameters if they exist
+            job_req = json.loads(str(req.stream.read(req.content_length or 0), 'utf-8')) # create dict of parameters if they exist
 
-            print("Data provided: \n", (job_data))
-            jobID = str(randrange(100,999))
-            job_status = "INIT"
+            # below ID randomizer from: https://stackoverflow.com/questions/2257441/random-string-generation-with-upper-case-letters-and-digits-in-python
+            job_id = ''.join(random.SystemRandom().choice(string.ascii_uppercase + string.digits) for _ in range(5))
+
+            # add job to table
+            job_req['job_id'] = job_id
+            job_req['job_status'] = "INIT"
+            job_req['ttl'] = 30
+            job_req['start_time'] = LService.get_current_timestamp()
+            LookUpTable.Jobs.new_job
+
 
             # prepare response
-            res.body = "Request received, allocating resources for job - Job ID: {}".format(jobID)
+            res.body = "Request received, allocating resources for job - Job ID: {}".format(job_id)
             res.content_type = "String"
             res.status = falcon.HTTP_200
             print(job_status)
+
             ## THIS PART SHOULD BE ASYNCHRONOUS
 
-            # get server data
-            data = LookUpTable.verbose()
-            data['MSG'] = MessagesQueue.verbose()
-            candidates = []
-            target_container = job_data[Definition.Container.get_str_con_image_name()]
-
-            # find suitable worker by prio 1
-            if target_container in data["CONTAINERS"]:
-                print("Looking for container called " + target_container)
-                for container in data["CONTAINERS"][target_container]:
-                    print("Found one at addr " + container["batch_addr"])
-                    candidates.append((container["batch_addr"], container["batch_port"], data["WORKERS"][container["batch_addr"]]["load5"])) # create tuple with IP, port and load on worker with container
-
-                candidates.sort(key=lambda index: index[2]) # sort candidate workers on load (avg. load last 5 minutes)
-                print(str(candidates[0]) + " has least load, sending request here!")
-
-            # send request to worker
-            worker_url = "http://{}:8081/docker?token=None&command=create".format(candidates[0][0])
-            print(worker_url, '\n', job_data, '\n', bytes(json.dumps(job_data), 'utf-8'))
-            with urlopen(worker_url, bytes(json.dumps(job_data), 'utf-8')) as response:
-                html = response.read()
-
-            worker_response = html.decode('UTF-8')
-            print(worker_response)
-            job_status = "ACTIVE"
-            print(job_status)
         return
 
 class RESTService(object):
@@ -351,6 +334,59 @@ class RESTService(object):
         SysOut.out_string("REST Ready.....")
 
         self.__server.serve_forever()
+
+def find_available_worker(job_req):
+    # get server data
+    data = LookUpTable.verbose()
+    data['MSG'] = MessagesQueue.verbose()
+    candidates = []
+    target_container = job_req[Definition.Container.get_str_con_image_name()]
+
+    for worker in data["WORKERS"]:
+        if worker[Definition.REST.get_str_local_imgs()]:
+
+        for image in worker[Definition.REST.get_str_local_imgs()]:
+            if target_container in image.tags:
+                candidate = (worker["node_addr"], worker["load5"]) # create tuple with IP and load on worker with container
+
+    # find suitable worker by prio 1
+    if target_container in data["CONTAINERS"]:
+        print("Looking for container called " + target_container)
+        for container in data["CONTAINERS"][target_container]:
+            candidate = ((container["batch_addr"], data["WORKERS"][container["batch_addr"]]["load5"])) # create tuple with IP and load on worker with container
+            if candidate[1] < 0.5: # only add candidate if worker load less than 50%
+                candidates.append(candidate)
+
+
+    # find suitable worker by prio 2
+    elif data["WORKERS"]:
+        for worker in data["WORKERS"]:
+
+            if candidate[1] < 0.5:
+                candidates.append(candidate)
+
+    # no suitable worker available
+    else:
+        return None
+
+    candidates.sort(key=lambda index: index[1]) # sort candidate workers on load (avg. load last 5 minutes)
+    print('Candidates:\n' + candidates)
+    print(str(candidates[0]) + " has least load, sending request here!")
+
+    return candidates
+
+def start_job(target_worker)
+
+    # send request to worker
+    worker_url = "http://{}:8081/docker?token=None&command=create".format(candidates[0][0])
+    print(worker_url, '\n', job_req, '\n', bytes(json.dumps(job_req), 'utf-8'))
+    with urlopen(worker_url, bytes(json.dumps(job_req), 'utf-8')) as response:
+        html = response.read()
+
+    worker_response = html.decode('UTF-8')
+    print(worker_response)
+    job_status = "ACTIVE"
+    print(job_status)
 
 
 def get_html_form(worker, msg, containers, tuples):

@@ -32,6 +32,8 @@ class ContainerService(object):
             res.content_type = "String"
             res.status = falcon.HTTP_200
 
+        ## TODO: add list containers
+
     def on_post(self, req, res):
         """
         POST: docker?token=None&command={command}
@@ -93,6 +95,7 @@ class RequestStatus(object):
         if req.params[Definition.get_str_token()] == Setting.get_token():
             s_content = Services.get_machine_status(Setting, CRole.WORKER)
             s_content[Definition.REST.get_str_docker()] = DockerService.get_containers_status()
+            s_content[Definition.REST.get_str_local_imgs()] = DockerService.get_local_images()
 
             res.body = str(s_content)
 

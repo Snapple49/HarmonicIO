@@ -15,3 +15,7 @@ class DockerService(object):
     @staticmethod
     def get_containers_status():
         return DockerService.__docker_master.get_containers_status()
+
+    @staticmethod
+    def get_local_images():
+        return DockerService.__docker_master.get_local_images()

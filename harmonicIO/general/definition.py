@@ -188,6 +188,10 @@ class Definition(object):
         def get_str_docker():
             return "docker"
 
+        @staticmethod
+        def get_str_local_imgs():
+            return "local_images"
+
         class Batch(object):
             @staticmethod
             def get_str_batch_addr():

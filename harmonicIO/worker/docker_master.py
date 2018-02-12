@@ -70,6 +70,9 @@ class DockerMaster(object):
 
         return res
 
+    def get_local_images(self):
+        self.__client.images.list()
+
     def run_container(self, container_name):
 
         def get_ports_setting(expose, ports):

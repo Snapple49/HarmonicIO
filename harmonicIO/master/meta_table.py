@@ -1,5 +1,5 @@
 import queue
-from harmonicIO.general.services import Services
+from harmonicIO.general.services import Services, SysOut
 from harmonicIO.general.definition import Definition, CTuple
 
 
@@ -98,15 +98,53 @@ class LookUpTable(object):
     class Jobs(object):
         __jobs = {}
 
+        # create new job from request dictionary
         @staticmethod
         def new_job(request):
             new_item = {}
-            new_item['job_id'] = request.get('job_id')
+            new_id = request.get('job_id')
+            if not new_id:
+                SysOut.warn_string("Couldn't create job, no ID provided!")
+                return None
+
+            if new_id in LookUpTable.Jobs.__jobs:
+                SysOut.warn_string("Job already exists in system, can't create!")
+                return None
+
+            new_item['job_id'] = new_id
             new_item['job_status'] = request.get('job_status')
-            new_item['container'] = request
-            new_item[''] = request['']
-            new_item[''] = request['']
-            new_item[''] = request['']
+            new_item[Definition.Container.get_str_con_image_name()] = request.get(Definition.Container.get_str_con_image_name())
+            new_item['user_token'] = request.get(Definition.get_str_token())
+            new_item['time_to_live'] = request.get('ttl')
+
+            LookUpTable.Jobs.__jobs[new_id] = new_item
+
+        @staticmethod
+        def update_job(request):
+            job_id = request.get('job_id')
+            if not job_id in LookUpTable.Jobs.__jobs:
+                SysOut.warn_string("Couldn't update job, no existing job matching ID!")
+                return None
+
+            tkn = request.get(Definitions.get_str_token())
+            if not tkn == LookUpTable.Jobs.__jobs[job_id]['user_token']:
+                SysOut.warn_string("Incorrect token, refusing update.")
+                return None
+
+            old_job = LookUpTable.Jobs.__jobs[]
+            old_job['job_status'] = request.get('job_status')
+            old_job[Definition.Container.get_str_con_image_name()] = request.get(Definition.Container.get_str_con_image_name())
+#            old_job['user_token'] = request.get(Definition.get_str_token()) # should not be able to change user who requested job?
+            old_job['time_to_live'] = request.get('ttl')
+            old_job['start_time'] = request.get('time')
+            host = {}
+            host[Definition.get_str_node_port()] = request.get(Definition.get_str_node_port())
+            host[Definition.get_str_node_addr()] = request.get(Definition.get_str_node_addr())
+            old_job['host_container'] = host
+
+        @staticmethod
+        def verbose():
+            return LookUpTable.Jobs.__jobs
 
     @staticmethod
     def update_worker(dict_input):
@@ -117,10 +155,19 @@ class LookUpTable(object):
         return LookUpTable.Containers.get_candidate_container(image_name)
 
     @staticmethod
+    def new_job(request):
+        LookUpTable.Jobs.new_job(request)
+
+    @staticmethod
+    def update_job(request):
+        LookUpTable.Jobs.update_job(request)
+
+    @staticmethod
     def verbose():
         ret = dict()
         ret['WORKERS'] = LookUpTable.Workers.verbose()
         ret['CONTAINERS'] = LookUpTable.Containers.verbose()
         ret['TUPLES'] = LookUpTable.Tuples.verbose()
+        ret['JOBS'] = LookUpTable.Jobs.verbose()
 
         return ret

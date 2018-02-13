@@ -133,7 +133,7 @@ class LookUpTable(object):
                 SysOut.warn_string("Incorrect token, refusing update.")
                 return None
 
-            old_job = LookUpTable.Jobs.__jobs[]
+            old_job = LookUpTable.Jobs.__jobs[job_id]
             old_job['job_status'] = request.get('job_status')
             old_job[Definition.Container.get_str_con_image_name()] = request.get(Definition.Container.get_str_con_image_name())
             #old_job['user_token'] = request.get(Definition.get_str_token()) # should not be able to change user who requested job?

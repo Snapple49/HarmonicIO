@@ -1,15 +1,15 @@
 import falcon
 from .configuration import Setting
-from harmonicIO.general.definition import Definition, CStatus, CRole
+from harmonicIO.general.definition import Definition, CStatus, CRole, JobStatus
 from .messaging_system import MessagesQueue
 from harmonicIO.general.services import SysOut, Services as LService
 from .meta_table import LookUpTable
 
 from urllib.request import urlopen
 from urllib3.request import urlencode
-from random.SystemRandom import choice
+
 import json
-import string
+import JobQueue
 
 class RequestStatus(object):
 
@@ -260,11 +260,6 @@ class ClientManager(object):
             res.status = falcon.HTTP_406
             return
 
-        # get status of job
-        #if req.params['type'] == 'jobStatus':
-
-
-
         return
 
     def on_post(self, req, res):
@@ -281,31 +276,9 @@ class ClientManager(object):
             res.status = falcon.HTTP_406
             return
 
-        # request to create new job - create ID for job, look for available container (prio 1 - worker with container available, prio 2 - worker with lowest cpu load),
-        if req.params['type'] == 'newJob':
-
-            # create job ID
-            print("Requested new job!")
-            job_req = json.loads(str(req.stream.read(req.content_length or 0), 'utf-8')) # create dict of parameters if they exist
-
-            # below ID randomizer from: https://stackoverflow.com/questions/2257441/random-string-generation-with-upper-case-letters-and-digits-in-python
-            job_id = ''.join(random.SystemRandom().choice(string.ascii_uppercase + string.digits) for _ in range(5))
-
-            # add job to table
-            job_req['job_id'] = job_id
-            job_req['job_status'] = "INIT"
-            job_req['ttl'] = 30
-            job_req['start_time'] = LService.get_current_timestamp()
-            LookUpTable.Jobs.new_job
-
-
-            # prepare response
-            res.body = "Request received, allocating resources for job - Job ID: {}".format(job_id)
-            res.content_type = "String"
-            res.status = falcon.HTTP_200
-            print(job_status)
-
-            ## THIS PART SHOULD BE ASYNCHRONOUS
+        # request to create new job - create ID for job, add to lookup table, queue creation of the job
+        if req.params['type'] == 'new_job':
+            new_job(req, res)
 
         return
 
@@ -334,6 +307,43 @@ class RESTService(object):
         SysOut.out_string("REST Ready.....")
 
         self.__server.serve_forever()
+
+def new_job(req, res):
+    # create job ID
+    print("Requested new job!")
+    job_params = json.loads(str(req.stream.read(req.content_length or 0), 'utf-8')) # create dict of parameters if they exist
+
+    ### below ID randomizer from: https://stackoverflow.com/questions/2257441/random-string-generation-with-upper-case-letters-and-digits-in-python
+    def rand_id(N):
+        from random.SystemRandom import choice
+        import string
+        return ''.join(random.SystemRandom().choice(string.ascii_uppercase + string.digits) for _ in range(N))
+    ###
+
+    # make sure ID is new
+    job_id = rand_id(5)
+    while job_id in LookUpTable.Jobs.__jobs:
+        job_id = rand_id(5)
+
+    # add job to table
+    job_req['job_id'] = job_id
+    job_req['job_status'] = JobStatus.INIT
+    job_req['ttl'] = 30
+    job_req['start_time'] = LService.get_current_timestamp()
+    if not LookUpTable.Jobs.new_job(job_req):
+        SysOut.err_string("New job could not be added!")
+        res.body = "Could not create job."
+        res.content_type = "String"
+        res.status = falcon.HTTP_500
+        return
+
+    # prepare response
+    res.body = "Request received, allocating resources for job - Job ID: {}".format(job_id)
+    res.content_type = "String"
+    res.status = falcon.HTTP_200
+
+    # queue creation
+    JobQueue.queue_job(job_req)
 
 def find_available_worker(job_req):
     # get server data

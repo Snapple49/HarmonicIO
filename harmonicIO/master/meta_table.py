@@ -116,8 +116,10 @@ class LookUpTable(object):
             new_item[Definition.Container.get_str_con_image_name()] = request.get(Definition.Container.get_str_con_image_name())
             new_item['user_token'] = request.get(Definition.get_str_token())
             new_item['time_to_live'] = request.get('ttl')
-
+            new_item['start_time'] = request.get('start_time')
             LookUpTable.Jobs.__jobs[new_id] = new_item
+
+            return True
 
         @staticmethod
         def update_job(request):

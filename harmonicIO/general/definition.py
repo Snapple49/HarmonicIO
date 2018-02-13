@@ -23,6 +23,13 @@ class CTuple:
     RT = 3
 
 
+class JobStatus(object):
+    INIT = 0
+    READY = 1
+    ACTIVE = 2
+    IDLE = 3
+
+
 class Definition(object):
     @staticmethod
     def get_str_node_name():

@@ -1,5 +1,5 @@
 from harmonicIO.general.services import SysOut
-
+import threading
 
 """
 Master entry point
@@ -21,7 +21,6 @@ def run_msg_service():
     """
     from .configuration import Setting
     from .server_socket import ThreadedTCPServer, ThreadedTCPRequestHandler
-    import threading
     server = ThreadedTCPServer((Setting.get_node_addr(), Setting.get_data_port_start()),
                                ThreadedTCPRequestHandler, bind_and_activate=True)
 
@@ -39,6 +38,9 @@ def run_msg_service():
     # server.shutdown()
     # server.server_close()
 
+
+def run_job_sevice():
+    return None
 
 if __name__ == '__main__':
     """
@@ -64,4 +66,3 @@ if __name__ == '__main__':
 
     # Binding commander to the rest service and enable REST service
     pool.submit(run_rest_service)
-

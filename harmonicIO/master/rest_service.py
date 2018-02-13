@@ -9,7 +9,7 @@ from urllib.request import urlopen
 from urllib3.request import urlencode
 
 import json
-import JobQueue
+from jobqueue import JobQueue
 
 class RequestStatus(object):
 

@@ -1,5 +1,5 @@
 from harmonicIO.general.services import SysOut
-import threading
+
 
 """
 Master entry point
@@ -21,6 +21,7 @@ def run_msg_service():
     """
     from .configuration import Setting
     from .server_socket import ThreadedTCPServer, ThreadedTCPRequestHandler
+    import threading
     server = ThreadedTCPServer((Setting.get_node_addr(), Setting.get_data_port_start()),
                                ThreadedTCPRequestHandler, bind_and_activate=True)
 

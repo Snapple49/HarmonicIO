@@ -105,11 +105,11 @@ class LookUpTable(object):
             new_id = request.get('job_id')
             if not new_id:
                 SysOut.warn_string("Couldn't create job, no ID provided!")
-                return None
+                return False
 
             if new_id in LookUpTable.Jobs.__jobs:
                 SysOut.warn_string("Job already exists in system, can't create!")
-                return None
+                return False
 
             new_item['job_id'] = new_id
             new_item['job_status'] = request.get('job_status')
@@ -158,7 +158,7 @@ class LookUpTable(object):
 
     @staticmethod
     def new_job(request):
-        LookUpTable.Jobs.new_job(request)
+        return LookUpTable.Jobs.new_job(request)
 
     @staticmethod
     def update_job(request):

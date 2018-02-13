@@ -23,7 +23,7 @@ class CTuple:
     RT = 3
 
 
-class JobStatus(object):
+class JobStatus:
     INIT = 0
     READY = 1
     ACTIVE = 2

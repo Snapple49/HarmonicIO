@@ -355,9 +355,9 @@ def find_available_worker(job_req):
     for worker in data["WORKERS"]:
         if worker[Definition.REST.get_str_local_imgs()]:
 
-        for image in worker[Definition.REST.get_str_local_imgs()]:
-            if target_container in image.tags:
-                candidate = (worker["node_addr"], worker["load5"]) # create tuple with IP and load on worker with container
+            for image in worker[Definition.REST.get_str_local_imgs()]:
+                if target_container in image.tags:
+                    candidate = (worker["node_addr"], worker["load5"]) # create tuple with IP and load on worker with container
 
     # find suitable worker by prio 1
     if target_container in data["CONTAINERS"]:
@@ -385,7 +385,7 @@ def find_available_worker(job_req):
 
     return candidates
 
-def start_job(target_worker)
+def start_job(target_worker):
 
     # send request to worker
     worker_url = "http://{}:8081/docker?token=None&command=create".format(candidates[0][0])

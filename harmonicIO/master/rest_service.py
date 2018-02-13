@@ -9,7 +9,7 @@ from urllib.request import urlopen
 from urllib3.request import urlencode
 
 import json
-from jobqueue import JobQueue
+#from jobqueue import JobQueue
 
 class RequestStatus(object):
 
@@ -315,17 +315,18 @@ def new_job(req, res):
 
     ### below ID randomizer from: https://stackoverflow.com/questions/2257441/random-string-generation-with-upper-case-letters-and-digits-in-python
     def rand_id(N):
-        from random.SystemRandom import choice
+        from random import SystemRandom
         import string
-        return ''.join(random.SystemRandom().choice(string.ascii_uppercase + string.digits) for _ in range(N))
+        return ''.join(SystemRandom().choice(string.ascii_uppercase + string.digits) for _ in range(N))
     ###
 
     # make sure ID is new
     job_id = rand_id(5)
-    while job_id in LookUpTable.Jobs.__jobs:
-        job_id = rand_id(5)
-
+#    while job_id in LookUpTable.Jobs.__jobs:
+#        job_id = rand_id(5)
+# TODO: implement function to check if ID in jobs
     # add job to table
+    job_req = {}
     job_req['job_id'] = job_id
     job_req['job_status'] = JobStatus.INIT
     job_req['ttl'] = 30

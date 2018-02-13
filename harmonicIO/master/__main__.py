@@ -40,9 +40,6 @@ def run_msg_service():
     # server.server_close()
 
 
-def run_job_sevice():
-    return None
-
 if __name__ == '__main__':
     """
     Entry point

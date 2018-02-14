@@ -1,9 +1,22 @@
 from harmonicIO.general.services import SysOut
-
+from .jobqueue import JobManager
 
 """
 Master entry point
 """
+
+def run_queue_manager():
+    """
+    Run job queue manager thread
+    can be several managers to manage large amount of queued jobs
+    """
+    import threading
+    manager = JobManager()
+    manager_thread = threading.Thread(target=manager.job_queuer)
+    manager_thread.daemon = True
+    manager_thread.start()
+
+    SysOut.out_string("Job queue started")
 
 
 def run_rest_service():

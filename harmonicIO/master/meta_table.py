@@ -126,12 +126,12 @@ class LookUpTable(object):
             job_id = request.get('job_id')
             if not job_id in LookUpTable.Jobs.__jobs:
                 SysOut.warn_string("Couldn't update job, no existing job matching ID!")
-                return None
+                return False
 
-            tkn = request.get(Definitions.get_str_token())
+            tkn = request.get(Definition.get_str_token())
             if not tkn == LookUpTable.Jobs.__jobs[job_id]['user_token']:
                 SysOut.warn_string("Incorrect token, refusing update.")
-                return None
+                return False
 
             old_job = LookUpTable.Jobs.__jobs[job_id]
             old_job['job_status'] = request.get('job_status')
@@ -143,6 +143,8 @@ class LookUpTable(object):
             host[Definition.get_str_node_port()] = request.get(Definition.get_str_node_port())
             host[Definition.get_str_node_addr()] = request.get(Definition.get_str_node_addr())
             old_job['host_container'] = host
+
+            return True
 
         @staticmethod
         def verbose():
@@ -162,7 +164,11 @@ class LookUpTable(object):
 
     @staticmethod
     def update_job(request):
-        LookUpTable.Jobs.update_job(request)
+        return LookUpTable.Jobs.update_job(request)
+
+    @staticmethod
+    def poll_id(id):
+        return id in LookUpTable.Jobs.verbose()
 
     @staticmethod
     def verbose():

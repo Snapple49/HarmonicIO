@@ -24,10 +24,10 @@ class CTuple:
 
 
 class JobStatus:
-    INIT = 0
-    READY = 1
-    ACTIVE = 2
-    IDLE = 3
+    INIT = "INITIALIZING"
+    READY = "READY"
+    ACTIVE = "ACTIVE"
+    IDLE = "IDLE"
 
 
 class Definition(object):
@@ -90,10 +90,6 @@ class Definition(object):
     @staticmethod
     def get_str_data_port_range():
         return "node_data_port_range"
-
-    @staticmethod
-    def get_str_idle_time():
-        return "std_idle_time"
 
     @staticmethod
     def get_str_token():

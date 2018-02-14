@@ -9,7 +9,13 @@ from urllib.request import urlopen
 from urllib3.request import urlencode
 
 import json
-#from jobqueue import JobQueue
+from .jobqueue import JobQueue
+
+def format_response_string(res, http_code, msg):
+    res.body = msg + '\n'
+    res.status = http_code
+    res.content_type = "String"
+    return res
 
 class RequestStatus(object):
 
@@ -21,22 +27,15 @@ class RequestStatus(object):
         GET: /status?token={None}
         """
         if not Definition.get_str_token() in req.params:
-            res.body = "Token is required."
-            res.content_type = "String"
-            res.status = falcon.HTTP_401
+            format_response_string(res, falcon.HTTP_401, "Token is required")
             return
 
         if req.params[Definition.get_str_token()] == Setting.get_token():
-
             result = LService.get_machine_status(Setting, CRole.MASTER)
-
-            res.body = str(result)
-            res.content_type = "String"
-            res.status = falcon.HTTP_200
+            format_response_string(res, falcon.HTTP_200, str(result))
+            
         else:
-            res.body = "Invalid token ID."
-            res.content_type = "String"
-            res.status = falcon.HTTP_401
+            format_response_string(res, falcon.HTTP_401,"Invalid token ID")
 
     def on_put(self, req, res):
         """
@@ -249,18 +248,25 @@ class ClientManager(object):
     def on_get(self, req, res):
         # check token and request type is provided
         if not Definition.get_str_token() in req.params:
-            res.body = "Token is required."
-            res.content_type = "String"
-            res.status = falcon.HTTP_401
+            format_response_string(res, falcon.HTTP_401, "Token required.")
             return
 
         if not "type" in req.params:
-            res.body = "No command specified."
-            res.content_type = "String"
-            res.status = falcon.HTTP_406
+            format_response_string(res, falcon.HTTP_406, "Command not specified.")
             return
 
-        return
+        if req.params['type'] == "poll_job":
+            id = req.params.get('job_id')
+            if not id in LookUpTable.Jobs.verbose():
+                format_response_string(res, falcon.HTTP_404, "Specified job not available.")
+                return
+
+            job = LookUpTable.Jobs.verbose()
+            if job:
+                stat = str(job[id].get('job_status'))
+                format_response_string(res, falcon.HTTP_200, ("Job status: " + stat))
+
+        return 
 
     def on_post(self, req, res):
         # check token and request type is provided
@@ -278,7 +284,14 @@ class ClientManager(object):
 
         # request to create new job - create ID for job, add to lookup table, queue creation of the job
         if req.params['type'] == 'new_job':
-            new_job(req, res)
+            job = new_job(req)
+            if not job:
+                SysOut.err_string("New job could not be added!")
+                format_response_string(res, falcon.HTTP_500, "Could not create job.")
+                return
+            job_status = job.get('job_status')
+            format_response_string(res, falcon.HTTP_200, "Job request received, container status: {}\nJob ID: {}".format(job_status, job.get('job_id')))
+            return
 
         return
 
@@ -308,11 +321,7 @@ class RESTService(object):
 
         self.__server.serve_forever()
 
-def new_job(req, res):
-    # create job ID
-    print("Requested new job!")
-    job_params = json.loads(str(req.stream.read(req.content_length or 0), 'utf-8')) # create dict of parameters if they exist
-
+def new_job(req):
     ### below ID randomizer from: https://stackoverflow.com/questions/2257441/random-string-generation-with-upper-case-letters-and-digits-in-python
     def rand_id(N):
         from random import SystemRandom
@@ -320,31 +329,24 @@ def new_job(req, res):
         return ''.join(SystemRandom().choice(string.ascii_uppercase + string.digits) for _ in range(N))
     ###
 
-    # make sure ID is new
+    # create job ID, make sure ID is new
     job_id = rand_id(5)
-#    while job_id in LookUpTable.Jobs.__jobs:
-#        job_id = rand_id(5)
-# TODO: implement function to check if ID in jobs
+    while LookUpTable.poll_id(job_id):
+        job_id = rand_id(5)
+    
     # add job to table
-    job_req = {}
+    job_req = req.params
     job_req['job_id'] = job_id
     job_req['job_status'] = JobStatus.INIT
     job_req['ttl'] = 30
     job_req['start_time'] = LService.get_current_timestamp()
     if not LookUpTable.Jobs.new_job(job_req):
-        SysOut.err_string("New job could not be added!")
-        res.body = "Could not create job."
-        res.content_type = "String"
-        res.status = falcon.HTTP_500
-        return
-
-    # prepare response
-    res.body = "Request received, allocating resources for job - Job ID: {}".format(job_id)
-    res.content_type = "String"
-    res.status = falcon.HTTP_200
+        return None
 
     # queue creation
-    JobQueue.queue_job(job_req)
+    JobQueue.queue_new_job(job_req)
+
+    return job_req
 
 def find_available_worker(job_req):
     # get server data
@@ -385,19 +387,6 @@ def find_available_worker(job_req):
     print(str(candidates[0]) + " has least load, sending request here!")
 
     return candidates
-
-def start_job(target_worker):
-
-    # send request to worker
-    worker_url = "http://{}:8081/docker?token=None&command=create".format(candidates[0][0])
-    print(worker_url, '\n', job_req, '\n', bytes(json.dumps(job_req), 'utf-8'))
-    with urlopen(worker_url, bytes(json.dumps(job_req), 'utf-8')) as response:
-        html = response.read()
-
-    worker_response = html.decode('UTF-8')
-    print(worker_response)
-    job_status = "ACTIVE"
-    print(job_status)
 
 
 def get_html_form(worker, msg, containers, tuples):

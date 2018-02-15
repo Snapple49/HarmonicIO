@@ -283,8 +283,9 @@ class ClientManager(object):
             return
 
         # request to create new job - create ID for job, add to lookup table, queue creation of the job
+        job_params = json.loads(str(req.stream.read(req.content_length or 0), 'utf-8')) # create dict of body data if they exist
         if req.params['type'] == 'new_job':
-            job = new_job(req)
+            job = new_job(job_params)
             if not job:
                 SysOut.err_string("New job could not be added!")
                 format_response_string(res, falcon.HTTP_500, "Could not create job.")
@@ -321,7 +322,7 @@ class RESTService(object):
 
         self.__server.serve_forever()
 
-def new_job(req):
+def new_job(job_params):
     ### below ID randomizer from: https://stackoverflow.com/questions/2257441/random-string-generation-with-upper-case-letters-and-digits-in-python
     def rand_id(N):
         from random import SystemRandom
@@ -335,18 +336,17 @@ def new_job(req):
         job_id = rand_id(5)
     
     # add job to table
-    job_req = req.params
-    job_req['job_id'] = job_id
-    job_req['job_status'] = JobStatus.INIT
-    job_req['ttl'] = 30
-    job_req['start_time'] = LService.get_current_timestamp()
-    if not LookUpTable.Jobs.new_job(job_req):
+    job_params['job_id'] = job_id
+    job_params['job_status'] = JobStatus.INIT
+    job_params['ttl'] = 30
+    job_params['start_time'] = LService.get_current_timestamp()
+    if not LookUpTable.Jobs.new_job(job_params):
         return None
 
     # queue creation
-    JobQueue.queue_new_job(job_req)
+    JobQueue.queue_new_job(job_params)
 
-    return job_req
+    return job_params
 
 def find_available_worker(job_req):
     # get server data

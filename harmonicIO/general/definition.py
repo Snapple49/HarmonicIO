@@ -28,6 +28,7 @@ class JobStatus:
     READY = "READY"
     ACTIVE = "ACTIVE"
     IDLE = "IDLE"
+    FAILED = "FAILED"
 
 
 class Definition(object):

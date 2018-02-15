@@ -56,7 +56,6 @@ class ContainerService(object):
         if req.params[Definition.Docker.get_str_command()] == Definition.Docker.get_str_create():
             # Unpack the posted data
             raw = req.stream.read(req.content_length or 0)
-            print(raw, str(raw, 'utf-8'))
             data = json.loads(str(raw, 'utf-8')) # create dict of parameters if they exist
 
             if not data[Definition.Container.get_str_con_image_name()]:

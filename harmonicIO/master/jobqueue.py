@@ -5,51 +5,29 @@ from .meta_table import LookUpTable
 from harmonicIO.general.definition import Definition, JobStatus
 from harmonicIO.general.services import SysOut
 
-def asdasd(job_req):
-    # get server data
-    data = LookUpTable.verbose()
-    data['MSG'] = MessagesQueue.verbose()
-    candidates = []
-    target_container = job_req[Definition.Container.get_str_con_image_name()]
-
-    for worker in data["WORKERS"]:
-        if worker[Definition.REST.get_str_local_imgs()]:
-
-            for image in worker[Definition.REST.get_str_local_imgs()]:
-                if target_container in image.tags:
-                    candidate = (worker["node_addr"], worker["load5"]) # create tuple with IP and load on worker with container
-
-    # find suitable worker by prio 1
-    if target_container in data["CONTAINERS"]:
-        print("Looking for container called " + target_container)
-        for container in data["CONTAINERS"][target_container]:
-            candidate = ((container["batch_addr"], data["WORKERS"][container["batch_addr"]]["load5"])) # create tuple with IP and load on worker with container
-            if candidate[1] < 0.5: # only add candidate if worker load less than 50%
-                candidates.append(candidate)
-
-
-    # find suitable worker by prio 2
-    elif data["WORKERS"]:
-        for worker in data["WORKERS"]:
-
-            if candidate[1] < 0.5:
-                candidates.append(candidate)
-
-    # no suitable worker available
-    else:
-        return None
-
-    candidates.sort(key=lambda index: index[1]) # sort candidate workers on load (avg. load last 5 minutes)
-    print('Candidates:\n' + candidates)
-    print(str(candidates[0]) + " has least load, sending request here!")
-
-    return candidates
-
 class JobManager():
 
     def find_available_worker(self, container):
-        ## TODO: actually do stuff
-        return [('192.168.1.8', '0.05')]
+        candidates = []
+        workers = LookUpTable.Workers.verbose()
+
+        if not workers:
+            return None
+
+        # loop through workers and make tuples of worker IP, load and if requested container is available locally
+        for worker in workers:
+            curr_worker = workers[worker]
+            if container in curr_worker[Definition.REST.get_str_local_imgs()]:
+                candidates.append((curr_worker[Definition.get_str_node_addr()], curr_worker[Definition.get_str_load5()], True))
+            else:
+                candidates.append((curr_worker[Definition.get_str_node_addr()], curr_worker[Definition.get_str_load5()], False))
+
+        candidates.sort(key=lambda x: (-x[2], x[1])) # sort candidate workers first on availability of image, then on load (avg load last 5 mins)
+        for candidate in candidates:
+            if float(candidate[1]) < 0.5: 
+                return candidate
+        
+        return None
 
     def start_job(self, target_worker, job_data):
         # send request to worker
@@ -65,9 +43,9 @@ class JobManager():
     def job_queuer(self):
         while True:
             job_data = JobQueue.q.get()
-            candidates = self.find_available_worker(job_data.get('c_name'))
-            worker_ip = candidates[0][0]
+            target = self.find_available_worker(job_data.get(Definition.Container.get_str_con_image_name()))
             try:
+                worker_ip = target[0]
                 if self.start_job(worker_ip, job_data):
                     job_data[Definition.get_str_node_port()] = 1337
                     job_data[Definition.get_str_node_addr()] = worker_ip

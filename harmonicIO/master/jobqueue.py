@@ -5,7 +5,7 @@ from .meta_table import LookUpTable
 from harmonicIO.general.definition import Definition, JobStatus
 from harmonicIO.general.services import SysOut
 
-def find_available_worker(job_req):
+def asdasd(job_req):
     # get server data
     data = LookUpTable.verbose()
     data['MSG'] = MessagesQueue.verbose()
@@ -49,7 +49,7 @@ class JobManager():
 
     def find_available_worker(self, container):
         ## TODO: actually do stuff
-        return [('192.168.1.9', '0.05')]
+        return [('192.168.1.8', '0.05')]
 
     def start_job(self, target_worker, job_data):
         # send request to worker

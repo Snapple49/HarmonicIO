@@ -71,7 +71,13 @@ class DockerMaster(object):
         return res
 
     def get_local_images(self):
-        self.__client.images.list()
+        # get a list of all tags of all locally available images on this machine
+        imgs = self.__client.images.list()
+        local_imgs = []
+        for img in imgs:
+            local_imgs += img.tags
+        
+        return local_imgs
 
     def run_container(self, container_name):
 

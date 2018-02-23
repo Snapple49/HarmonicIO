@@ -135,14 +135,9 @@ class LookUpTable(object):
 
             old_job = LookUpTable.Jobs.__jobs[job_id]
             old_job['job_status'] = request.get('job_status')
-            old_job[Definition.Container.get_str_con_image_name()] = request.get(Definition.Container.get_str_con_image_name())
             #old_job['user_token'] = request.get(Definition.get_str_token()) # should not be able to change user who requested job?
             if 'ttl' in request:
                 old_job['time_to_live'] = request.get('ttl')
-            host = {}
-            host[Definition.get_str_node_port()] = request.get(Definition.get_str_node_port())
-            host[Definition.get_str_node_addr()] = request.get(Definition.get_str_node_addr())
-            old_job['host_container'] = host
 
             return True
 

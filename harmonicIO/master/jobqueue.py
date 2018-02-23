@@ -37,7 +37,6 @@ class JobManager():
 
         if resp.getcode() == 200: # container was created
             return True
-        ## TODO: add port?
         return False
 
     def job_queuer(self):
@@ -47,13 +46,11 @@ class JobManager():
             try:
                 worker_ip = target[0]
                 if self.start_job(worker_ip, job_data):
-                    job_data[Definition.get_str_node_port()] = 1337
-                    job_data[Definition.get_str_node_addr()] = worker_ip
                     job_data['job_status'] = JobStatus.READY
             except:
                 job_data['job_status'] = JobStatus.FAILED
             finally:
-                LookUpTable.Jobs.update_job(job_data) ## TODO: double check nothing wrong gets updated
+                LookUpTable.Jobs.update_job(job_data) 
                 JobQueue.q.task_done()
 
 class JobQueue(object):

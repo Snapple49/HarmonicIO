@@ -52,6 +52,7 @@ class RequestStatus(object):
             data = eval(raw)
 
             LookUpTable.update_worker(data)
+            ## TODO: make sure also available containers are updated!
             SysOut.debug_string("Update worker status ({0})".format(data[Definition.get_str_node_name()]))
 
             res.body = "Okay"

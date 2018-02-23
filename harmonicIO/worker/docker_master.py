@@ -63,7 +63,7 @@ class DockerMaster(object):
             return res
 
         res = []
-        for item in self.__client.containers.list():
+        for item in self.__client.containers.list(): ## TODO: add all=True? 
             res.append(get_container_status(item))
             # To print all logs:
             #print(item.logs(stdout=True, stderr=True))

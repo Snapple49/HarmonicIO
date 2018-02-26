@@ -1,6 +1,6 @@
 import socketserver
 from .messaging_system import MessagesQueue
-
+from harmonicIO.general.services import SysOut
 
 class ThreadedTCPServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
     """
@@ -42,4 +42,4 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
 
         except:
             from harmonicIO.general.services import Services
-            Services.e_print("Insufficient memory for storing g object.")
+            SysOut.err_string("Insufficient memory for storing g object.")

@@ -47,12 +47,22 @@ class RequestStatus(object):
             res.status = falcon.HTTP_401
             return
 
+        if Definition.Docker.get_str_finished() in req.params:
+            # a container is shutting down, update containers
+            if LookUpTable.remove_container(
+                req.params.get(Definition.Container.get_str_con_image_name()),
+                req.params.get(Definition.Container.Status.get_str_sid())
+            ):
+                format_response_string(res, falcon.HTTP_200, "Container successfully removed")
+            else:
+                format_response_string(res, falcon.HTTP_400, "Could not remove container from table!")
+            return
+
+
         if req.params[Definition.get_str_token()] == Setting.get_token():
-            raw = str(req.stream.read(), 'UTF-8')
-            data = eval(raw)
+            data = json.loads(str(req.stream.read(req.content_length or 0), 'utf-8'))
 
             LookUpTable.update_worker(data)
-            ## TODO: make sure also available containers are updated!
             SysOut.debug_string("Update worker status ({0})".format(data[Definition.get_str_node_name()]))
 
             res.body = "Okay"
@@ -63,6 +73,7 @@ class RequestStatus(object):
             res.content_type = "String"
             res.status = falcon.HTTP_401
 
+        return
 
 class MessageStreaming(object):
     def __init__(self):
@@ -242,7 +253,7 @@ class MessagesQuery(object):
             res.content_type = "String"
             res.status = falcon.HTTP_200
 
-class ClientManager(object):
+class JobManager(object):
     def __init__(self):
         pass
 
@@ -286,7 +297,7 @@ class ClientManager(object):
         # request to create new job - create ID for job, add to lookup table, queue creation of the job
         job_params = json.loads(str(req.stream.read(req.content_length or 0), 'utf-8')) # create dict of body data if they exist
         if req.params['type'] == 'new_job':
-            job = new_job(job_params)
+            job = new_job(job_params) # attempt to create new job from provided parameters
             if not job:
                 SysOut.err_string("New job could not be added!")
                 format_response_string(res, falcon.HTTP_500, "Could not create job.")
@@ -312,8 +323,8 @@ class RESTService(object):
         # Add route for msg query
         api.add_route('/' + Definition.REST.get_str_msg_query(), MessagesQuery())
 
-        # Add route for client manager
-        api.add_route('/' + 'clientManagement', ClientManager())
+        # Add route for job manager
+        api.add_route('/' + Definition.REST.get_str_job_mgr(), JobManager())
 
         # Establishing a REST server
         self.__server = make_server(Setting.get_node_addr(), Setting.get_node_port(), api)
@@ -348,47 +359,6 @@ def new_job(job_params):
     JobQueue.queue_new_job(job_params)
 
     return job_params
-
-def find_available_worker(job_req):
-    # get server data
-    data = LookUpTable.verbose()
-    data['MSG'] = MessagesQueue.verbose()
-    candidates = []
-    target_container = job_req[Definition.Container.get_str_con_image_name()]
-
-    for worker in data["WORKERS"]:
-        if worker[Definition.REST.get_str_local_imgs()]:
-
-            for image in worker[Definition.REST.get_str_local_imgs()]:
-                if target_container in image.tags:
-                    candidate = (worker["node_addr"], worker["load5"]) # create tuple with IP and load on worker with container
-
-    # find suitable worker by prio 1
-    if target_container in data["CONTAINERS"]:
-        print("Looking for container called " + target_container)
-        for container in data["CONTAINERS"][target_container]:
-            candidate = ((container["batch_addr"], data["WORKERS"][container["batch_addr"]]["load5"])) # create tuple with IP and load on worker with container
-            if candidate[1] < 0.5: # only add candidate if worker load less than 50%
-                candidates.append(candidate)
-
-
-    # find suitable worker by prio 2
-    elif data["WORKERS"]:
-        for worker in data["WORKERS"]:
-
-            if candidate[1] < 0.5:
-                candidates.append(candidate)
-
-    # no suitable worker available
-    else:
-        return None
-
-    candidates.sort(key=lambda index: index[1]) # sort candidate workers on load (avg. load last 5 minutes)
-    print('Candidates:\n' + candidates)
-    print(str(candidates[0]) + " has least load, sending request here!")
-
-    return candidates
-
 
 def get_html_form(worker, msg, containers, tuples):
     html = """

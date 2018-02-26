@@ -5,6 +5,27 @@ from .docker_service import DockerService
 from harmonicIO.general.definition import Definition, CRole
 import json
 
+
+# function that sends request to master to notify exiting of a container
+def notify_master_container_finished(csid):
+    from urllib.request import urlopen, Request
+    
+    notify_url = "http://{}:{}/{}?token=None&{}={}".format(
+        Setting.get_master_addr, 
+        Setting.get_master_port, 
+        Definition.REST.get_str_status(), 
+        Definition.Docker.get_str_finished(), 
+        csid
+    )
+    req = Request(url=notify_url, method='PUT')
+    resp = urlopen(req)
+    
+    if resp.getcode() == 200: 
+        # container was removed on master
+        return True
+    return False
+
+
 class ContainerService(object):
     def __init__(self):
         pass
@@ -31,8 +52,25 @@ class ContainerService(object):
             res.body = str(body)
             res.content_type = "String"
             res.status = falcon.HTTP_200
+            return
 
-        ## TODO: add list containers
+        # Container is exiting, notify master to update
+        if req.params[Definition.Docker.get_str_command()] == Definition.Docker.get_str_finished():
+            res.content_type = "String"
+            
+            container_short_id = req.params.get(Definition.Container.Status.get_str_sid)
+            if container_short_id:
+                if not notify_master_container_finished(container_short_id):
+                    res.body = "Could not find requested container running."    
+                    res.status = falcon.HTTP_404
+                else:
+                    res.body = "ACK: Container terminated, master notified."
+                    res.status = falcon.HTTP_200
+            else:
+                res.body = "Container short id required"
+                res.status = falcon.HTTP_400
+
+
 
     def on_post(self, req, res):
         """

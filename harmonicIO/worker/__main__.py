@@ -16,6 +16,7 @@ def run_rest_service():
     rest = RESTService()
     rest.run()
 
+## TODO: add gc thread
 
 def update_worker_status():
     """
@@ -84,3 +85,5 @@ if __name__ == "__main__":
 
     # Update the worker status
     pool.submit(update_worker_status)
+
+    ##TODO: ACTUALLY PUT THE DAMN THREAD START IN HERE LOL

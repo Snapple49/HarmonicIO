@@ -181,6 +181,10 @@ class Definition(object):
             return "messagesQuery"
 
         @staticmethod
+        def get_str_job_mgr():
+            return "jobRequest"
+
+        @staticmethod
         def get_str_reg_func():
             return "registeredFunctions"
 
@@ -288,6 +292,10 @@ class Definition(object):
         @staticmethod
         def get_str_query():
             return "query"
+
+        @staticmethod
+        def get_str_finished():
+            return "finished"
 
         class HDE(object):
 

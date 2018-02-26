@@ -39,7 +39,7 @@ class LookUpTable(object):
             ret[Definition.REST.Batch.get_str_batch_status()] = int(req.params[Definition.REST.Batch.get_str_batch_status()])
             ret[Definition.Container.get_str_con_image_name()] = req.params[Definition.Container.get_str_con_image_name()].strip()
             ret[Definition.get_str_last_update()] = Services.get_current_timestamp()
-
+            ## TODO: add s_id
             return ret
 
         @staticmethod
@@ -66,6 +66,21 @@ class LookUpTable(object):
                 return LookUpTable.Containers.__containers[image_name].get()
 
             return None
+
+        @staticmethod
+        def del_container(container_name, short_id):
+            conts = LookUpTable.Containers.__containers.get(container_name)
+            if not conts:
+                return False
+            else: 
+                # conts is list of containers with same c_name
+                
+                # List filter code based on: https://stackoverflow.com/questions/1235618/python-remove-dictionary-from-list
+                # Removes 
+                conts[:] = [con for con in conts if con.get(Definition.Container.Status.get_str_sid) != short_id]
+
+
+
 
     class Tuples(object):
         __tuples = {}
@@ -164,6 +179,10 @@ class LookUpTable(object):
     @staticmethod
     def poll_id(id):
         return id in LookUpTable.Jobs.verbose()
+
+    @staticmethod
+    def remove_container(c_name, csid):
+        return LookUpTable.Containers.del_container(c_name, csid)
 
     @staticmethod
     def verbose():

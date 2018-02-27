@@ -1,6 +1,6 @@
 {
   "node_name": "PE Master",
-  "master_addr": "192.168.1.12",
+  "master_addr": "192.168.1.11",
   "node_port": 8080,
   "node_data_port_range": [8090,8090],
   "std_idle_time": 5

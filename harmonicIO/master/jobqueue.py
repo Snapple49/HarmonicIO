@@ -36,8 +36,9 @@ class JobManager():
         resp = urlopen(worker_url, req_data) # NOTE: might need increase in timeout to allow download of large container images!!!
 
         if resp.getcode() == 200: # container was created
-            SysOut.debug_string(resp.read())
-            return resp.read()
+            sid = str(resp.read(), 'utf-8')
+            SysOut.debug_string("Received sid from container: " + sid)
+            return sid
         return False
 
     def job_queuer(self):
@@ -46,9 +47,12 @@ class JobManager():
             target = self.find_available_worker(job_data.get(Definition.Container.get_str_con_image_name()))
             try:
                 worker_ip = target[0]
-                if self.start_job(worker_ip, job_data):
+                sid = self.start_job(worker_ip, job_data)
+                if sid:
                     job_data['job_status'] = JobStatus.READY
+                    job_data[Definition.Container.Status.get_str_sid()] = sid
             except:
+                SysOut.err_string("Response from worker threw exception!")
                 job_data['job_status'] = JobStatus.FAILED
             finally:
                 LookUpTable.Jobs.update_job(job_data) 

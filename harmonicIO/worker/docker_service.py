@@ -19,3 +19,7 @@ class DockerService(object):
     @staticmethod
     def get_local_images():
         return DockerService.__docker_master.get_local_images()
+
+    @staticmethod
+    def delete_container(csid):
+        return DockerService.__docker_master.delete_container(csid)

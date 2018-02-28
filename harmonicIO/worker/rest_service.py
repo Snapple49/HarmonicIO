@@ -104,7 +104,7 @@ class ContainerService(object):
             result = DockerService.create_container(data[Definition.Container.get_str_con_image_name()])
 
             if result:
-                res.body = "Okay"
+                res.body = "{}".format(result)
                 res.content_type = "String"
                 res.status = falcon.HTTP_200
                 return

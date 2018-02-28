@@ -4,6 +4,8 @@ from .configuration import Setting
 from harmonicIO.general.definition import CStatus, Definition
 from harmonicIO.general.services import SysOut
 
+from docker.errors import APIError
+from requests.exceptions import HTTPError
 
 class ChannelStatus(object):
     def __init__(self, port):
@@ -63,7 +65,7 @@ class DockerMaster(object):
             return res
 
         res = []
-        for item in self.__client.containers.list(): ## TODO: add all=True? 
+        for item in self.__client.containers.list(all=True):
             res.append(get_container_status(item))
             # To print all logs:
             #print(item.logs(stdout=True, stderr=True))
@@ -78,6 +80,16 @@ class DockerMaster(object):
             local_imgs += img.tags
         
         return local_imgs
+
+    def delete_container(self, cont_shortid):
+        # remove a container from the worker by provided short id, only removes exited containers
+        try:
+            self.__client.containers.get(cont_shortid).remove()
+            return True
+        except (ApiError, HTTPError) as e:
+            SysOut.err_string("Could not remove requested container, exception:\n{}".format(e))
+            return False
+
 
     def run_container(self, container_name):
 
@@ -119,7 +131,8 @@ class DockerMaster(object):
             if res:
                 SysOut.out_string("Container " + container_name + " is created!")
                 SysOut.out_string("Container " + container_name + " is " + res.status + " ")
-                return True
+                # return short id of container
+                return res.short_id
             else:
                 SysOut.out_string("Container " + container_name + " cannot be created!")
                 return False

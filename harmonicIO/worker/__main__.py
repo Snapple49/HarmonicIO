@@ -6,6 +6,8 @@ import urllib3
 from .configuration import Setting
 from harmonicIO.general.services import SysOut, Services
 from harmonicIO.general.definition import Definition, CRole
+from .garbage_collector import GarbageCollector
+import json
 
 
 def run_rest_service():
@@ -16,7 +18,15 @@ def run_rest_service():
     rest = RESTService()
     rest.run()
 
-## TODO: add gc thread
+
+def start_gc_thread():
+    carbage_collector = GarbageCollector(10)
+    gc_thread = threading.Thread(carbage_collector.collect_exited_containers())
+    gc_thread.daemon = True
+    gc_thread.start()
+
+    SysOut.out_string("Garbage collector started")
+
 
 def update_worker_status():
     """
@@ -28,16 +38,18 @@ def update_worker_status():
     Get machine status by calling a unix command and fetch for load average
     """
 
-    s_content = Services.get_machine_status(Setting, CRole.WORKER)
-    s_content[Definition.REST.get_str_docker()] = DockerService.get_containers_status()
-    s_content[Definition.REST.get_str_local_imgs()] = DockerService.get_local_images()
+    content = Services.get_machine_status(Setting, CRole.WORKER)
+    content[Definition.REST.get_str_docker()] = DockerService.get_containers_status()
+    content[Definition.REST.get_str_local_imgs()] = DockerService.get_local_images()
+    
+    s_content = bytes(json.dumps(content), 'utf-8')
 
     html = urllib3.PoolManager()
     try:
         r = html.request('PUT', Definition.Master.get_str_check_master(Setting.get_master_addr(),
                                                                        Setting.get_master_port(),
                                                                        Setting.get_token()),
-                         body=str(s_content))
+                         body=s_content)
 
         if r.status != 200:
             SysOut.err_string("Cannot update worker status to the master!")
@@ -86,4 +98,5 @@ if __name__ == "__main__":
     # Update the worker status
     pool.submit(update_worker_status)
 
-    ##TODO: ACTUALLY PUT THE DAMN THREAD START IN HERE LOL
+    # Start garbage collector thread
+    pool.submit(start_gc_thread)

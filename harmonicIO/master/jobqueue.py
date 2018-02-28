@@ -36,7 +36,8 @@ class JobManager():
         resp = urlopen(worker_url, req_data) # NOTE: might need increase in timeout to allow download of large container images!!!
 
         if resp.getcode() == 200: # container was created
-            return True
+            SysOut.debug_string(resp.read())
+            return resp.read()
         return False
 
     def job_queuer(self):

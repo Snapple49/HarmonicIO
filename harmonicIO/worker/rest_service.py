@@ -92,7 +92,6 @@ class ContainerService(object):
         POST: docker?token=None&command=create
         """
         if req.params[Definition.Docker.get_str_command()] == Definition.Docker.get_str_create():
-            # Unpack the posted data
             raw = req.stream.read(req.content_length or 0)
             data = json.loads(str(raw, 'utf-8')) # create dict of body data if it exists
 

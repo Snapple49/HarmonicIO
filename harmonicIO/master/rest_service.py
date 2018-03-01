@@ -254,6 +254,12 @@ class MessagesQuery(object):
             res.status = falcon.HTTP_200
 
 class JobManager(object):
+    """
+    JobManager is about taking requests from clients to set up containers
+    
+    Provides a post request to let master allocate containers, and get requests to check the status of this.
+
+    """
     def __init__(self):
         pass
 
@@ -267,21 +273,23 @@ class JobManager(object):
             format_response_string(res, falcon.HTTP_406, "Command not specified.")
             return
 
+        # user wants to know if containers are ready for provided job ID
         if req.params['type'] == "poll_job":
             id = req.params.get('job_id')
             if not id in LookUpTable.Jobs.verbose():
                 format_response_string(res, falcon.HTTP_404, "Specified job not available.")
                 return
 
-            job = LookUpTable.Jobs.verbose()
-            if job:
-                stat = str(job[id].get('job_status'))
-                format_response_string(res, falcon.HTTP_200, ("Job status: " + stat))
+            jobs = LookUpTable.Jobs.verbose()
+            stat = str(jobs[id].get('job_status'))
+            format_response_string(res, falcon.HTTP_200, ("Job status: " + stat))
 
         return 
 
     def on_post(self, req, res):
         # check token and request type is provided
+        req_data = json.loads(str(req.stream.read(req.content_length or 0), 'utf-8')) # create dict of body data if they exist
+        
         if not Definition.get_str_token() in req.params:
             res.body = "Token is required."
             res.content_type = "String"
@@ -295,9 +303,8 @@ class JobManager(object):
             return
 
         # request to create new job - create ID for job, add to lookup table, queue creation of the job
-        job_params = json.loads(str(req.stream.read(req.content_length or 0), 'utf-8')) # create dict of body data if they exist
         if req.params['type'] == 'new_job':
-            job = new_job(job_params) # attempt to create new job from provided parameters
+            job = new_job(req_data) # attempt to create new job from provided parameters
             if not job:
                 SysOut.err_string("New job could not be added!")
                 format_response_string(res, falcon.HTTP_500, "Could not create job.")

@@ -44,19 +44,25 @@ class JobManager():
     def job_queuer(self):
         while True:
             job_data = JobQueue.q.get()
-            target = self.find_available_worker(job_data.get(Definition.Container.get_str_con_image_name()))
-            try:
-                worker_ip = target[0]
-                sid = self.start_job(worker_ip, job_data)
-                if sid:
-                    job_data['job_status'] = JobStatus.READY
-                    job_data[Definition.Container.Status.get_str_sid()] = sid
-            except:
-                SysOut.err_string("Response from worker threw exception!")
-                job_data['job_status'] = JobStatus.FAILED
-            finally:
-                LookUpTable.Jobs.update_job(job_data) 
-                JobQueue.q.task_done()
+            num_of_conts = job_data.get('num')
+            job_sids = []
+            for i in range(num_of_conts):
+                target = self.find_available_worker(job_data.get(Definition.Container.get_str_con_image_name()))
+                try:
+                    worker_ip = target[0]
+                    sid = self.start_job(worker_ip, job_data)
+                    if sid:
+                        job_sids.append(sid)
+                    if len(job_sids) == num_of_conts:
+                        job_data['job_status'] = JobStatus.READY
+                        job_data[Definition.Container.Status.get_str_sid()] = job_sids
+                except:
+                    SysOut.err_string("Response from worker threw exception!")
+                    job_data['job_status'] = JobStatus.FAILED
+                    break # break makes it stop trying to create new containers as soon as one fails, is this desireable?
+            ## NOTE: can get really ugly, need to cleanup containers that started OR let user know how many were started instead??
+            LookUpTable.Jobs.update_job(job_data)
+            JobQueue.q.task_done()
 
 class JobQueue(object):
     q = queue.Queue()

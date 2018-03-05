@@ -158,7 +158,8 @@ class MessageStreaming(object):
         if Definition.REST.Batch.get_str_batch_addr() in req.params and \
            Definition.REST.Batch.get_str_batch_port() in req.params and \
            Definition.REST.Batch.get_str_batch_status() in req.params and \
-           Definition.Container.get_str_con_image_name() in req.params:
+           Definition.Container.get_str_con_image_name() in req.params and \
+           Definition.Container.Status.get_str_sid() in req.params:
 
             # Check for data type
             if req.params[Definition.REST.Batch.get_str_batch_port()].isdigit() and \

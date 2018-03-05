@@ -38,8 +38,9 @@ class LookUpTable(object):
             ret[Definition.REST.Batch.get_str_batch_port()] = int(req.params[Definition.REST.Batch.get_str_batch_port()])
             ret[Definition.REST.Batch.get_str_batch_status()] = int(req.params[Definition.REST.Batch.get_str_batch_status()])
             ret[Definition.Container.get_str_con_image_name()] = req.params[Definition.Container.get_str_con_image_name()].strip()
+            ret[Definition.Container.Status.get_str_sid()] = req.params[Definition.Container.Status.get_str_sid()]
             ret[Definition.get_str_last_update()] = Services.get_current_timestamp()
-            ## TODO: add s_id
+            
             return ret
 
         @staticmethod
@@ -53,17 +54,17 @@ class LookUpTable(object):
         @staticmethod
         def update_container(dict_input):
             if dict_input[Definition.Container.get_str_con_image_name()] not in LookUpTable.Containers.__containers:
-                LookUpTable.Containers.__containers[dict_input[Definition.Container.get_str_con_image_name()]] = queue.Queue()
+                LookUpTable.Containers.__containers[dict_input[Definition.Container.get_str_con_image_name()]] = []
 
-            LookUpTable.Containers.__containers[dict_input[Definition.Container.get_str_con_image_name()]].put(dict_input)
+            LookUpTable.Containers.__containers[dict_input[Definition.Container.get_str_con_image_name()]].append(dict_input)
 
         @staticmethod
         def get_candidate_container(image_name):
             if image_name not in LookUpTable.Containers.__containers:
                 return None
 
-            if len(LookUpTable.Containers.__containers[image_name].queue) > 0:
-                return LookUpTable.Containers.__containers[image_name].get()
+            if len(LookUpTable.Containers.__containers[image_name]) > 0:
+                return LookUpTable.Containers.__containers[image_name].pop()
 
             return None
 

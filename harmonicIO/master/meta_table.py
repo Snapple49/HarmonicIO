@@ -45,11 +45,7 @@ class LookUpTable(object):
 
         @staticmethod
         def verbose():
-            ret = dict()
-            for key, value in LookUpTable.Containers.__containers.items():
-                ret[key] = list(value.queue)
-
-            return ret
+            return LookUpTable.Containers.__containers
 
         @staticmethod
         def update_container(dict_input):
@@ -78,7 +74,9 @@ class LookUpTable(object):
                 
                 # List filter code based on: https://stackoverflow.com/questions/1235618/python-remove-dictionary-from-list
                 # Removes 
-                conts[:] = [con for con in conts if con.get(Definition.Container.Status.get_str_sid) != short_id]
+                conts[:] = [con for con in conts if con.get(Definition.Container.Status.get_str_sid()) != short_id]
+            
+            return True
 
 
 

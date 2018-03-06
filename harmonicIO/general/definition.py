@@ -93,6 +93,10 @@ class Definition(object):
         return "node_data_port_range"
 
     @staticmethod
+    def get_str_container_idle_timeout():
+        return "container_idle_timeout"
+
+    @staticmethod
     def get_str_token():
         return "token"
 
@@ -330,3 +334,7 @@ class Definition(object):
             @staticmethod
             def get_str_token():
                 return "HDE_TOKEN"
+
+            @staticmethod
+            def get_str_idle_timeout():
+                return "HDE_IDLE_TIMEOUT"

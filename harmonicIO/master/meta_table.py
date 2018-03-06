@@ -129,8 +129,7 @@ class LookUpTable(object):
             new_item['job_status'] = request.get('job_status')
             new_item[Definition.Container.get_str_con_image_name()] = request.get(Definition.Container.get_str_con_image_name())
             new_item['user_token'] = request.get(Definition.get_str_token())
-            new_item['time_to_live'] = request.get('ttl')
-            new_item['start_time'] = request.get('start_time')
+            new_item['volatile'] = request.get('volatile')
             LookUpTable.Jobs.__jobs[new_id] = new_item
 
             return True
@@ -149,9 +148,6 @@ class LookUpTable(object):
 
             old_job = LookUpTable.Jobs.__jobs[job_id]
             old_job['job_status'] = request.get('job_status')
-            #old_job['user_token'] = request.get(Definition.get_str_token()) # should not be able to change user who requested job?
-            if 'ttl' in request:
-                old_job['time_to_live'] = request.get('ttl')
 
             return True
 

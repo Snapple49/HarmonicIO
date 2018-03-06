@@ -6,5 +6,6 @@
   "master_addr": "192.168.1.5",
   "master_port": 8080,
   "node_data_port_range": [9000, 9010],
-  "std_idle_time": 5
+  "std_idle_time": 5,
+  "container_idle_timeout": 1
 }

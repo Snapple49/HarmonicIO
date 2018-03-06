@@ -49,13 +49,16 @@ class RequestStatus(object):
 
         if Definition.Docker.get_str_finished() in req.params:
             # a container is shutting down, update containers
+            # TODO: add some kind of safety mechanism to really make sure no new requests have been sent to this container before acknowledging removal?
             if LookUpTable.remove_container(
                 req.params.get(Definition.Container.get_str_con_image_name()),
                 req.params.get(Definition.Container.Status.get_str_sid())
             ):
                 format_response_string(res, falcon.HTTP_200, "Container successfully removed")
+                # NOTE: container will terminate as soon as it reads this response!
             else:
                 format_response_string(res, falcon.HTTP_400, "Could not remove container from table!")
+                # NOTE: container will continue as before when it reads this response!
             return
 
 
@@ -289,8 +292,9 @@ class JobManager(object):
 
     def on_post(self, req, res):
         # check token and request type is provided
-        req_data = json.loads(str(req.stream.read(req.content_length or 0), 'utf-8')) # create dict of body data if they exist
-        
+        req_raw = (str(req.stream.read(req.content_length or 0), 'utf-8')) # create dict of body data if they exist
+        print(req_raw)
+        req_data = json.loads(req_raw)
         if not Definition.get_str_token() in req.params:
             res.body = "Token is required."
             res.content_type = "String"
@@ -358,8 +362,6 @@ def new_job(job_params):
     # add job to table
     job_params['job_id'] = job_id
     job_params['job_status'] = JobStatus.INIT
-    job_params['ttl'] = 30
-    job_params['start_time'] = LService.get_current_timestamp()
     if not LookUpTable.Jobs.new_job(job_params):
         return None
 

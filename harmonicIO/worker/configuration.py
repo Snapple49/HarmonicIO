@@ -12,6 +12,7 @@ class Setting(object):
     __master_port = None
     __node_external_addr = None
     __node_internal_addr = None
+    __container_idle_timeout = None
 
     @staticmethod
     def set_node_addr(addr=None):
@@ -87,6 +88,10 @@ class Setting(object):
     @staticmethod
     def get_node_external_addr():
         return Setting.__node_external_addr
+        
+    @staticmethod
+    def get_container_idle_timeout():
+        return Setting.__container_idle_timeout
 
     @staticmethod
     def read_cfg_from_file():
@@ -107,7 +112,8 @@ class Setting(object):
                         Definition.get_str_idle_time() in cfg and \
                         Definition.get_str_master_addr() in cfg and \
                         Definition.get_str_master_port() in cfg and \
-                        Definition.get_str_node_external_addr() in cfg and \
+                        Definition.get_str_container_idle_timeout() in cfg and \
+                        Definition.get_str_node_internal_addr() in cfg and \
                         Definition.get_str_node_internal_addr():
                         # Check port number is int or not
                         if not isinstance(cfg[Definition.get_str_node_port()], int):
@@ -137,6 +143,7 @@ class Setting(object):
                             Setting.__master_addr = cfg[Definition.get_str_master_addr()].strip()
                             Setting.__master_port = cfg[Definition.get_str_master_port()]
                             Setting.__node_external_addr = cfg[Definition.get_str_node_external_addr()].strip().lower()
+                            Setting.__container_idle_timeout = cfg[Definition.get_str_container_idle_timeout()] * 60 # convert idle time from minute to seconds
 
                             # Check for auto node name
                             if Setting.__node_name.lower() == "auto":

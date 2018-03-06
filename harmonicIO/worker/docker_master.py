@@ -91,12 +91,12 @@ class DockerMaster(object):
             return False
 
 
-    def run_container(self, container_name):
+    def run_container(self, container_name, volatile):
 
         def get_ports_setting(expose, ports):
             return {str(expose) + '/tcp': ports}
 
-        def get_env_setting(expose, a_port):
+        def get_env_setting(expose, a_port, volatile):
             ret = dict()
             ret[Definition.Docker.HDE.get_str_node_name()] = container_name
             ret[Definition.Docker.HDE.get_str_node_addr()] = Setting.get_node_addr()
@@ -106,7 +106,8 @@ class DockerMaster(object):
             ret[Definition.Docker.HDE.get_str_master_port()] = Setting.get_master_port()
             ret[Definition.Docker.HDE.get_str_std_idle_time()] = Setting.get_std_idle_time()
             ret[Definition.Docker.HDE.get_str_token()] = Setting.get_token()
-
+            if not volatile:
+                ret[Definition.Docker.HDE.get_str_idle_timeout()] = Setting.get_container_idle_timeout()
             return ret
 
         port = self.__get_available_port()
@@ -122,7 +123,7 @@ class DockerMaster(object):
                                                stderr=True,
                                                stdout=True,
                                                ports=get_ports_setting(expose_port, port),
-                                               environment=get_env_setting(expose_port, port))
+                                               environment=get_env_setting(expose_port, port, volatile))
             import time
             time.sleep(1)
             print('..created container, logs:')

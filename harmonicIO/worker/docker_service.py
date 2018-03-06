@@ -9,8 +9,8 @@ class DockerService(object):
         DockerService.__docker_master = DockerMaster()
 
     @staticmethod
-    def create_container(container_name):
-        return DockerService.__docker_master.run_container(container_name)
+    def create_container(container_name, volatile):
+        return DockerService.__docker_master.run_container(container_name, volatile)
 
     @staticmethod
     def get_containers_status():

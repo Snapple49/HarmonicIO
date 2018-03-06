@@ -52,7 +52,7 @@ class RequestStatus(object):
             # TODO: add some kind of safety mechanism to really make sure no new requests have been sent to this container before acknowledging removal?
             if LookUpTable.remove_container(
                 req.params.get(Definition.Container.get_str_con_image_name()),
-                req.params.get(Definition.Container.Status.get_str_sid())
+                req.params.get(Definition.Docker.get_str_finished())
             ):
                 format_response_string(res, falcon.HTTP_200, "Container successfully removed")
                 # NOTE: container will terminate as soon as it reads this response!

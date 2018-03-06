@@ -106,7 +106,7 @@ class DockerMaster(object):
             ret[Definition.Docker.HDE.get_str_master_port()] = Setting.get_master_port()
             ret[Definition.Docker.HDE.get_str_std_idle_time()] = Setting.get_std_idle_time()
             ret[Definition.Docker.HDE.get_str_token()] = Setting.get_token()
-            if not volatile:
+            if volatile:
                 ret[Definition.Docker.HDE.get_str_idle_timeout()] = Setting.get_container_idle_timeout()
             return ret
 

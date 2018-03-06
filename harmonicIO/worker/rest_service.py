@@ -11,12 +11,12 @@ def notify_master_container_finished(container, csid):
     from urllib.request import urlopen, Request
     
     notify_url = "http://{}:{}/{}?token=None&{}={}&{}={}".format(
-        Setting.get_master_addr, 
-        Setting.get_master_port, 
+        Setting.get_master_addr(), 
+        Setting.get_master_port(), 
         Definition.REST.get_str_status(), 
         Definition.Docker.get_str_finished(), 
         csid,
-        Definition.Container.get_str_con_image_name,
+        Definition.Container.get_str_con_image_name(),
         container
     )
     req = Request(url=notify_url, method='PUT')
@@ -59,9 +59,8 @@ class ContainerService(object):
         # Container is exiting, notify master to update
         if req.params[Definition.Docker.get_str_command()] == Definition.Docker.get_str_finished():
             res.content_type = "String"
-            
-            short_id = req.params.get(Definition.Container.Status.get_str_sid)
-            name = req.params.get(Definition.Container.get_str_con_image_name)
+            short_id = req.params.get(Definition.Container.Status.get_str_sid())
+            name = req.params.get(Definition.Container.get_str_con_image_name())
             if short_id and name:
                 if not notify_master_container_finished(name, short_id):
                     res.body = "Could not find requested container running."    

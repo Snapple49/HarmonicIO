@@ -52,6 +52,7 @@ class LookUpTable(object):
             if dict_input[Definition.Container.get_str_con_image_name()] not in LookUpTable.Containers.__containers:
                 LookUpTable.Containers.__containers[dict_input[Definition.Container.get_str_con_image_name()]] = []
 
+            ## TODO: make sure no duplicate of existing container in list of containers is added
             LookUpTable.Containers.__containers[dict_input[Definition.Container.get_str_con_image_name()]].append(dict_input)
 
         @staticmethod

@@ -4,13 +4,12 @@ from harmonicIO.general.services import SysOut
 # Example program
 # The use case number can be defined by varying the number in use case variable
 MASTER_DATA = {
-    "MASTER_ADDR": "192.168.0.137",
+    "MASTER_ADDR": "192.168.1.5",
     "MASTER_PORT": 8080
 }
 
 PROCC_DATA = {
-    "batch_hist":  "beirbear/test:batch_hist",
-    "batch_sum":   "beirbear/test:batch_sum",
+    "daemon_test":  "snapple49/hio-daemondev:test",
     "OS":    "ubuntu"
 }
 
@@ -38,15 +37,14 @@ def get_random_data():
 
     # Define data to test
     d_list = {
-        'batch_hist': read_data_from_file('stream_connector/lena512.bmp'),
-        'batch_sum': read_data_from_file('stream_connector/str_array.txt')
+        'daemon_test': read_data_from_file('harmonicIO/stream_connector/lena512.bmp')
     }
 
     # Generate a sample stream order
     stream_order = [0] * ITEM_NUMBER
     import random
     for i in range(ITEM_NUMBER):
-        stream_order[i] = (i, 'batch_sum' if (random.randrange(1, 100) % len(d_list)) == 0 else 'batch_hist')
+        stream_order[i] = (i, 'daemon_test' if (random.randrange(1, 100) % len(d_list)) == 0 else 'daemon_test')
 
     return stream_order, d_list
 

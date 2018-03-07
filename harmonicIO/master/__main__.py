@@ -5,16 +5,20 @@ from .jobqueue import JobManager
 Master entry point
 """
 
-def run_queue_manager():
+def run_queue_manager(manager):
     """
     Run job queue manager thread
     can be several managers to manage large amount of queued jobs
     """
     import threading
-    manager = JobManager()
-    manager_thread = threading.Thread(target=manager.job_queuer)
-    manager_thread.daemon = True
-    manager_thread.start()
+    for i in range(manager.queuer_threads):
+        manager_thread = threading.Thread(target=manager.job_queuer)
+        manager_thread.daemon = True
+        manager_thread.start()
+
+    supervisor_thread = threading.Thread(target=manager.queue_supervisor)
+    supervisor_thread.daemon = True
+    supervisor_thread.start()
 
     SysOut.out_string("Job queue started")
 
@@ -77,6 +81,8 @@ if __name__ == '__main__':
 
     # Binding commander to the rest service and enable REST service
     pool.submit(run_rest_service)
-
+    
+    # create a job manager which is a queue manager supervising the creation of containers, both via user and auto-scaling
+    jobManager = JobManager(30, 100, 5, 1) 
     # Run job queue manager thread
-    pool.submit(run_queue_manager)
+    pool.submit(run_queue_manager, jobManager)

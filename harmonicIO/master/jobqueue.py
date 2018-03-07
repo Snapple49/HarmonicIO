@@ -4,8 +4,17 @@ from urllib.request import urlopen
 from .meta_table import LookUpTable
 from harmonicIO.general.definition import Definition, JobStatus
 from harmonicIO.general.services import SysOut
+import time
+from .messaging_system import MessagesQueue
 
-class JobManager():
+class JobManager:
+    
+    def __init__(self, interval, threshold, increment, queuers):
+        self.__supervisor_interval = interval
+        self.__supervisor_increment = increment
+        self.__supervisor_threshold = threshold
+        self.queuer_threads = queuers
+    
 
     def find_available_worker(self, container):
         candidates = []
@@ -60,11 +69,27 @@ class JobManager():
                     SysOut.err_string("Response from worker threw exception!")
                     job_data['job_status'] = JobStatus.FAILED
                     break # break makes it stop trying to create new containers as soon as one fails, is this desireable?
-            ## NOTE: can get really ugly, need to cleanup containers that started OR let user know how many were started instead??
+            
+            ## NOTE: can get really ugly, need to cleanup containers that started (rollback) OR let user know how many were started instead?? or retry failed ones?
             LookUpTable.Jobs.update_job(job_data)
             JobQueue.q.task_done()
 
-class JobQueue(object):
+    def queue_supervisor(self):
+        while True:
+            time.sleep(self.__supervisor_interval) ## NOTE: this is probably a very tuneable parameter for later
+            msg_queue = MessagesQueue.verbose()
+            for container in msg_queue:
+                if int(msg_queue[container]) > self.__supervisor_threshold:
+                    job_data = {
+                        Definition.Container.get_str_con_image_name() : container,
+                        'num' : self.__supervisor_increment,
+                        'volatile' : True
+                    }
+                    JobQueue.queue_new_job(job_data)
+
+            
+
+class JobQueue:
     q = queue.Queue()
 
     @staticmethod

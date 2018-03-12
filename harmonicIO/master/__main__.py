@@ -83,6 +83,6 @@ if __name__ == '__main__':
     pool.submit(run_rest_service)
     
     # create a job manager which is a queue manager supervising the creation of containers, both via user and auto-scaling
-    jobManager = JobManager(30, 100, 5, 1) 
+    jobManager = JobManager(30, 100, 5, 1) # 30 seconds interval between checking, 100 requests in queue before increase, add 5 new containers, 1 thread for queue supervisor
     # Run job queue manager thread
     pool.submit(run_queue_manager, jobManager)

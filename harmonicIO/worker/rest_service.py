@@ -9,6 +9,7 @@ import json
 # function that sends request to master to notify exiting of a container
 def notify_master_container_finished(container, csid):
     from urllib.request import urlopen, Request
+    from urllib.error import HTTPError
     
     notify_url = "http://{}:{}/{}?token=None&{}={}&{}={}".format(
         Setting.get_master_addr(), 
@@ -19,13 +20,17 @@ def notify_master_container_finished(container, csid):
         Definition.Container.get_str_con_image_name(),
         container
     )
-    req = Request(url=notify_url, method='PUT')
-    resp = urlopen(req)
+    try:
+        req = Request(url=notify_url, method='PUT')
+        resp = urlopen(req)
     
-    if resp.getcode() == 200: 
-        # container was removed on master
-        return True
-    return False
+        if resp.getcode() == 200: 
+            # container was removed on master
+            return True
+    except HTTPError as e:
+        SysOut.err_string(e.msg)
+        return False
+
 
 
 class ContainerService(object):

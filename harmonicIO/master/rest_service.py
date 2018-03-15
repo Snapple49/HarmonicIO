@@ -293,7 +293,6 @@ class JobManager(object):
     def on_post(self, req, res):
         # check token and request type is provided
         req_raw = (str(req.stream.read(req.content_length or 0), 'utf-8')) # create dict of body data if they exist
-        print(req_raw)
         req_data = json.loads(req_raw)
         if not Definition.get_str_token() in req.params:
             res.body = "Token is required."

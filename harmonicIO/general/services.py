@@ -81,6 +81,7 @@ class Services(object):
         body[Definition.get_str_node_name()] = setting.get_node_name()
         body[Definition.get_str_node_role()] = role
         body[Definition.get_str_node_addr()] = setting.get_node_addr()
+        body[Definition.get_str_node_port()] = setting.get_node_port()
         body[Definition.get_str_load1()] = load1
         body[Definition.get_str_load5()] = load5
         body[Definition.get_str_load15()] = load15

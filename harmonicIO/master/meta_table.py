@@ -39,7 +39,6 @@ class LookUpTable(object):
             ret[Definition.REST.Batch.get_str_batch_status()] = int(req.params[Definition.REST.Batch.get_str_batch_status()])
             ret[Definition.Container.get_str_con_image_name()] = req.params[Definition.Container.get_str_con_image_name()].strip()
             ret[Definition.Container.Status.get_str_sid()] = req.params[Definition.Container.Status.get_str_sid()]
-            ret[Definition.get_str_last_update()] = Services.get_current_timestamp()
             
             return ret
 
@@ -51,9 +50,14 @@ class LookUpTable(object):
         def update_container(dict_input):
             if dict_input[Definition.Container.get_str_con_image_name()] not in LookUpTable.Containers.__containers:
                 LookUpTable.Containers.__containers[dict_input[Definition.Container.get_str_con_image_name()]] = []
-
-            if not dict_input in LookUpTable.Containers.__containers[dict_input[Definition.Container.get_str_con_image_name()]]:
-                LookUpTable.Containers.__containers[dict_input[Definition.Container.get_str_con_image_name()]].append(dict_input)
+                
+            # TODO: not quite done here
+            for cont in LookUpTable.Containers.__containers[dict_input[Definition.Container.get_str_con_image_name()]]:
+                cont.pop(Definition.get_str_last_update(), None)
+                if not dict_input == cont:
+                    dict_input[Definition.get_str_last_update()] = Services.get_current_timestamp()
+                    LookUpTable.Containers.__containers[dict_input[Definition.Container.get_str_con_image_name()]].append(dict_input)
+                cont[Definition.get_str_last_update()] = Services.get_current_timestamp()
 
         @staticmethod
         def get_candidate_container(image_name):

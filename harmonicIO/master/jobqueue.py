@@ -27,9 +27,9 @@ class JobManager:
         for worker in workers:
             curr_worker = workers[worker]
             if container in curr_worker[Definition.REST.get_str_local_imgs()]:
-                candidates.append((curr_worker[Definition.get_str_node_addr()], curr_worker[Definition.get_str_load5()], True))
+                candidates.append(((curr_worker[Definition.get_str_node_addr()], curr_worker[Definition.get_str_node_port()]), curr_worker[Definition.get_str_load5()], True))
             else:
-                candidates.append((curr_worker[Definition.get_str_node_addr()], curr_worker[Definition.get_str_load5()], False))
+                candidates.append(((curr_worker[Definition.get_str_node_addr()], curr_worker[Definition.get_str_node_port()]), curr_worker[Definition.get_str_load5()], False))
 
         candidates.sort(key=lambda x: (-x[2], x[1])) # sort candidate workers first on availability of image, then on load (avg load last 5 mins)
         for candidate in candidates:
@@ -38,9 +38,9 @@ class JobManager:
         
         return None
 
-    def start_job(self, target_worker, job_data):
+    def start_job(self, target, job_data):
         # send request to worker
-        worker_url = "http://{}:8081/docker?token=None&command=create".format(target_worker)
+        worker_url = "http://{}:{}/docker?token=None&command=create".format(target[0], target[1])
         req_data = bytes(json.dumps(job_data), 'utf-8') 
         resp = urlopen(worker_url, req_data) # NOTE: might need increase in timeout to allow download of large container images!!!
 
@@ -56,10 +56,9 @@ class JobManager:
             num_of_conts = job_data.get('num')
             job_sids = []
             for i in range(num_of_conts):
-                target = self.find_available_worker(job_data.get(Definition.Container.get_str_con_image_name()))
+                target = self.find_available_worker(job_data.get(Definition.Container.get_str_con_image_name()))[0]
                 try:
-                    worker_ip = target[0]
-                    sid = self.start_job(worker_ip, job_data)
+                    sid = self.start_job(target, job_data)
                     if sid:
                         job_sids.append(sid)
                     if len(job_sids) == num_of_conts:

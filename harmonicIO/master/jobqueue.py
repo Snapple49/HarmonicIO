@@ -19,12 +19,13 @@ class JobManager:
     def find_available_worker(self, container):
         candidates = []
         workers = LookUpTable.Workers.verbose()
-
+        SysOut.debug_string("Found workers: " + str(workers))
         if not workers:
             return None
 
         # loop through workers and make tuples of worker IP, load and if requested container is available locally
         for worker in workers:
+
             curr_worker = workers[worker]
             if container in curr_worker[Definition.REST.get_str_local_imgs()]:
                 candidates.append(((curr_worker[Definition.get_str_node_addr()], curr_worker[Definition.get_str_node_port()]), curr_worker[Definition.get_str_load5()], True))
@@ -32,11 +33,11 @@ class JobManager:
                 candidates.append(((curr_worker[Definition.get_str_node_addr()], curr_worker[Definition.get_str_node_port()]), curr_worker[Definition.get_str_load5()], False))
 
         candidates.sort(key=lambda x: (-x[2], x[1])) # sort candidate workers first on availability of image, then on load (avg load last 5 mins)
-        for candidate in candidates:
-            if float(candidate[1]) < 0.5: 
-                return candidate
+        for candidate in list(candidates):
+            if not float(candidate[1]) < 0.5: 
+                candidates.remove(candidate) # remove candidates with higher than 50% cpu load
         
-        return None
+        return candidates
 
     def start_job(self, target, job_data):
         # send request to worker
@@ -55,19 +56,37 @@ class JobManager:
             job_data = JobQueue.q.get()
             num_of_conts = job_data.get('num')
             job_sids = []
-            for i in range(num_of_conts):
-                target = self.find_available_worker(job_data.get(Definition.Container.get_str_con_image_name()))[0]
+            targets = self.find_available_worker(job_data.get(Definition.Container.get_str_con_image_name()))
+            SysOut.debug_string("Candidate workers: " + str(targets))
+            n = 0
+            while len(job_sids) < num_of_conts:
+                target = targets[n][0]
+                SysOut.debug_string("Attempting to send request to worker: " + str(target))
                 try:
                     sid = self.start_job(target, job_data)
                     if sid:
                         job_sids.append(sid)
+                    else: # not sure how urllib handles a 400 response, but this needs to happen either in case of exception or sid = False
+                        if n < len(targets)-1: # other candidates are available
+                            n+= 1
+                            continue
+                        else:
+                            job_data['job_status'] = JobStatus.FAILED
+                            break
+                    
                     if len(job_sids) == num_of_conts:
                         job_data['job_status'] = JobStatus.READY
-                        job_data[Definition.Container.Status.get_str_sid()] = job_sids
+                        job_data[Definition.Container.Status.get_str_sid()] = job_sids #TODO: add this in metatable
+
                 except:
-                    SysOut.err_string("Response from worker threw exception!")
-                    job_data['job_status'] = JobStatus.FAILED
-                    break # break makes it stop trying to create new containers as soon as one fails, is this desireable?
+                    SysOut.debug_string("Response from worker threw exception!")
+                    if n < len(targets)-1: # other candidates are available
+                        SysOut.usr_string("We got to other candidates available!!!!!!! -------------------------------------")
+                        n+= 1
+                        continue
+                    else:
+                        job_data['job_status'] = JobStatus.FAILED
+                        break # break makes it stop trying to create new containers as soon as one fails, is this desireable? Probaby as now it is unlikely that there is any hosting capability
             
             ## NOTE: can get really ugly, need to cleanup containers that started (rollback) OR let user know how many were started instead?? or retry failed ones?
             LookUpTable.Jobs.update_job(job_data)

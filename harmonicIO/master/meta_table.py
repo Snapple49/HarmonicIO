@@ -48,16 +48,23 @@ class LookUpTable(object):
 
         @staticmethod
         def update_container(dict_input):
-            if dict_input[Definition.Container.get_str_con_image_name()] not in LookUpTable.Containers.__containers:
-                LookUpTable.Containers.__containers[dict_input[Definition.Container.get_str_con_image_name()]] = []
-                
-            # TODO: not quite done here
-            for cont in LookUpTable.Containers.__containers[dict_input[Definition.Container.get_str_con_image_name()]]:
-                cont.pop(Definition.get_str_last_update(), None)
-                if not dict_input == cont:
-                    dict_input[Definition.get_str_last_update()] = Services.get_current_timestamp()
+
+            def cont_in_table(dict_input):
+                conts = LookUpTable.Containers.__containers[dict_input[Definition.Container.get_str_con_image_name()]]
+                for cont in conts:
+                    if dict_input.get(Definition.Container.Status.get_str_sid()) == cont.get(Definition.Container.Status.get_str_sid()):
+                        return cont
+                return None
+            
+            if dict_input[Definition.Container.get_str_con_image_name()] not in LookUpTable.Containers.__containers: # no containers for this image exist
+                new_cont = [dict_input]
+                LookUpTable.Containers.__containers[dict_input[Definition.Container.get_str_con_image_name()]] = new_cont
+            else:
+                cont = cont_in_table(dict_input)
+                if not cont: # this specific container is not already in table
                     LookUpTable.Containers.__containers[dict_input[Definition.Container.get_str_con_image_name()]].append(dict_input)
-                cont[Definition.get_str_last_update()] = Services.get_current_timestamp()
+                else: # container was already in table, update timestamp
+                    cont[Definition.get_str_last_update()] = Services.get_current_timestamp()
 
         @staticmethod
         def get_candidate_container(image_name):

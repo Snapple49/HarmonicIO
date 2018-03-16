@@ -116,10 +116,6 @@ class DockerMaster(object):
             if volatile:
                 ret[Definition.Docker.HDE.get_str_idle_timeout()] = Setting.get_container_idle_timeout()
             return ret
-            
-
-        for port in self.__ports:
-            SysOut.debug_string(str(port.port) + ": " + str(port.is_port_open()))
 
         self.__update_ports()
 

@@ -244,6 +244,8 @@ class MessagesQuery(object):
         if req.params[Definition.MessagesQueue.get_str_command()] == "verbose":
             data = LookUpTable.verbose()
             data['MSG'] = MessagesQueue.verbose()
+            if req.params.get('format') == 'JSON':
+                data = json.dumps(data)
 
             res.body = str(data)
             res.content_type = "String"

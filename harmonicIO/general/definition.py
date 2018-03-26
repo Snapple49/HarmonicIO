@@ -312,6 +312,10 @@ class Definition(object):
                 return "HDE_NODE_ADDR"
 
             @staticmethod
+            def get_str_node_rest_port():
+                return "HDE_NODE_REST_PORT"
+
+            @staticmethod
             def get_str_node_data_port():
                 return "HDE_NODE_DATA_PORT"
 

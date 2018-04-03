@@ -34,9 +34,8 @@ $ sudo ./runMaster.sh
 $ sudo ./runWorker.sh
 ```
 
-* Start an (example) processing container on the worker (localhost) node (replacing `<local-ip>`):
 
- --- Update from Oliver:
+* Update from Oliver:
 
 hosting containers: 
 ```
@@ -50,7 +49,8 @@ polling status of container request:
 ```
 , checks status of the container hosting job with provided ID, READY means all contaiers are started and running, INITIALIZING means not all have started yet, FAILED means not all could be started but some may still be available
 
- ---
+
+* Start an (example) processing container on the worker (localhost) node (replacing `<local-ip>`):
 
 We use the example container `benblamey/hio-example:latest`, which can be built from https://github.com/HASTE-project/HarmonicPE
 ```

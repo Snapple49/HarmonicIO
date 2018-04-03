@@ -98,7 +98,7 @@ class DockerMaster(object):
             return False
 
 
-    def run_container(self, container_name, volatile):
+    def run_container(self, container_name, volatile=False):
 
         def get_ports_setting(expose, ports):
             return {str(expose) + '/tcp': ports}

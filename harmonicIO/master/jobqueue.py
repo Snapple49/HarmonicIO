@@ -93,6 +93,9 @@ class JobManager:
             JobQueue.q.task_done()
 
     def queue_supervisor(self):
+        """
+        Thread that handles autoscaling
+        """
         while True:
             time.sleep(self.__supervisor_interval) ## NOTE: this is probably a very tuneable parameter for later
             msg_queue = MessagesQueue.verbose()

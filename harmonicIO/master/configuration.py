@@ -9,6 +9,7 @@ class Setting(object):
     __node_data_port_stop = None
     __std_idle_time = None
     __token = "None"
+    __autoscaling = None
 
     @staticmethod
     def set_node_addr(addr=None):
@@ -59,6 +60,10 @@ class Setting(object):
         return Setting.__token
 
     @staticmethod
+    def get_autoscaling():
+        return Setting.__autoscaling
+
+    @staticmethod
     def read_cfg_from_file():
         from harmonicIO.general.services import Services, SysOut
         if not Services.is_file_exist('harmonicIO/master/configuration.json'):
@@ -99,6 +104,7 @@ class Setting(object):
                             Setting.__node_data_port_start = cfg[Definition.get_str_data_port_range()][0]
                             Setting.__node_data_port_stop = cfg[Definition.get_str_data_port_range()][1]
                             Setting.__std_idle_time = cfg[Definition.get_str_idle_time()]
+                            Setting.__autoscaling = cfg.get('auto_scaling_enabled')
                             SysOut.out_string("Load setting successful.")
 
                         try:

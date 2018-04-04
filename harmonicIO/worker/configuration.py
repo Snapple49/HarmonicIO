@@ -143,7 +143,7 @@ class Setting(object):
                             Setting.__master_addr = cfg[Definition.get_str_master_addr()].strip()
                             Setting.__master_port = cfg[Definition.get_str_master_port()]
                             Setting.__node_external_addr = cfg[Definition.get_str_node_external_addr()].strip().lower()
-                            Setting.__container_idle_timeout = cfg[Definition.get_str_container_idle_timeout()] * 60 # convert idle time from minute to seconds
+                            Setting.__container_idle_timeout = cfg[Definition.get_str_container_idle_timeout()]
 
                             # Check for auto node name
                             if Setting.__node_name.lower() == "auto":

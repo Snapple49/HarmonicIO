@@ -20,8 +20,8 @@ def run_rest_service():
 
 
 def start_gc_thread():
-    carbage_collector = GarbageCollector(10)
-    gc_thread = threading.Thread(carbage_collector.collect_exited_containers())
+    garbage_collector = GarbageCollector(10)
+    gc_thread = threading.Thread(garbage_collector.collect_exited_containers())
     gc_thread.daemon = True
     gc_thread.start()
 

@@ -10,6 +10,26 @@ Stream_Connector - client for sending tasks for distributed execution.
 
 Forked from https://github.com/beirbear/HarmonicIO
 
+## Update from Oliver:
+* Autoscaling:
+
+An important feature added is auto-scaling, but to not break production it can be disabled. To enable/disable, set the field "auto_scaling_enabled" to true/false in the master's configuration.json file
+
+* Hosting containers: 
+```
+curl -X POST "http://<master_ip>:/jobRequest?token=None&type=new_job" --data '{"c_name" : <container_image>, "num" : , "volatile" : <true/false>}' 
+```
+NOTE: spelling is important, `true`=volatile container, `false`=involatile container. responds with an ID of the container creation job
+
+* Polling status of container request: 
+```
+curl http://<master_ip>:/jobRequest?token=None&type=poll_job&job_id=<job id, see above>
+```
+, checks status of the container hosting job with provided ID, READY means all contaiers are started and running, INITIALIZING means not all have started yet, FAILED means not all could be started but some may still be available
+
+* Stream connector
+
+Use just as before
 
 ## Quickstart
 
@@ -33,22 +53,6 @@ $ pip3 install -e .
 $ sudo ./runMaster.sh
 $ sudo ./runWorker.sh
 ```
-
-
-* Update from Oliver:
-
-hosting containers: 
-```
-"curl -X POST "http://<master_ip>:/jobRequest?token=None&type=new_job" --data '{"c_name" : <container_image>, "num" : , "volatile" : <true/false>}'" 
-```
-NOTE: spelling is important, `true`=volatile container, `false`=involatile container. responds with an ID of the container creation job
-
-polling status of container request: 
-```
-"curl http://<master_ip>:/jobRequest?token=None&type=poll_job&job_id=<job id, see above>"
-```
-, checks status of the container hosting job with provided ID, READY means all contaiers are started and running, INITIALIZING means not all have started yet, FAILED means not all could be started but some may still be available
-
 
 * Start an (example) processing container on the worker (localhost) node (replacing `<local-ip>`):
 

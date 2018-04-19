@@ -132,6 +132,8 @@ class DockerMaster(object):
                                                detach=True,
                                                stderr=True,
                                                stdout=True,
+                                               cpu_shares=512,
+                                               mem_limit='1g',
                                                ports=get_ports_setting(expose_port, port),
                                                environment=get_env_setting(expose_port, port, volatile))
             import time

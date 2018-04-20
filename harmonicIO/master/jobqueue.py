@@ -7,6 +7,9 @@ from harmonicIO.general.services import SysOut
 import time
 from .messaging_system import MessagesQueue
 
+#debug imports
+import threading
+
 class JobManager:
     
     def __init__(self, interval, threshold, increment, queuers):
@@ -93,10 +96,12 @@ class JobManager:
             JobQueue.q.task_done()
 
     def queue_supervisor(self):
+        SysOut.debug_string("Autoscaling thread started, I am {}!".format(threading.currentThread.__name__))
         """
         Thread that handles autoscaling
         """
         while True:
+            SysOut.debug_string("Performing autoscaling check! Tuturuu!")
             time.sleep(self.__supervisor_interval) ## NOTE: this is probably a very tuneable parameter for later
             msg_queue = MessagesQueue.verbose()
             for container in msg_queue:

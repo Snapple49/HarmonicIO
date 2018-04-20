@@ -106,6 +106,7 @@ class JobManager:
             msg_queue = MessagesQueue.verbose()
             for container in msg_queue:
                 if int(msg_queue[container]) > self.__supervisor_threshold:
+                    SysOut.debug_string("We need to scale up! Tuturuu!")
                     job_data = {
                         Definition.Container.get_str_con_image_name() : container,
                         'num' : self.__supervisor_increment,

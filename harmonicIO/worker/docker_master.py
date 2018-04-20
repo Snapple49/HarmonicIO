@@ -73,7 +73,10 @@ class DockerMaster(object):
 
         res = []
         for item in self.__client.containers.list(all=True):
-            res.append(get_container_status(item))
+            try:
+                res.append(get_container_status(item))
+            except (ApiError, HTTPError) as e:
+                SysOut.err_string("Could not find requested container, exception:\n{}".format(e))
             # To print all logs:
             #print(item.logs(stdout=True, stderr=True))
 

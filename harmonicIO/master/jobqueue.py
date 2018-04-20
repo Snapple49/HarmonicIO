@@ -96,7 +96,7 @@ class JobManager:
             JobQueue.q.task_done()
 
     def queue_supervisor(self):
-        SysOut.debug_string("Autoscaling thread started, I am {}!".format(threading.currentThread.__name__))
+        SysOut.debug_string("Autoscaling thread started, I am {}!".format(threading.currentThread().getName()))
         """
         Thread that handles autoscaling
         """

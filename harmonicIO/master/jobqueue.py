@@ -95,7 +95,8 @@ class JobManager:
                         break # break makes it stop trying to create new containers as soon as one fails, is this desireable? Probaby as now it is unlikely that there is any hosting capability
             
             ## NOTE: can get really ugly, need to cleanup containers that started (rollback) OR let user know how many were started instead?? or retry failed ones?
-            LookUpTable.Jobs.update_job(job_data)  ### FIXME: Only do this if job was from client?
+            if not job_data.get('autoscaled'):
+                LookUpTable.Jobs.update_job(job_data)  ### FIXME: Only do this if job was from client?
             JobQueue.q.task_done()
 
     def queue_supervisor(self):
@@ -113,7 +114,8 @@ class JobManager:
                     job_data = {
                         Definition.Container.get_str_con_image_name() : container,
                         'num' : self.__supervisor_increment,
-                        'volatile' : True
+                        'volatile' : True,
+                        'autoscaled' : True
                     }
                     JobQueue.queue_new_job(job_data)
 

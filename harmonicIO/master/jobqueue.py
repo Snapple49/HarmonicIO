@@ -55,8 +55,11 @@ class JobManager:
         return False
 
     def job_queuer(self):
+        SysOut.debug_string("Jobqueuer thread started, I am {}!".format(threading.currentThread().getName()))
         while True:
+            SysOut.debug_string("Waiting for item!")
             job_data = JobQueue.q.get()
+            SysOut.debug_string("Got an item!")
             num_of_conts = job_data.get('num')
             job_sids = []
             targets = self.find_available_worker(job_data.get(Definition.Container.get_str_con_image_name()))
@@ -92,7 +95,7 @@ class JobManager:
                         break # break makes it stop trying to create new containers as soon as one fails, is this desireable? Probaby as now it is unlikely that there is any hosting capability
             
             ## NOTE: can get really ugly, need to cleanup containers that started (rollback) OR let user know how many were started instead?? or retry failed ones?
-            LookUpTable.Jobs.update_job(job_data)
+            LookUpTable.Jobs.update_job(job_data)  ### FIXME: Only do this if job was from client?
             JobQueue.q.task_done()
 
     def queue_supervisor(self):
@@ -101,12 +104,12 @@ class JobManager:
         Thread that handles autoscaling
         """
         while True:
-            SysOut.debug_string("Performing autoscaling check! Tuturuu!")
+            SysOut.debug_string("Performing autoscaling check!")
             time.sleep(self.__supervisor_interval) ## NOTE: this is probably a very tuneable parameter for later
             msg_queue = MessagesQueue.verbose()
             for container in msg_queue:
                 if int(msg_queue[container]) > self.__supervisor_threshold:
-                    SysOut.debug_string("We need to scale up! Tuturuu!")
+                    SysOut.debug_string("We need to scale up!")
                     job_data = {
                         Definition.Container.get_str_con_image_name() : container,
                         'num' : self.__supervisor_increment,

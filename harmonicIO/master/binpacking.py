@@ -16,12 +16,16 @@ class BinPacking():
             for bin_ in bins:
                 if bin_.pack(item):
                     item_packed = True
+                    item["bin_index"] = bin_.index
                     break
                     
             # otherwise make new bin
             if not item_packed:
                 bins.append(Bin(len(bins)))
-                bins[len(bins)-1].pack(item)
+                if bins[len(bins)-1].pack(item):
+                    item_packed = True
+                    item["bin_index"] = bin_.index
+
 
         return bins
 
@@ -32,10 +36,11 @@ class Bin():
         self.items = []
         self.free_space = 1.0
         self.index = bin_index
+        self.space_margin = 0.05
 
     def pack(self, item):
         item_size = item['avg_cpu']
-        if item_size < self.free_space:
+        if item_size < self.free_space - self.space_margin:
             self.items.append(item)
             self.free_space -= item_size
             return True

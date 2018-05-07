@@ -1,6 +1,9 @@
 import math
 import queue
 import threading
+import json
+from urllib.request import urlopen
+
 #from binpacking import BinPacking, Bin
 from harmonicIO.master.binpacking import BinPacking, Bin
 from harmonicIO.general.definition import Definition
@@ -51,12 +54,41 @@ class ContainerQueue():
 
 class ContainerAllocator():
 
-    def __init__(self, container_queue):
-        self.cq = container_queue
-        self.allocation_queue = queue.Queue()
-        self.bins = []
+    def queue_manager(self):
+        while True:
+            try:
+                self.allocation_lock.acquire()
+                container = self.allocation_q.get()
+                
+                for worker in LookUpTable.Workers.__workers:
+                    if worker["bin_index"] == container["bin_index"]:
+                        target_worker = (worker[Definition.get_str_node_addr()], worker[Definition.get_str_node_port()])
+
+                if target_worker:
+                    try:
+                        sid = self.start_container_on_worker(target_worker, container)
+                    except Exception as e:
+                        print(e)
+                
+
+            finally:
+                self.allocation_q.task_done()
+                self.allocation_lock.release()
+
+
+
+    def __init__(self, cq):
+        self.container_q = cq
         self.packing_algorithm = BinPacking.first_fit # TODO: make configurable
+        self.allocation_q = queue.Queue()
+        self.allocation_lock = threading.Lock()
+        self.bins = []
         self.bin_layout_lock = threading.Lock()
+
+        for _ in range(4):            
+            new_thread = threading.Thread(target=self.queue_manager)
+            new_thread.daemon=False
+            new_thread.start()
 
 
 
@@ -86,7 +118,7 @@ class ContainerAllocator():
         
         self.bin_layout_lock.acquire() # bin layout may not be mutated extrenally during packing
         try:
-            container_list = self.cq.get_current_queue_list()
+            container_list = self.container_q.get_current_queue_list()
             bins_layout = self.packing_algorithm(container_list, self.bins)
             self.bins = bins_layout
         finally:
@@ -95,7 +127,7 @@ class ContainerAllocator():
         minimum_worker_number = len(bins_layout)
         
         for item in bins_layout:
-            self.allocation_queue.put(item)
+            self.allocation_q.put(item)
             
         self.target_worker_number = minimum_worker_number + self.calculate_overhead_workers(number_of_current_workers)
 
@@ -110,8 +142,8 @@ class ContainerAllocator():
         else:
             return math.trunc(math.log(number_of_current_workers))
 
-    def enqueue_container(self, container):
-        self.allocation_queue.put(container)
+    def __enqueue_container(self, container):
+        self.allocation_q.put(container)
 
     def update_binned_containers(self, update_data):
         """
@@ -120,7 +152,7 @@ class ContainerAllocator():
         self.bin_layout_lock.acquire()
         try:
             for bin_ in self.bins:
-                bin_.update_items_in_bin(Definition.Container.get_str_con_image_name, update_data)
+                bin_.update_items_in_bin("c_image_name", update_data)
         finally:
             self.bin_layout_lock.release()
 
@@ -138,6 +170,17 @@ class ContainerAllocator():
     def allocate_containers(self):
         pass
 
+    def start_container_on_worker(self, target_worker, container):
+        # send request to worker
+        worker_url = "http://{}:{}/docker?token=None&command=create".format(target_worker[0], target_worker[1])
+        req_data = bytes(json.dumps(container), 'utf-8') 
+        resp = urlopen(worker_url, req_data) # NOTE: might need increase in timeout to allow download of large container images!!!
+
+        if resp.getcode() == 200: # container was created
+            sid = str(resp.read(), 'utf-8')
+            print("Received sid from container: " + sid)
+            return sid
+        return False
 
 
 

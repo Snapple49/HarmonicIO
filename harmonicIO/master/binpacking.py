@@ -16,7 +16,6 @@ class BinPacking():
             for bin_ in bins:
                 if bin_.pack(item):
                     item_packed = True
-                    item["bin_index"] = bin_.index
                     break
                     
             # otherwise make new bin
@@ -24,14 +23,19 @@ class BinPacking():
                 bins.append(Bin(len(bins)))
                 if bins[len(bins)-1].pack(item):
                     item_packed = True
-                    item["bin_index"] = bin_.index
 
+            
 
         return bins
 
 
 class Bin():
     
+    class ContainerBinStatus():
+        PACKED = "packed"
+        QUEUED = "queued"
+        RUNNING = "running"
+
     def __init__(self, bin_index):
         self.items = []
         self.free_space = 1.0
@@ -43,6 +47,8 @@ class Bin():
         if item_size < self.free_space - self.space_margin:
             self.items.append(item)
             self.free_space -= item_size
+            item["bin_index"] = self.index
+            item["bin_status"] = self.ContainerBinStatus.PACKED
             return True
         else:
             return False

@@ -67,9 +67,11 @@ class ContainerAllocator():
                 if target_worker:
                     try:
                         sid = self.start_container_on_worker(target_worker, container)
+                        container["bin_status"] = Bin.ContainerBinStatus.RUNNING
                     except Exception as e:
                         print(e)
                 
+                container[Definition.Container.Status.get_str_sid()] = sid
 
             finally:
                 self.allocation_q.task_done()
@@ -86,9 +88,9 @@ class ContainerAllocator():
         self.bin_layout_lock = threading.Lock()
 
         for _ in range(4):            
-            new_thread = threading.Thread(target=self.queue_manager)
-            new_thread.daemon=False
-            new_thread.start()
+            queue_manager_thread = threading.Thread(target=self.queue_manager)
+            queue_manager_thread.daemon=False
+            queue_manager_thread.start()
 
 
 
@@ -106,13 +108,6 @@ class ContainerAllocator():
             if bin_.free_space < 0.9:
                 return False
         return True
-        
-    def check_near_full(self):
-        """
-        checks if avg cpu consumption is above 80% of total available,
-        and if number of used workers are equal to or 1 less than available workers
-        """
-        return (self.average_wasted_space(self.bins) > 0.8 and len(self.bins))# > len(LookUpTable.Workers.__workers) -1)
 
     def pack_containers(self, number_of_current_workers):
         
@@ -126,9 +121,13 @@ class ContainerAllocator():
 
         minimum_worker_number = len(bins_layout)
         
-        for item in bins_layout:
-            self.allocation_q.put(item)
-            
+        for bin_ in bins_layout:
+            for item in bin_.items:
+                if item["bin_status"] == Bin.ContainerBinStatus.PACKED:
+                    self.allocation_q.put(item)
+                    item["bin_status"] = Bin.ContainerBinStatus.QUEUED
+
+
         self.target_worker_number = minimum_worker_number + self.calculate_overhead_workers(number_of_current_workers)
 
     def calculate_overhead_workers(self, number_of_current_workers):
@@ -167,9 +166,6 @@ class ContainerAllocator():
         finally:
             self.bin_layout_lock.release()
 
-    def allocate_containers(self):
-        pass
-
     def start_container_on_worker(self, target_worker, container):
         # send request to worker
         worker_url = "http://{}:{}/docker?token=None&command=create".format(target_worker[0], target_worker[1])
@@ -188,9 +184,28 @@ class ContainerAllocator():
 
 class WorkerProfiler():
     
-    pass
-
+    def __init__(self, params):
+        pass
+        
 
 class LoadPredictor():
-
     pass
+
+
+def calculateCPUPercent(previousCPU, previousSystem):
+    cpuPercent = 0.0
+    #// calculate the change for the cpu usage of the container in between readings
+    
+    #cpuDelta = float64(v.CPUStats.CPUUsage.TotalUsage) - float64(previousCPU)
+
+     #   // calculate the change for the entire system between readings
+     # 
+    #systemDelta = float64(v.CPUStats.SystemUsage) - float64(previousSystem)
+
+
+
+    
+
+    #f systemDelta > 0.0 and cpuDelta > 0.0:
+        #cpuPercent = (cpuDelta / systemDelta) * float64(len(v.CPUStats.CPUUsage.PercpuUsage)) * 100.0
+    return cpuPercent

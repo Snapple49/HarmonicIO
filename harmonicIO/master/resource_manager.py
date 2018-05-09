@@ -2,6 +2,7 @@ import math
 import queue
 import threading
 import json
+import time
 from urllib.request import urlopen
 
 #from binpacking import BinPacking, Bin
@@ -28,10 +29,15 @@ class ContainerQueue():
         return False
             
     def update_containers(self, update_data):
-        for item in self.__queue.queue:
-            if item['c_image_name'] == update_data['c_image_name']:
-                for field in update_data:
-                    item[field] = update_data[field]
+        self.container_queue_lock.acquire()
+        try:
+            for item in self.__queue.queue:
+                if item['c_name'] == update_data['c_name']:
+                    for field in update_data:
+                        item[field] = update_data[field]
+        finally:
+            self.container_queue_lock.release()
+
 
     def put_container(self, container_data):
         self.container_queue_lock.acquire()
@@ -79,9 +85,9 @@ class ContainerAllocator():
 
 
 
-    def __init__(self, cq):
+    def __init__(self, cq, packing_algo):
         self.container_q = cq
-        self.packing_algorithm = BinPacking.first_fit # TODO: make configurable
+        self.packing_algorithm = packing_algo # TODO: make configurable
         self.allocation_q = queue.Queue()
         self.allocation_lock = threading.Lock()
         self.bins = []
@@ -155,6 +161,16 @@ class ContainerAllocator():
         finally:
             self.bin_layout_lock.release()
 
+    def update_queued_containers(self, update_data):
+        self.allocation_lock.acquire()
+        try:
+            for item in self.allocation_q.queue:
+                if item['c_name'] == update_data['c_name']:
+                    for field in update_data:
+                        item[field] = update_data[field]
+        finally:
+            self.allocation_lock.release()
+
     def remove_container_from_bin(self, target_container, target_bin):
         """
         remove a container of the provided container image name from the specified bin. Should only be called externally
@@ -184,8 +200,38 @@ class ContainerAllocator():
 
 class WorkerProfiler():
     
-    def __init__(self, params):
+    def __init__(self, cq, ca, interval):
+        self.c_queue = cq
+        self.c_allocator = ca
+        self.update_interval = interval
+        self.update_fields = [Definition.Container.get_str_container_os, "bin_status", "bin_index", "avg_cpu"]
+
+    def update_container_information(self):
+        while True:
+            time.sleep(self.update_interval)
+
+            # update all containers in both container and allocation queues (as they are waiting) and in the bins with new data
+            # from the meta table
+
+            for container in LookUpTable.ImageMetadata.verbose():
+                
+                # container queue
+                self.c_queue.update_containers(container)
+                    
+                # allocation queue
+                self.c_queue.update_queued_containers(container)
+
+                # bins
+                
+
+    def gather_container_metadata(self):
+        """
+        transfers data from individual containers in metadata to container image-based metadata which is more interesting
+        for the resurce manager, such as average cpu usage across all instances of a specific container image.
+        """
+
         pass
+    
         
 
 class LoadPredictor():

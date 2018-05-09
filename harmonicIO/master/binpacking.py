@@ -24,8 +24,6 @@ class BinPacking():
                 if bins[len(bins)-1].pack(item):
                     item_packed = True
 
-            
-
         return bins
 
 
@@ -53,21 +51,16 @@ class Bin():
         else:
             return False
 
-    def remove_item_in_bin(self, item):
-        if item in self.items:
-            try:
-                self.items.remove(item)
-                return True
-            except ValueError:
-                print("could not remove item!")
-                return False
+    def remove_item_in_bin(self, identifier, target):
+        for i in range(self.items):
+            if self.items[i][identifier] == target[identifier]:
+                del self.items[i]
 
     def update_items_in_bin(self, identifier, update_data):
         for item in self.items:
             if item[identifier] == update_data[identifier]:
                 for field in update_data:
                     item[field] = update_data[field]
-
 
     def __str__(self):
         return ("Bin {}: {}. Free space: {}".format(self.index, self.items, self.free_space))

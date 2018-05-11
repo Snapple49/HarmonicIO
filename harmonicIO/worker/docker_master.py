@@ -100,6 +100,28 @@ class DockerMaster(object):
             SysOut.err_string("Could not remove requested container, exception:\n{}".format(e))
             return False
 
+    def cpu_per_container(self):
+        pass
+
+    def calculateCPUPercent(self, container):
+
+        containers = {}
+        for container in self.__client.container.list():
+
+            stats = self.__client.api.stats(container.name, stream=False)
+            # calculate the change for the cpu usage of the container in between readings
+            cpu_delta = stats["cpu_stats"]["cpu_usage"]["total_usage"] - stats["precpu_stats"]["cpu_usage"]["total_usage"]
+            #   // calculate the change for the entire system between readings
+            # 
+            system_delta = stats["cpu_stats"]["system_cpu_usage"] - stats["precpu_stats"]["system_cpu_usage"]
+            if system_delta > 0.0 and cpu_delta > 0.0:
+
+                # put this data with the container's image name:tag
+                containers[(str(container.image)).split('\'')[1]] = (cpu_delta / system_delta) * len(stats["cpu_stats"]["cpu_usage"]["percpu_usage"]) * 100.0
+
+
+            
+
 
     def run_container(self, container_name, volatile=False):
 

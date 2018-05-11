@@ -167,6 +167,17 @@ class LookUpTable(object):
         def verbose():
             return LookUpTable.Jobs.__jobs
 
+    class ImageMetadata():
+        
+        __container_data = []
+
+
+
+        @staticmethod
+        def verbose():
+            return LookUpTable.ImageMetadata.__container_data
+            
+    
     @staticmethod
     def update_worker(dict_input):
         LookUpTable.Workers.add_worker(dict_input)

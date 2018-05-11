@@ -219,10 +219,10 @@ class WorkerProfiler():
                 self.c_queue.update_containers(container)
                     
                 # allocation queue
-                self.c_queue.update_queued_containers(container)
+                self.c_allocator.update_queued_containers(container)
 
                 # bins
-                
+                self.c_allocator.update_binned_containers(container)
 
     def gather_container_metadata(self):
         """

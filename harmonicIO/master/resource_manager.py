@@ -230,7 +230,14 @@ class WorkerProfiler():
         for the resurce manager, such as average cpu usage across all instances of a specific container image.
         """
 
-        pass
+        running_containers = LookUpTable.Containers.verbose()
+        current_workers = LookUpTable.Workers.verbose()
+        for container_name in running_containers:
+            instance_counter = 0
+            for worker in current_workers:
+                for instance in 
+
+                    
     
         
 

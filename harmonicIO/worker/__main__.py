@@ -6,9 +6,10 @@ import urllib3
 from .configuration import Setting
 from harmonicIO.general.services import SysOut, Services
 from harmonicIO.general.definition import Definition, CRole
+from harmonicIO.worker.docker_service import DockerService
 from .garbage_collector import GarbageCollector
 import json
-
+from concurrent.futures import ThreadPoolExecutor
 
 def run_rest_service():
     """
@@ -41,6 +42,7 @@ def update_worker_status():
     content = Services.get_machine_status(Setting, CRole.WORKER)
     content[Definition.REST.get_str_docker()] = DockerService.get_containers_status()
     content[Definition.REST.get_str_local_imgs()] = DockerService.get_local_images()
+    content["local_image_stats"] = DockerService.get_local_image_stats()
     
     s_content = bytes(json.dumps(content), 'utf-8')
 
@@ -85,11 +87,9 @@ if __name__ == "__main__":
                                                                  Setting.get_data_port_start()))
 
     # Init docker driver
-    from .docker_service import DockerService
     DockerService.init()
 
     # Create thread for handling REST Service
-    from concurrent.futures import ThreadPoolExecutor
     pool = ThreadPoolExecutor()
 
     # Binding commander to the rest service and enable REST service

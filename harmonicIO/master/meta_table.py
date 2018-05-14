@@ -170,7 +170,7 @@ class LookUpTable(object):
 
     class ImageMetadata():
         
-        __container_data = []
+        __container_data = {}
 
         
 

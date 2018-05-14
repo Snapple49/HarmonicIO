@@ -64,11 +64,11 @@ class DockerMaster(object):
 
     def get_containers_status(self):
 
-        def get_container_status(input):
+        def get_container_status(cont):
             res = dict()
-            res[Definition.Container.Status.get_str_sid()] = input.short_id
-            res[Definition.Container.Status.get_str_image()] = input.image.tags
-            res[Definition.Container.Status.get_str_status()] = input.status
+            res[Definition.Container.Status.get_str_sid()] = cont.short_id
+            res[Definition.Container.Status.get_str_image()] = (str(cont.image)).split('\'')[1]
+            res[Definition.Container.Status.get_str_status()] = cont.status
             return res
 
         res = []
@@ -101,23 +101,46 @@ class DockerMaster(object):
             return False
 
     def cpu_per_container(self):
-        pass
-
-    def calculateCPUPercent(self, container):
-
         containers = {}
-        for container in self.__client.container.list():
+        sum_of_cpu = {}
+        counters = {}
+        conts_to_check = self.__client.container.list()
 
-            stats = self.__client.api.stats(container.name, stream=False)
-            # calculate the change for the cpu usage of the container in between readings
-            cpu_delta = stats["cpu_stats"]["cpu_usage"]["total_usage"] - stats["precpu_stats"]["cpu_usage"]["total_usage"]
-            #   // calculate the change for the entire system between readings
-            # 
-            system_delta = stats["cpu_stats"]["system_cpu_usage"] - stats["precpu_stats"]["system_cpu_usage"]
-            if system_delta > 0.0 and cpu_delta > 0.0:
+        for container in conts_to_check:
+            name = (str(container.image)).split('\'')[1]
+            if not sum_of_cpu.get(name):
+                sum_of_cpu[name] = self.calculate_cpu_usage(container)
+            else:
+                sum_of_cpu[name] += self.calculate_cpu_usage(container)
+            if not counters.get(name):
+                counters[name] = 0
+            else:
+                counters[name] += 1
+            
+        for container in sum_of_cpu:
+            containers[container] = {"avg_cpu" : sum_of_cpu[container]/counters[container]}
+        
+        return containers
+            
 
-                # put this data with the container's image name:tag
-                containers[(str(container.image)).split('\'')[1]] = (cpu_delta / system_delta) * len(stats["cpu_stats"]["cpu_usage"]["percpu_usage"]) * 100.0
+    def calculate_cpu_usage(self, container):
+        """
+        calculate given container stats
+        Returns CPU usage of container across instances on current worker. 
+        Based on discussion here: https://stackoverflow.com/questions/30271942/get-docker-container-cpu-usage-as-percentage
+        """
+
+        # get worker stats via docker api
+        stats = self.__client.api.stats(container.name, stream=False)
+
+        # calculate the change for the cpu usage of the container in between readings
+        cpu_delta = stats["cpu_stats"]["cpu_usage"]["total_usage"] - stats["precpu_stats"]["cpu_usage"]["total_usage"]
+        # calculate the change for the entire system between readings
+        system_delta = stats["cpu_stats"]["system_cpu_usage"] - stats["precpu_stats"]["system_cpu_usage"]
+        
+        if system_delta > 0.0 and cpu_delta > 0.0:
+            # put this data with the container's image name:tag
+            return (cpu_delta / system_delta) * len(stats["cpu_stats"]["cpu_usage"]["percpu_usage"]) * 100.0
 
 
             

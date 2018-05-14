@@ -23,3 +23,10 @@ class DockerService(object):
     @staticmethod
     def delete_container(csid):
         return DockerService.__docker_master.delete_container(csid)
+
+    @staticmethod
+    def get_local_image_stats():
+        """
+        get stats of local running images, such as CPU usage per image
+        """
+        return DockerService.__docker_master.cpu_per_container()

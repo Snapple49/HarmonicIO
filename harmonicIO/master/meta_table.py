@@ -172,7 +172,14 @@ class LookUpTable(object):
         
         __container_data = {}
 
-        
+        @staticmethod
+        def push_metadata(container, data):
+            if container in ImageMetadata.__container_data:
+                for field in data:  
+                    ImageMetadata.__container_data[container][field] = data[field]
+
+
+            
 
         @staticmethod
         def verbose():

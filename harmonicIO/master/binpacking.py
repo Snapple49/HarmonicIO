@@ -2,7 +2,7 @@
 class BinPacking():
 
     @staticmethod
-    def first_fit(input_list, bin_layout):
+    def first_fit(input_list, bin_layout, size_descriptor):
         """
         perform a first fit bin packing on the input list, using the alredy existing list of available bins if provided
         """
@@ -14,14 +14,14 @@ class BinPacking():
         for item in input_list:
             item_packed = False
             for bin_ in bins:
-                if bin_.pack(item):
+                if bin_.pack(item, size_descriptor):
                     item_packed = True
                     break
                     
             # otherwise make new bin
             if not item_packed:
                 bins.append(Bin(len(bins)))
-                if bins[len(bins)-1].pack(item):
+                if bins[len(bins)-1].pack(item, size_descriptor):
                     item_packed = True
 
         return bins
@@ -40,8 +40,8 @@ class Bin():
         self.index = bin_index
         self.space_margin = 0.05
 
-    def pack(self, item):
-        item_size = item['avg_cpu']
+    def pack(self, item, size_descriptor):
+        item_size = item[size_descriptor]
         if item_size < self.free_space - self.space_margin:
             self.items.append(item)
             self.free_space -= item_size

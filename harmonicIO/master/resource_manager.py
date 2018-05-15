@@ -92,6 +92,7 @@ class ContainerAllocator():
         self.allocation_lock = threading.Lock()
         self.bins = []
         self.bin_layout_lock = threading.Lock()
+        self.size_descriptor = "avg_cpu"
 
         for _ in range(4):            
             queue_manager_thread = threading.Thread(target=self.queue_manager)
@@ -120,7 +121,7 @@ class ContainerAllocator():
         self.bin_layout_lock.acquire() # bin layout may not be mutated extrenally during packing
         try:
             container_list = self.container_q.get_current_queue_list()
-            bins_layout = self.packing_algorithm(container_list, self.bins)
+            bins_layout = self.packing_algorithm(container_list, self.bins, )
             self.bins = bins_layout
         finally:
             self.bin_layout_lock.release()
@@ -227,15 +228,26 @@ class WorkerProfiler():
     def gather_container_metadata(self):
         """
         transfers data from individual containers in metadata to container image-based metadata which is more interesting
-        for the resurce manager, such as average cpu usage across all instances of a specific container image.
+        for the resource manager, such as average cpu usage across all instances of a specific container image.
         """
 
         running_containers = LookUpTable.Containers.verbose()
         current_workers = LookUpTable.Workers.verbose()
         for container_name in running_containers:
-            instance_counter = 0
+            total_counter = 0
+            avg_sum = 0
             for worker in current_workers:
-                for instance in 
+                local_counter = 0
+                if container_name in current_workers[worker]["local_image_stats"]:
+                    for local in current_workers[worker][Definition.REST.get_str_docker()]:
+                        if local[Definition.Container.get_str_con_image_name()] == container_name:
+                            local_counter +=1
+                    avg_sum += current_workers[worker]["local_image_stats"][container_name] * local_counter
+                total_counter += local_counter
+            LookUpTable.ImageMetadata.
+            storage[container_name] = avg_sum/total_counter
+
+
 
                     
     

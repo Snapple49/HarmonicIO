@@ -9,6 +9,7 @@ from urllib.request import urlopen
 from harmonicIO.master.binpacking import BinPacking, Bin
 from harmonicIO.general.definition import Definition
 from harmonicIO.master.meta_table import LookUpTable
+from harmonicIO.master.messaging_system import MessagesQueue
 
 class Container():
     pass
@@ -85,8 +86,8 @@ class ContainerAllocator():
 
 
 
-    def __init__(self, cq, packing_algo):
-        self.container_q = cq
+    def __init__(self, packing_algo):
+        self.container_q = ContainerQueue()
         self.packing_algorithm = packing_algo # TODO: make configurable
         self.allocation_q = queue.Queue()
         self.allocation_lock = threading.Lock()
@@ -117,7 +118,9 @@ class ContainerAllocator():
         return True
 
     def pack_containers(self, number_of_current_workers):
-        
+        """
+        perform bin packing with containers in workers, giving each container a worker to be allocated on and the amount of workers
+        """
         self.bin_layout_lock.acquire() # bin layout may not be mutated extrenally during packing
         try:
             container_list = self.container_q.get_current_queue_list()
@@ -211,8 +214,7 @@ class WorkerProfiler():
         while True:
             time.sleep(self.update_interval)
 
-            # update all containers in both container and allocation queues (as they are waiting) and in the bins with new data
-            # from the meta table
+            # update all containers in both container and allocation queues (as they are waiting) and in the bins with new data from the meta table
 
             for container in LookUpTable.ImageMetadata.verbose():
                 
@@ -225,12 +227,12 @@ class WorkerProfiler():
                 # bins
                 self.c_allocator.update_binned_containers(container)
 
+    
     def gather_container_metadata(self):
         """
         transfers data from individual containers in metadata to container image-based metadata which is more interesting
         for the resource manager, such as average cpu usage across all instances of a specific container image.
         """
-
         running_containers = LookUpTable.Containers.verbose()
         current_workers = LookUpTable.Workers.verbose()
         for container_name in running_containers:
@@ -244,17 +246,47 @@ class WorkerProfiler():
                             local_counter +=1
                     avg_sum += current_workers[worker]["local_image_stats"][container_name] * local_counter
                 total_counter += local_counter
-            LookUpTable.ImageMetadata.
-            storage[container_name] = avg_sum/total_counter
+            LookUpTable.ImageMetadata.push_metadata(container_name, avg_sum/total_counter)
 
-
-
-                    
-    
-        
 
 class LoadPredictor():
-    pass
+    
+    def __init__(self, cm, step, lower, upper):
+        self.c_manager = cm
+        self.step_length = step
+        self.previous_total = 0
+        self.image_queue = {}
+        self.worker_scaleup_in_progress = False
 
+        self.roc_limit_lower = lower
+        self.roc_limit_upper = upper
+        
 
+    def calculate_messagequeue_total_roc(self):
+        items_in_queue = 0
+        current_queue = MessagesQueue.verbose()
+        for name in current_queue:
+            items_in_queue += current_queue[name]
+
+        self.roc_total = (items_in_queue - self.previous_total) / self.step_length
+        self.previous_total = items_in_queue
+        return self.roc_total
+
+    def calculate_roc_per_image(self):
+        current_queue = MessagesQueue.verbose()
+        for image in current_queue:
+            if not self.image_queue.get(image):
+                self.image_queue[image] = current_queue[image]
+            else:
+                self.image_queue[image] = (current_queue[image] - self.image_queue[image]) / self.step_length
+                
+    def analyze_roc_for_autoscaling(self, parameter_list):
+        self.c_manager.target_worker_number = None
+        self.worker_scaleup_in_progress = None
+        for image in self.image_queue:
+            if self.image_queue[image] > self.roc_limit_lower:
+                self.c_manager.container_q.put_container({Definition.Container.get_str_con_image_name(): image})
+
+    #NOTE: container should now be in queue, maybe test this with test_script somehow? expand logic
+    # for auto-scaling based on ROC                
 

@@ -174,13 +174,20 @@ class LookUpTable(object):
 
         @staticmethod
         def push_metadata(container, data):
-            if container in ImageMetadata.__container_data:
-                for field in data:  
-                    ImageMetadata.__container_data[container][field] = data[field]
+            """
+            updates data of specified container with a cumulative moving average, with a history of maximum 10000 previous averages
+            """
+            container_dataset = LookUpTable.ImageMetadata.__container_data
+            if container in container_dataset:
+                history = container_dataset.get("update_count")
+                if not history: 
+                    container_dataset[container]["update_count"] = 1
+                for field in data:
+                    container_dataset[container][field] = (history * container_dataset + data[field]) / (history + 1)
+                if history < 10000:
+                    container_dataset["update_count"] += 1
 
-
-            
-
+        
         @staticmethod
         def verbose():
             return LookUpTable.ImageMetadata.__container_data

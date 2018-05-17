@@ -251,15 +251,19 @@ class WorkerProfiler():
 
 class LoadPredictor():
     
-    def __init__(self, cm, step, lower, upper):
+    def __init__(self, cm, step, lower, upper, q_size_limit, waiting_time):
         self.c_manager = cm
         self.step_length = step
         self.previous_total = 0
-        self.image_queue = {}
-        self.worker_scaleup_in_progress = False
+        self.image_rocs = {}
+
 
         self.roc_limit_lower = lower
         self.roc_limit_upper = upper
+        self.roc_waiting_time = waiting_time
+        self.queue_length_limit = q_size_limit
+        self.wait_starttime = None
+
         
 
     def calculate_messagequeue_total_roc(self):
@@ -275,18 +279,25 @@ class LoadPredictor():
     def calculate_roc_per_image(self):
         current_queue = MessagesQueue.verbose()
         for image in current_queue:
-            if not self.image_queue.get(image):
-                self.image_queue[image] = current_queue[image]
+            if not self.image_rocs.get(image):
+                self.image_rocs[image] = current_queue[image]
             else:
-                self.image_queue[image] = (current_queue[image] - self.image_queue[image]) / self.step_length
+                self.image_rocs[image] = (current_queue[image] - self.image_rocs[image]) / self.step_length
                 
     def analyze_roc_for_autoscaling(self, parameter_list):
         self.c_manager.target_worker_number = None
-        self.worker_scaleup_in_progress = None
-        for image in self.image_queue:
-            if self.image_queue[image] > self.roc_limit_lower:
+        for image in self.image_rocs:
+            # cases: RoC above limit or RoC <= 0 but queue lenght above limit
+            prev_roc = dict(self.image_rocs)
+            self.calculate_roc_per_image
+            if self.image_rocs[image]:
+                pass
+            
+            
+            if self.image_rocs[image] > self.roc_limit_lower:
                 self.c_manager.container_q.put_container({Definition.Container.get_str_con_image_name(): image})
 
     #NOTE: container should now be in queue, maybe test this with test_script somehow? expand logic
-    # for auto-scaling based on ROC                
+    # for auto-scaling based on ROC    
+
 

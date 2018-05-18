@@ -251,18 +251,19 @@ class WorkerProfiler():
 
 class LoadPredictor():
     
-    def __init__(self, cm, step, lower, upper, q_size_limit, waiting_time):
+    def __init__(self, cm, step, lower, upper, minimum, q_size_limit, waiting_time, large, small):
         self.c_manager = cm
         self.step_length = step
         self.previous_total = 0
-        self.image_rocs = {}
+        self.image_data = {}
 
-
-        self.roc_limit_lower = lower
-        self.roc_limit_upper = upper
-        self.roc_waiting_time = waiting_time
+        self.roc_positive_lower = lower
+        self.roc_positive_upper = upper
+        self.roc_minimum = minimum
         self.queue_length_limit = q_size_limit
-        self.wait_starttime = None
+        self.wait_time = waiting_time
+        self.large_increment = large
+        self.small_increment = small
 
         
 
@@ -279,23 +280,48 @@ class LoadPredictor():
     def calculate_roc_per_image(self):
         current_queue = MessagesQueue.verbose()
         for image in current_queue:
-            if not self.image_rocs.get(image):
-                self.image_rocs[image] = current_queue[image]
+            if not self.image_data.get(image):
+                self.image_data[image] = {"roc" : current_queue[image]}
             else:
-                self.image_rocs[image] = (current_queue[image] - self.image_rocs[image]) / self.step_length
+                self.image_data[image] = {"roc" : (current_queue[image] - self.image_data[image]) / self.step_length }
                 
-    def analyze_roc_for_autoscaling(self, parameter_list):
+    def queue_container(self, container_data):
+        self.c_manager.container_q.put_container(container_data)
+
+    def analyze_roc_for_autoscaling(self):
         self.c_manager.target_worker_number = None
-        for image in self.image_rocs:
-            # cases: RoC above limit or RoC <= 0 but queue lenght above limit
-            prev_roc = dict(self.image_rocs)
+        for image in self.image_data:
+            if
+            #prev_roc = self.image_rocs[image]
             self.calculate_roc_per_image
-            if self.image_rocs[image]:
-                pass
+            roc = self.image_data[image]["roc"]
+            increment = 0
+            image_queue_length = MessagesQueue.verbose().get(image)
+            if not image_queue_length:
+                image_queue_length = 0
+
+            if self:
+                # we did not recently queue new containers
+                continue
+
+            # decide how many containers should be added, if any, and send these to the container queue
+            # cases: RoC above limit or RoC <= 0 but queue lenght above limit
+
+            if roc > self.roc_positive_upper:
+                increment = self.large_increment
+            elif roc > self.roc_positive_lower:
+                increment = self.small_increment
+            elif image_queue_length > self.queue_length_limit and roc > self.roc_minimum:
+                increment = self.large_increment
+            elif image_queue_length > self.queue_length_limit:
+                increment = self.small_increment
+
+            for _ in range(increment):
+                self.queue_container({Definition.Container.get_str_con_image_name() : image})
             
-            
-            if self.image_rocs[image] > self.roc_limit_lower:
-                self.c_manager.container_q.put_container({Definition.Container.get_str_con_image_name(): image})
+            if increment > 0:
+                self.i = int(time.time())
+
 
     #NOTE: container should now be in queue, maybe test this with test_script somehow? expand logic
     # for auto-scaling based on ROC    

@@ -1,5 +1,5 @@
 from harmonicIO.general.services import SysOut
-
+import json
 
 class Setting(object):
     __node_name = None
@@ -70,7 +70,6 @@ class Setting(object):
             SysOut.terminate_string('harmonicIO/master/configuration.json does not exist!')
         else:
             with open('harmonicIO/master/configuration.json', 'rt') as t:
-                import json
                 cfg = json.loads(t.read())
 
                 try:
@@ -124,3 +123,17 @@ class Setting(object):
                         SysOut.terminate_string("Invalid data in configuration file.")
                 except:
                     SysOut.terminate_string("Invalid data in configuration file.")
+
+class RMISetting():
+    def __init__(self):
+        with open('harmonicIO/master/rmi_configuration.json', 'r') as cfg_file:
+            data = json.load(cfg_file.read())
+        self.profiling_interval = data["profiling_interval"]
+        self.step_length = data["predictor_interval"]
+        self.roc_lower = data["lower_rate_limit"]
+        self.roc_upper = data["upper_rate_limit"]
+        self.roc_minimum = data["maximum_slowdown_rate"]
+        self.queue_limit = data["queue_size_limit"]
+        self.waiting_time = data["scaleup_waiting_time"]
+        self.large_increment = data["large_scaleup_amount"]
+        self.small_increment = data["small_scaleup_amount"]

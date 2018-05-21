@@ -10,6 +10,7 @@ from harmonicIO.master.binpacking import BinPacking, Bin
 from harmonicIO.general.definition import Definition
 from harmonicIO.master.meta_table import LookUpTable
 from harmonicIO.master.messaging_system import MessagesQueue
+from harmonicIO.master.configuration import Setting, RMISetting
 
 class Container():
     pass
@@ -86,14 +87,21 @@ class ContainerAllocator():
 
 
 
-    def __init__(self, packing_algo):
+    def __init__(self, packing_algo, profiling_interval):
         self.container_q = ContainerQueue()
-        self.packing_algorithm = packing_algo # TODO: make configurable
+        self.packing_algorithm = packing_algo 
         self.allocation_q = queue.Queue()
         self.allocation_lock = threading.Lock()
         self.bins = []
         self.bin_layout_lock = threading.Lock()
         self.size_descriptor = "avg_cpu"
+
+        config = RMISetting()
+        self.profiler = WorkerProfiler(self.container_q, self, config.profiling_interval)
+        self.load_predictor = LoadPredictor(self, config.step_length,config.roc_lower, config.roc_upper,
+                                            config.roc_minimum, config.queue_limit, config.waiting_time,
+                                            config.large_increment, config.small_increment)
+
 
         for _ in range(4):            
             queue_manager_thread = threading.Thread(target=self.queue_manager)
@@ -265,6 +273,11 @@ class LoadPredictor():
         self.large_increment = large
         self.small_increment = small
 
+        self.analyzer_thread = threading.Thread(target=self.analyze_roc_for_autoscaling)
+        self.analyzer_thread.daemon = False
+        self.analyzer_thread.start()
+
+
         
 
     def calculate_messagequeue_total_roc(self):
@@ -289,41 +302,44 @@ class LoadPredictor():
         self.c_manager.container_q.put_container(container_data)
 
     def analyze_roc_for_autoscaling(self):
-        self.c_manager.target_worker_number = None
-        for image in self.image_data:
-            if
-            #prev_roc = self.image_rocs[image]
-            self.calculate_roc_per_image
-            roc = self.image_data[image]["roc"]
-            increment = 0
-            image_queue_length = MessagesQueue.verbose().get(image)
-            if not image_queue_length:
-                image_queue_length = 0
+        while True:
+            time.sleep(self.step_length)
 
-            if self:
-                # we did not recently queue new containers
-                continue
-
-            # decide how many containers should be added, if any, and send these to the container queue
-            # cases: RoC above limit or RoC <= 0 but queue lenght above limit
-
-            if roc > self.roc_positive_upper:
-                increment = self.large_increment
-            elif roc > self.roc_positive_lower:
-                increment = self.small_increment
-            elif image_queue_length > self.queue_length_limit and roc > self.roc_minimum:
-                increment = self.large_increment
-            elif image_queue_length > self.queue_length_limit:
-                increment = self.small_increment
-
-            for _ in range(increment):
-                self.queue_container({Definition.Container.get_str_con_image_name() : image})
-            
-            if increment > 0:
-                self.i = int(time.time())
+            self.c_manager.target_worker_number = None
+            for image in self.image_data:
+                
+                last_start = self.image_data[image].get("last_start", 0)
+                
+                if int(time.time()) - last_start > self.wait_time:
+                    # a new container was not recently started so action should be taken if needed
+                    
+                    self.calculate_roc_per_image
+                    roc = self.image_data[image]["roc"]
+                    increment = 0
+                    image_queue_length = MessagesQueue.verbose().get(image)
+                    if not image_queue_length:
+                        image_queue_length = 0
 
 
-    #NOTE: container should now be in queue, maybe test this with test_script somehow? expand logic
-    # for auto-scaling based on ROC    
+                    # decide how many containers should be added, if any, and send these to the container queue
+                    # cases: RoC above either limit or RoC negative but queue length above limit
+
+                    if roc > self.roc_positive_upper:
+                        increment = self.large_increment
+                    elif roc > self.roc_positive_lower:
+                        increment = self.small_increment
+                    elif image_queue_length > self.queue_length_limit and roc > self.roc_minimum:
+                        increment = self.large_increment
+                    elif image_queue_length > self.queue_length_limit:
+                        increment = self.small_increment
+
+                    
+                    if increment > 0:
+                        for _ in range(increment):
+                            self.queue_container({Definition.Container.get_str_con_image_name() : image})
+                        self.image_data[image]["last_start"] = int(time.time()) 
+
+
+      
 
 

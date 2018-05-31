@@ -21,13 +21,26 @@ class LookUpTable(object):
 
         @staticmethod
         def add_worker(dict_input):
-            dict_input[Definition.get_str_last_update()] = Services.get_current_timestamp()
-            LookUpTable.Workers.__workers[dict_input[Definition.get_str_node_addr()]] = dict_input
+            worker_ip = dict_input[Definition.get_str_node_addr()]
+            # if worker exists 
+            if not worker_ip in LookUpTable.Workers.__workers:
+                dict_input[Definition.get_str_last_update()] = Services.get_current_timestamp()
+                dict_input["bin_index"] = len(LookUpTable.Workers.__workers)
+                dict_input["active"] = True
+                LookUpTable.Workers.__workers[worker_ip] = dict_input
+            else:
+                LookUpTable.Workers.__workers[worker_ip]["active"] = True
+
+            # TODO: finish adding worker w.r.t. bin indexing
 
         @staticmethod
         def del_worker(worker_addr):
             # TODO: implement actual worker termination?
-            del LookUpTable.Workers.__workers[worker_addr]
+            #del LookUpTable.Workers.__workers[worker_addr]
+            """
+            In this version, for purpose of testing an unused worker is flagged as "active" : False
+            """
+            LookUpTable.Workers.__workers[worker_addr]["active"] = False
 
     class Containers(object):
         __containers = {}
@@ -90,9 +103,6 @@ class LookUpTable(object):
                 conts[:] = [con for con in conts if con.get(Definition.Container.Status.get_str_sid()) != short_id]
             
             return True
-
-
-
 
     class Tuples(object):
         __tuples = {}

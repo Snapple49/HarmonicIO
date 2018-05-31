@@ -124,16 +124,47 @@ class Setting(object):
                 except:
                     SysOut.terminate_string("Invalid data in configuration file.")
 
-class RMISetting():
+class IRMSetting():
     def __init__(self):
-        with open('harmonicIO/master/rmi_configuration.json', 'r') as cfg_file:
-            data = json.load(cfg_file.read())
-        self.profiling_interval = data["profiling_interval"]
-        self.step_length = data["predictor_interval"]
-        self.roc_lower = data["lower_rate_limit"]
-        self.roc_upper = data["upper_rate_limit"]
-        self.roc_minimum = data["maximum_slowdown_rate"]
-        self.queue_limit = data["queue_size_limit"]
-        self.waiting_time = data["scaleup_waiting_time"]
-        self.large_increment = data["large_scaleup_amount"]
-        self.small_increment = data["small_scaleup_amount"]
+        try:
+            with open('harmonicIO/master/irm_configuration.json', 'r') as cfg_file:
+                data = json.load(cfg_file.read())
+        except FileNotFoundError:
+            SysOut.err_string("Config file for IRM missing!")
+        else:
+            try:
+                self.profiling_interval = int(data["profiling_interval"])
+                self.step_length = int(data["predictor_interval"])
+                self.roc_lower = int(data["lower_rate_limit"])
+                self.roc_upper = int(data["upper_rate_limit"])
+                self.roc_minimum = int(data["slowdown_rate"])
+                self.queue_limit = int(data["queue_size_limit"])
+                self.waiting_time = int(data["scaleup_waiting_time"])
+                self.large_increment = int(data["large_scaleup_amount"])
+                self.small_increment = int(data["small_scaleup_amount"])
+            except KeyError as e:
+                raise KeyError("Missing config settings for following option: {}".format(e.args[0]))
+            except TypeError as e:
+                raise TypeError("Invalid config settings for options")
+            finally:
+                error = ""
+                if self.profiling_interval < 1:
+                    error = "profiling interval not above 0"
+                if self.step_length < 1:
+                    error = "step length not above 0"
+                if self.roc_lower < 1:
+                    error = "lower rate limit not above 0"
+                if self.roc_upper <= self.roc_lower:
+                    error = "upper rate limit not above lower rate limit"
+                if self.roc_minimum > -1:
+                    error = "slowdown rate not below 0"
+                if self.queue_limit < 1:
+                    error = "queue limit not above 0"
+                if self.waiting_time < 1:
+                    error = "scaleup waiting time not above 0"
+                if self.large_increment <= self.small_increment:
+                    error = "large increment smaller than small increment"
+                if self.small_increment < 1:
+                    error = "small increment not above 0"
+                if error == "":
+                    raise ValueError("Invalid value setting for option: {}".format(error)) 

@@ -20,15 +20,24 @@ class LookUpTable(object):
             return LookUpTable.Workers.__workers
 
         @staticmethod
+        def active_workers():
+            aw = 0
+            for worker in LookUpTable.Workers.__workers:
+                if LookUpTable.Workers.__workers[worker]["active"] == True:
+                    aw += 1
+            return aw
+
+        @staticmethod
         def add_worker(dict_input):
             worker_ip = dict_input[Definition.get_str_node_addr()]
             # if worker exists 
             if not worker_ip in LookUpTable.Workers.__workers:
                 dict_input[Definition.get_str_last_update()] = Services.get_current_timestamp()
-                dict_input["bin_index"] = len(LookUpTable.Workers.__workers)
+                dict_input["bin_index"] = LookUpTable.Workers.active_workers()
                 dict_input["active"] = True
                 LookUpTable.Workers.__workers[worker_ip] = dict_input
             else:
+                LookUpTable.Workers.__workers[worker_ip]["bin_index"] = LookUpTable.Workers.active_workers()
                 LookUpTable.Workers.__workers[worker_ip]["active"] = True
 
             # TODO: finish adding worker w.r.t. bin indexing
@@ -41,6 +50,31 @@ class LookUpTable(object):
             In this version, for purpose of testing an unused worker is flagged as "active" : False
             """
             LookUpTable.Workers.__workers[worker_addr]["active"] = False
+            del LookUpTable.Workers.__workers[worker_addr]["bin_index"]
+
+        @staticmethod
+        def enable_worker():
+            """
+            for testing purposes, marks an inactive worker as active and updates its index 
+            """
+            for worker in LookUpTable.Workers.__workers:
+                if not LookUpTable.Workers.__workers[worker]["active"]:
+                    LookUpTable.Workers.add_worker(LookUpTable.Workers.__workers[worker])
+                    return True
+
+            # no more workers available
+            return False
+
+        @staticmethod
+        def disable_worker():
+            """
+            for testing purposes, marks the highest index worker as inactive 
+            """
+            index = LookUpTable.Workers.active_workers()
+            for worker in LookUpTable.Workers.__workers:
+                if LookUpTable.Workers.__workers[worker]["bin_index"] == index:
+                    LookUpTable.Workers.del_worker(LookUpTable.Workers.__workers[worker][Definition.get_str_node_addr()])
+                    break
 
     class Containers(object):
         __containers = {}

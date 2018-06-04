@@ -1,0 +1,11 @@
+{
+    "profiling_interval" : 5,
+    "predictor_interval" : 2,
+    "lower_rate_limit" : 5,
+    "upper_rate_limit" : 10,
+    "slowdown_rate" : -10,
+    "queue_size_limit" : 100,
+    "scaleup_waiting_time" : 5,
+    "large_scaleup_amount" : 4,
+    "small_scaleup_amount" : 1
+}

@@ -2,6 +2,8 @@ import queue
 from harmonicIO.general.services import Services, SysOut
 from harmonicIO.general.definition import Definition, CTuple
 
+from harmonicIO.master.resource_manager import IntelligentResourceManager
+
 
 
 class DataStatStatus(object):
@@ -40,7 +42,6 @@ class LookUpTable(object):
                 LookUpTable.Workers.__workers[worker_ip]["bin_index"] = LookUpTable.Workers.active_workers()
                 LookUpTable.Workers.__workers[worker_ip]["active"] = True
 
-            # TODO: finish adding worker w.r.t. bin indexing
 
         @staticmethod
         def del_worker(worker_addr):
@@ -135,7 +136,10 @@ class LookUpTable(object):
                 # List filter code based on: https://stackoverflow.com/questions/1235618/python-remove-dictionary-from-list
                 # Removes item with specified short_id from list
                 conts[:] = [con for con in conts if con.get(Definition.Container.Status.get_str_sid()) != short_id]
-            
+
+                # notify IRM about container removal
+                IntelligentResourceManager.remove_container(container_name, short_id)
+
             return True
 
     class Tuples(object):

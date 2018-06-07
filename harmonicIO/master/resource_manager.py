@@ -20,7 +20,10 @@ class IntelligentResourceManager():
     def queue_container(container_data):
         IntelligentResourceManager.__container_manager.container_q.put_container(container_data)
         
-        
+    @staticmethod
+    def remove_container(c_name, csid):
+        pass
+
     @staticmethod
     def scale_workers():
         while True:

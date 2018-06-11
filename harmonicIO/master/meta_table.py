@@ -16,7 +16,6 @@ class LookUpTable(object):
 
     class Workers(object):
         __workers = {}
-
         @staticmethod
         def verbose():
             return LookUpTable.Workers.__workers

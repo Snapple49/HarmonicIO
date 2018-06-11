@@ -1,5 +1,7 @@
 from harmonicIO.general.services import SysOut
 from .jobqueue import JobManager
+from harmonicIO.master.resource_manager import IntelligentResourceManager as IRM
+from harmonicIO.master.binpacking import BinPacking as BP
 
 """
 Master entry point
@@ -24,6 +26,8 @@ def run_queue_manager(manager):
         supervisor_thread.start()
         SysOut.out_string("Autoscaling supervisor started")
 
+def run_irm():
+    IRM.start_irm(BP.first_fit)
 
 
 def run_rest_service():

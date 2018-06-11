@@ -217,6 +217,10 @@ class WorkerProfiler():
         self.update_interval = interval
         self.update_fields = [Definition.Container.get_str_container_os, "bin_status", "bin_index", "avg_cpu"]
 
+        self.updater_thread = threading.Thread(target=self.update_container_information)
+        self.updater_thread.daemon True
+        self.updater_thread.start()
+
     def update_container_information(self):
         while True:
             time.sleep(self.update_interval)
@@ -233,6 +237,8 @@ class WorkerProfiler():
 
                 # bins
                 self.c_allocator.update_binned_containers(container)
+
+        # TODO: finish this? or is it finished?
 
     
     def gather_container_metadata(self):
@@ -341,4 +347,5 @@ class LoadPredictor():
 
 # TODO: 
 # cleaning up of finished containers
-# finish container updater in profiler, make thread
+# finish container updater in profiler
+# make user request use IRM instead of jobqueuer

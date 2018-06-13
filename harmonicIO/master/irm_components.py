@@ -218,7 +218,7 @@ class WorkerProfiler():
         self.update_fields = [Definition.Container.get_str_container_os, "bin_status", "bin_index", "avg_cpu"]
 
         self.updater_thread = threading.Thread(target=self.update_container_information)
-        self.updater_thread.daemon True
+        self.updater_thread.daemon=True
         self.updater_thread.start()
 
     def update_container_information(self):
@@ -345,7 +345,3 @@ class LoadPredictor():
                         self.image_data[image]["last_start"] = int(time.time()) 
 
 
-# TODO: 
-# cleaning up of finished containers
-# finish container updater in profiler
-# make user request use IRM instead of jobqueuer

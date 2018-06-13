@@ -4,6 +4,7 @@ from harmonicIO.general.definition import Definition, CStatus, CRole, JobStatus
 from .messaging_system import MessagesQueue
 from harmonicIO.general.services import SysOut, Services as LService
 from .meta_table import LookUpTable
+from harmonicIO.master.resource_manager import IntelligentResourceManager as IRM
 
 from urllib.request import urlopen
 from urllib3.request import urlencode
@@ -259,11 +260,11 @@ class MessagesQuery(object):
             res.content_type = "String"
             res.status = falcon.HTTP_200
 
-class JobManager(object):
+class ContainerManager(object):
     """
-    JobManager is about taking requests from clients to set up containers
+    ContainerManager is about taking requests from clients to set up containers
     
-    Provides a post request to let master allocate containers, and get requests to check the status of this.
+    Provides a post request to let master allocate containers
 
     """
     def __init__(self):
@@ -279,17 +280,14 @@ class JobManager(object):
             format_response_string(res, falcon.HTTP_406, "Command not specified.")
             return
 
-        # user wants to know if containers are ready for provided job ID
-        if req.params['type'] == "poll_job":
-            id = req.params.get('job_id')
-            if not id in LookUpTable.Jobs.verbose():
-                format_response_string(res, falcon.HTTP_404, "Specified job not available.")
-                return
-
-            jobs = LookUpTable.Jobs.verbose()
-            stat = str(jobs[id].get('job_status'))
-            format_response_string(res, falcon.HTTP_200, ("Job status: " + stat))
-
+        # user wants to know if containers of provided image are available
+        if req.params['type'] == "poll_container":
+            container_image = req.params.get(Definition.Container.get_str_con_image_name())
+            if not container_image in LookUpTable.Containers.verbose():
+                format_response_string(res, falcon.HTTP_404, "No containers of specified image running.")
+            else:
+                format_response_string(res, falcon.HTTP_200, "Containers for specified image available.")
+            return
         return 
 
     def on_post(self, req, res):
@@ -308,15 +306,10 @@ class JobManager(object):
             res.status = falcon.HTTP_406
             return
 
-        # request to create new job - create ID for job, add to lookup table, queue creation of the job
-        if req.params['type'] == 'new_job':
-            job = new_job(req_data) # attempt to create new job from provided parameters
-            if not job:
-                SysOut.err_string("New job could not be added!")
-                format_response_string(res, falcon.HTTP_500, "Could not create job.")
-                return
-            job_status = job.get('job_status')
-            format_response_string(res, falcon.HTTP_200, "Job request received, container status: {}\nJob ID: {}".format(job_status, job.get('job_id')))
+        # request to create new container
+        if req.params['type'] == 'new_container':
+            new_container(req_data) 
+            format_response_string(res, falcon.HTTP_200, "Containers queued for creation!")
             return
 
         return
@@ -337,7 +330,7 @@ class RESTService(object):
         api.add_route('/' + Definition.REST.get_str_msg_query(), MessagesQuery())
 
         # Add route for job manager
-        api.add_route('/' + Definition.REST.get_str_job_mgr(), JobManager())
+        api.add_route('/' + Definition.REST.get_str_cont_mgr(), ContainerManager())
 
         # Establishing a REST server
         self.__server = make_server(Setting.get_node_addr(), Setting.get_node_port(), api)
@@ -346,6 +339,11 @@ class RESTService(object):
         SysOut.out_string("REST Ready.....")
 
         self.__server.serve_forever()
+
+def new_container(container_parameters):
+    for i in range(container_parameters.get('num', 1)):
+        IRM.queue_container(container_parameters)
+    
 
 def new_job(job_params):
     ### below ID randomizer from: https://stackoverflow.com/questions/2257441/random-string-generation-with-upper-case-letters-and-digits-in-python

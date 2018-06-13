@@ -185,8 +185,8 @@ class Definition(object):
             return "messagesQuery"
 
         @staticmethod
-        def get_str_job_mgr():
-            return "jobRequest"
+        def get_str_cont_mgr():
+            return "containerRequest"
 
         @staticmethod
         def get_str_reg_func():

@@ -6,7 +6,7 @@ import time
 import threading
 
 class IntelligentResourceManager():
-    __container_manager = None
+    __container_manager = ca(bp.first_fit)
 
 
     @staticmethod
@@ -23,7 +23,7 @@ class IntelligentResourceManager():
     @staticmethod
     def remove_container(c_name, csid):
         # called from metatable, update available containers accordingly
-        pass
+        IntelligentResourceManager.__container_manager.remove_container_from_bin(c_name, csid)
 
     @staticmethod
     def scale_workers():

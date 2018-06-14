@@ -53,8 +53,9 @@ class Bin():
 
     def remove_item_in_bin(self, identifier, target):
         for i in range(self.items):
-            if self.items[i][identifier] == target[identifier]:
+            if self.items[i][identifier] == target:
                 del self.items[i]
+                break
 
     def update_items_in_bin(self, identifier, update_data):
         for item in self.items:

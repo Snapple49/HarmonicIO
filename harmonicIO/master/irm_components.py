@@ -63,6 +63,7 @@ class ContainerAllocator():
     def queue_manager(self):
         while True:
             try:
+                sid = None
                 self.allocation_lock.acquire()
                 container = self.allocation_q.get()
                 
@@ -77,7 +78,10 @@ class ContainerAllocator():
                     except Exception as e:
                         print(e)
                 
-                container[Definition.Container.Status.get_str_sid()] = sid
+                if sid:
+                    container[Definition.Container.Status.get_str_sid()] = sid
+                else:
+                    print("Could not start container on target worker!\n")
 
             finally:
                 self.allocation_q.task_done()
@@ -103,7 +107,7 @@ class ContainerAllocator():
 
         for _ in range(4):            
             queue_manager_thread = threading.Thread(target=self.queue_manager)
-            queue_manager_thread.daemon=False
+            queue_manager_thread.daemon=True
             queue_manager_thread.start()
 
 
@@ -127,10 +131,10 @@ class ContainerAllocator():
         """
         perform bin packing with containers in workers, giving each container a worker to be allocated on and the amount of workers
         """
-        self.bin_layout_lock.acquire() # bin layout may not be mutated extrenally during packing
+        self.bin_layout_lock.acquire() # bin layout may not be mutated externally during packing
         try:
             container_list = self.container_q.get_current_queue_list()
-            bins_layout = self.packing_algorithm(container_list, self.bins, )
+            bins_layout = self.packing_algorithm(container_list, self.bins, self.size_descriptor)
             self.bins = bins_layout
         finally:
             self.bin_layout_lock.release()
@@ -181,17 +185,25 @@ class ContainerAllocator():
         finally:
             self.allocation_lock.release()
 
-    def remove_container_from_bin(self, target_container, target_bin):
+    def remove_container_by_id(self, c_name, csid):
         """
-        remove a container of the provided container image name from the specified bin. Should only be called externally
-        and when a container finishes and exits the system
+        remove container with specified short_id. Should only be called via external event when a container finishes and exits the system
         """
-        # TODO: match how it should work with SID instead
+        target_bin = -1
         self.bin_layout_lock.acquire()
         try:
-            self.bins[target_bin].remove_item_in_bin(target_container)
+            for _bin in self.bins:
+                for item in _bin.items:
+                    if item.get(Definition.Container.Status.get_str_sid(), "") == csid:
+                        target_bin = _bin.index
+                        break
+
+            if target_bin > -1:
+                self.bins[target_bin].remove_item_in_bin(Definition.Container.Status.get_str_sid(), csid)
+
         finally:
             self.bin_layout_lock.release()
+            return True if target_bin > -1 else False
 
     def start_container_on_worker(self, target_worker, container):
         # send request to worker

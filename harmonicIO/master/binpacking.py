@@ -33,6 +33,12 @@ class Bin():
         PACKED = "packed"
         QUEUED = "queued"
         RUNNING = "running"
+    
+    class Item():
+        def __init__(self, data, size_descriptor):
+            self.size_descriptor = size_descriptor
+            self.size = data[self.size_descriptor]
+            self.data = data
 
     def __init__(self, bin_index):
         self.items = []
@@ -40,28 +46,35 @@ class Bin():
         self.index = bin_index
         self.space_margin = 0.05
 
-    def pack(self, item, size_descriptor):
-        item_size = item[size_descriptor]
-        if item_size < self.free_space - self.space_margin:
+    def pack(self, item_data, size_descriptor):
+        item = self.Item(item_data, size_descriptor)
+        if item.size < self.free_space - self.space_margin:
             self.items.append(item)
-            self.free_space -= item_size
-            item["bin_index"] = self.index
-            item["bin_status"] = self.ContainerBinStatus.PACKED
+            self.free_space -= item.size
+            item.data["bin_index"] = self.index
+            item.data["bin_status"] = self.ContainerBinStatus.PACKED
             return True
         else:
+            del item  
             return False
 
     def remove_item_in_bin(self, identifier, target):
-        for i in range(self.items):
-            if self.items[i][identifier] == target:
+        for i in range(len(self.items)):
+            if self.items[i].data[identifier] == target[identifier]:
+                self.free_space += self.items[i].size
+                if self.free_space > 1.0:
+                    self.free_space = 1.0
                 del self.items[i]
                 break
 
     def update_items_in_bin(self, identifier, update_data):
         for item in self.items:
-            if item[identifier] == update_data[identifier]:
+            if item.data[identifier] == update_data[identifier]:
+                self.free_space += item.size
                 for field in update_data:
-                    item[field] = update_data[field]
+                    item.data[field] = update_data[field]
+                item.size = item.data[item.size_descriptor]
+                self.free_space -= item.size
 
     def __str__(self):
         return ("Bin {}: {}. Free space: {}".format(self.index, self.items, self.free_space))

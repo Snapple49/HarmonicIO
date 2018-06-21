@@ -220,19 +220,21 @@ class LookUpTable(object):
         __container_data = {}
 
         @staticmethod
-        def push_metadata(container, data):
+        def push_metadata(container_image_name, data):
             """
-            updates data of specified container with a cumulative moving average, with a history of maximum 10000 previous averages
+            Updates data of specified container with a cumulative moving average, with a history of maximum 10000 previous averages.
+            Data is dictionary of fields to update, such as CPU usage
             """
             container_dataset = LookUpTable.ImageMetadata.__container_data
-            if container in container_dataset:
-                history = container_dataset.get("update_count")
-                if not history: 
-                    container_dataset[container]["update_count"] = 1
+            c_data = container_dataset.get(container_image_name, None)
+            if c_data:
+                history = c_data.get("update_count", None)
+                if not history:
+                    c_data["update_count"] = 1
                 for field in data:
-                    container_dataset[container][field] = (history * container_dataset + data[field]) / (history + 1)
+                    c_data[field] = (history * float(c_data.get(field, 0)) + float(data[field])) / (history + 1)
                 if history < 10000:
-                    container_dataset["update_count"] += 1
+                    c_data["update_count"] += 1
 
         
         @staticmethod

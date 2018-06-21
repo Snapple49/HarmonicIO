@@ -11,7 +11,6 @@ from harmonicIO.general.definition import Definition
 from harmonicIO.master.meta_table import LookUpTable
 from harmonicIO.master.messaging_system import MessagesQueue
 from harmonicIO.master.configuration import Setting, IRMSetting
-
     
 class ContainerQueue():
     
@@ -22,17 +21,17 @@ class ContainerQueue():
     def get_queue_length(self):
         return self.__queue.qsize()
 
-    def is_container_in_queue(self, c_image_name):
+    def is_container_in_queue(self, c_image):
         for item in self.__queue.queue:
-            if item['c_image_name'] == c_image_name:
+            if item[Definition.Container.get_str_con_image_name()] == c_image:
                 return True
         return False
             
-    def update_containers(self, update_data):
+    def update_containers(self, c_image, update_data):
         self.container_queue_lock.acquire()
         try:
             for item in self.__queue.queue:
-                if item['c_name'] == update_data['c_name']:
+                if item[Definition.Container.get_str_con_image_name()] == c_image:
                     for field in update_data:
                         item[field] = update_data[field]
         finally:
@@ -171,15 +170,15 @@ class ContainerAllocator():
         self.bin_layout_lock.acquire()
         try:
             for bin_ in self.bins:
-                bin_.update_items_in_bin("c_image_name", update_data)
+                bin_.update_items_in_bin(Definition.Container.get_str_con_image_name(), update_data)
         finally:
             self.bin_layout_lock.release()
 
-    def update_queued_containers(self, update_data):
+    def update_queued_containers(self, c_name, update_data):
         self.allocation_lock.acquire()
         try:
             for item in self.allocation_q.queue:
-                if item['c_name'] == update_data['c_name']:
+                if item[Definition.Container.get_str_con_image_name()] == c_name:
                     for field in update_data:
                         item[field] = update_data[field]
         finally:
@@ -227,7 +226,7 @@ class WorkerProfiler():
         self.c_queue = cq
         self.c_allocator = ca
         self.update_interval = interval
-        self.update_fields = [Definition.Container.get_str_container_os, "bin_status", "bin_index", "avg_cpu"]
+        self.update_fields = [Definition.Container.get_str_container_os, "bin_status", "bin_index", ca.size_descriptor]
 
         self.updater_thread = threading.Thread(target=self.update_container_information)
         self.updater_thread.daemon=True
@@ -239,16 +238,18 @@ class WorkerProfiler():
 
             # update all containers in both container and allocation queues (as they are waiting) and in the bins with new data from the meta table
 
-            for container in LookUpTable.ImageMetadata.verbose():
-                
+            for container_image in LookUpTable.ImageMetadata.verbose():
+                container_data = LookUpTable.ImageMetadata.verbose()[container_image]
+                container_data[Definition.Container.get_str_con_image_name()] = container_image
+
                 # container queue
-                self.c_queue.update_containers(container)
+                self.c_queue.update_containers(container_image, container_data)
                     
                 # allocation queue
-                self.c_allocator.update_queued_containers(container)
+                self.c_allocator.update_queued_containers(container_image, container_data)
 
                 # bins
-                self.c_allocator.update_binned_containers(container)
+                self.c_allocator.update_binned_containers(container_data)
 
         # TODO: finish this? or is it finished?
 
@@ -271,7 +272,7 @@ class WorkerProfiler():
                             local_counter +=1
                     avg_sum += current_workers[worker]["local_image_stats"][container_name] * local_counter
                 total_counter += local_counter
-            LookUpTable.ImageMetadata.push_metadata(container_name, avg_sum/total_counter)
+            LookUpTable.ImageMetadata.push_metadata(container_name, {self.c_allocator.size_descriptor : avg_sum/total_counter})
 
 
 class LoadPredictor():

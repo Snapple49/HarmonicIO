@@ -21,6 +21,9 @@ def run_rest_service():
 
 
 def start_gc_thread():
+    """
+    A thread that will continuously check for terminated containers and remove them
+    """
     garbage_collector = GarbageCollector(10)
     gc_thread = threading.Thread(garbage_collector.collect_exited_containers())
     gc_thread.daemon = True

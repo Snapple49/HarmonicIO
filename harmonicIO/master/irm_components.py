@@ -205,6 +205,7 @@ class ContainerAllocator():
             return True if target_bin > -1 else False
 
     def start_container_on_worker(self, target_worker, container):
+        #TODO: add cpu share here, use metadata for size if available!
         # send request to worker
         worker_url = "http://{}:{}/docker?token=None&command=create".format(target_worker[0], target_worker[1])
         req_data = bytes(json.dumps(container), 'utf-8') 

@@ -146,7 +146,7 @@ class DockerMaster(object):
             
 
 
-    def run_container(self, container_name, volatile=False):
+    def run_container(self, container_name, cpu_share=50, volatile=False):
 
         def get_ports_setting(expose, ports):
             return {str(expose) + '/tcp': ports}
@@ -180,7 +180,7 @@ class DockerMaster(object):
                                                detach=True,
                                                stderr=True,
                                                stdout=True,
-                                               cpu_shares=512,
+                                               cpu_shares=int(1024*(cpu_share/100)),
                                                mem_limit='1g',
                                                ports=get_ports_setting(expose_port, port),
                                                environment=get_env_setting(expose_port, port, volatile))

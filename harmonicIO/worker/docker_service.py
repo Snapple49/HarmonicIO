@@ -2,15 +2,15 @@ from .docker_master import DockerMaster
 
 
 class DockerService(object):
-    __docker_master = None
+    __docker_master = DockerMaster()
 
     @staticmethod
     def init():
         DockerService.__docker_master = DockerMaster()
 
     @staticmethod
-    def create_container(container_name, volatile=False):
-        return DockerService.__docker_master.run_container(container_name, volatile)
+    def create_container(container_name, cpu_share=50, volatile=False):
+        return DockerService.__docker_master.run_container(container_name, cpu_share, volatile)
 
     @staticmethod
     def get_containers_status():

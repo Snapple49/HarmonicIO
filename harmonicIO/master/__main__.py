@@ -7,27 +7,14 @@ from harmonicIO.master.binpacking import BinPacking as BP
 Master entry point
 """
 
-def run_queue_manager(manager):
-    """
-    Run job queue manager thread
-    can be several managers to manage large amount of queued jobs
-    """
-    import threading
-    for i in range(manager.queuer_threads):
-        manager_thread = threading.Thread(target=manager.job_queuer)
-        manager_thread.daemon = True
-        manager_thread.start()
-
-    SysOut.out_string("Job queue started")
-
-    if Setting.get_autoscaling():    
-        supervisor_thread = threading.Thread(target=manager.queue_supervisor)
-        supervisor_thread.daemon = True
-        supervisor_thread.start()
-        SysOut.out_string("Autoscaling supervisor started")
 
 def run_irm():
-    IRM.start_irm(BP.first_fit)
+    """
+    Starts the intelligent resource management system, which enables autoscaling features
+    """
+    if Setting.get_autoscaling():    
+        IRM.start_irm(BP.first_fit)
+        SysOut.out_string("Autoscaling supervisor started")
 
 
 def run_rest_service():
@@ -88,9 +75,7 @@ if __name__ == '__main__':
 
     # Binding commander to the rest service and enable REST service
     pool.submit(run_rest_service)
+
+    # Start the IRM system
+    pool.submit(run_irm)
     
-    # create a job manager which is a queue manager supervising the creation of containers, both via user and auto-scaling
-    jobManager = JobManager(30, 100, 5, 1) # 30 seconds interval between checking, 100 requests in queue before increase, add 5 new containers, 1 thread for queue supervisor
-    
-    # Run job queue manager thread
-    pool.submit(run_queue_manager, jobManager)

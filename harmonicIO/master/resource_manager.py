@@ -23,7 +23,7 @@ class IntelligentResourceManager():
     @staticmethod
     def remove_container(c_name, csid):
         # called from metatable, update available containers accordingly
-        IntelligentResourceManager.__container_manager.remove_container_from_bin(c_name, csid)
+        IntelligentResourceManager.__container_manager.remove_container_by_id(c_name, csid)
 
     @staticmethod
     def scale_workers():

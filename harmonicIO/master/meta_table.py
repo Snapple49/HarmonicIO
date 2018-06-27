@@ -14,6 +14,8 @@ class DataStatStatus(object):
 
 class LookUpTable(object):
 
+    debugging = False
+
     class Workers(object):
         __workers = {}
         @staticmethod
@@ -276,5 +278,13 @@ class LookUpTable(object):
         ret['CONTAINERS'] = LookUpTable.Containers.verbose()
         ret['TUPLES'] = LookUpTable.Tuples.verbose()
         ret['JOBS'] = LookUpTable.Jobs.verbose()
+        ret['IMAGEDATA'] = LookUpTable.ImageMetadata.verbose()
+        if LookUpTable.debugging:
+            debug = {}
+            debug["bins"] = IntelligentResourceManager.__container_manager.bins
+            debug["allocation queue"] = IntelligentResourceManager.__container_manager.allocation_q.queue
+            debug["container queue"] = IntelligentResourceManager.__container_manager.container_q.__queue.queue
+            debug["load predictor data"] = IntelligentResourceManager.__container_manager.load_predictor.image_data
+            ret['DEGUBBING_DATA'] = debug
 
         return ret

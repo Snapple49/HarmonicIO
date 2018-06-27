@@ -59,6 +59,28 @@ class ContainerQueue():
 
 class ContainerAllocator():
 
+    def __init__(self, packing_algo):
+        self.container_q = ContainerQueue()
+        self.packing_algorithm = packing_algo 
+        self.allocation_q = queue.Queue()
+        self.allocation_lock = threading.Lock()
+        self.bins = []
+        self.bin_layout_lock = threading.Lock()
+        self.size_descriptor = "avg_cpu"
+
+        config = IRMSetting()
+        self.default_cpu_share = config.default_cpu_share
+        self.profiler = WorkerProfiler(self.container_q, self, config.profiling_interval)
+        self.load_predictor = LoadPredictor(self, config.step_length,config.roc_lower, config.roc_upper,
+                                            config.roc_minimum, config.queue_limit, config.waiting_time,
+                                            config.large_increment, config.small_increment)
+
+
+        for _ in range(4):            
+            queue_manager_thread = threading.Thread(target=self.queue_manager)
+            queue_manager_thread.daemon=True
+            queue_manager_thread.start()
+
     def queue_manager(self):
         while True:
             try:
@@ -85,31 +107,6 @@ class ContainerAllocator():
             finally:
                 self.allocation_q.task_done()
                 self.allocation_lock.release()
-
-
-
-    def __init__(self, packing_algo):
-        self.container_q = ContainerQueue()
-        self.packing_algorithm = packing_algo 
-        self.allocation_q = queue.Queue()
-        self.allocation_lock = threading.Lock()
-        self.bins = []
-        self.bin_layout_lock = threading.Lock()
-        self.size_descriptor = "avg_cpu"
-
-        config = IRMSetting()
-        self.profiler = WorkerProfiler(self.container_q, self, config.profiling_interval)
-        self.load_predictor = LoadPredictor(self, config.step_length,config.roc_lower, config.roc_upper,
-                                            config.roc_minimum, config.queue_limit, config.waiting_time,
-                                            config.large_increment, config.small_increment)
-
-
-        for _ in range(4):            
-            queue_manager_thread = threading.Thread(target=self.queue_manager)
-            queue_manager_thread.daemon=True
-            queue_manager_thread.start()
-
-
 
     def average_wasted_space(self, bins):
         total_wasted_space = 0.0
@@ -205,17 +202,19 @@ class ContainerAllocator():
             return True if target_bin > -1 else False
 
     def start_container_on_worker(self, target_worker, container):
-        #TODO: add cpu share here, use metadata for size if available!
         # send request to worker
+        cpu_share = LookUpTable.ImageMetadata.verbose().get(container[Definition.Container.get_str_con_image_name()], self.default_cpu_share)
+        cont = dict(container)
+        cont[Definition.Container.get_str_cpu_share()] = cpu_share
         worker_url = "http://{}:{}/docker?token=None&command=create".format(target_worker[0], target_worker[1])
-        req_data = bytes(json.dumps(container), 'utf-8') 
-        resp = urlopen(worker_url, req_data) # NOTE: might need increase in timeout to allow download of large container images!!!
+        req_data = bytes(json.dumps(cont), 'utf-8') 
+        resp = urlopen(worker_url, req_data) 
 
         if resp.getcode() == 200: # container was created
             sid = str(resp.read(), 'utf-8')
             print("Received sid from container: " + sid)
             return sid
-        return False
+        return None
 
 
 

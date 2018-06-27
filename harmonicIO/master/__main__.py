@@ -2,6 +2,7 @@ from harmonicIO.general.services import SysOut
 from .jobqueue import JobManager
 from harmonicIO.master.resource_manager import IntelligentResourceManager as IRM
 from harmonicIO.master.binpacking import BinPacking as BP
+from harmonicIO.master.meta_table import LookUpTable as LUT
 
 """
 Master entry point
@@ -56,6 +57,9 @@ if __name__ == '__main__':
     Entry point
     """
     SysOut.out_string("Running Harmonic Master")
+    debug = input("Debug mode?  y/n\n")
+    if debug == "y":
+        LUT.debugging = True
 
     # Load configuration from file
     from .configuration import Setting

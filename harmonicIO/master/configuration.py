@@ -133,6 +133,7 @@ class IRMSetting():
             SysOut.err_string("Config file for IRM missing!")
         else:
             try:
+                self.default_cpu_share = int(data["default_cpu_share"])
                 self.profiling_interval = int(data["profiling_interval"])
                 self.step_length = int(data["predictor_interval"])
                 self.roc_lower = int(data["lower_rate_limit"])
@@ -149,22 +150,22 @@ class IRMSetting():
             finally:
                 error = ""
                 if self.profiling_interval < 1:
-                    error = "profiling interval not above 0"
+                    error += "profiling interval not above 0\n"
                 if self.step_length < 1:
-                    error = "step length not above 0"
+                    error += "step length not above 0\n"
                 if self.roc_lower < 1:
-                    error = "lower rate limit not above 0"
+                    error += "lower rate limit not above 0\n"
                 if self.roc_upper <= self.roc_lower:
-                    error = "upper rate limit not above lower rate limit"
+                    error += "upper rate limit not above lower rate limit\n"
                 if self.roc_minimum > -1:
-                    error = "slowdown rate not below 0"
+                    error += "slowdown rate not below 0\n"
                 if self.queue_limit < 1:
-                    error = "queue limit not above 0"
+                    error += "queue limit not above 0\n"
                 if self.waiting_time < 1:
-                    error = "scaleup waiting time not above 0"
+                    error += "scaleup waiting time not above 0\n"
                 if self.large_increment <= self.small_increment:
-                    error = "large increment smaller than small increment"
+                    error += "large increment smaller than small increment\n"
                 if self.small_increment < 1:
-                    error = "small increment not above 0"
+                    error += "small increment not above 0\n"
                 if error == "":
                     raise ValueError("Invalid value setting for option: {}".format(error)) 

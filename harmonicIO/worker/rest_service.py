@@ -108,7 +108,7 @@ class ContainerService(object):
                 res.status = falcon.HTTP_401
 
             volatile = data.get('volatile', False) # only set to true if user has actually provided the "'volatile' : true" data in request
-            cpu_share = data.get('cpu_share', 50)
+            cpu_share = data.get(Definition.Container.get_str_cpu_share(), 50)
 
             result = DockerService.create_container(data[Definition.Container.get_str_con_image_name()], cpu_share, volatile)
 

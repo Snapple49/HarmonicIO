@@ -257,6 +257,10 @@ class Definition(object):
         def get_str_data_digest():
             return "digest"
 
+        @staticmethod
+        def get_str_cpu_share():
+            return "cpu_share"
+
         class Status(object):
 
             @staticmethod

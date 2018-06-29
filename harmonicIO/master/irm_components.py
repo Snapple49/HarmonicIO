@@ -6,11 +6,11 @@ import time
 from urllib.request import urlopen
 
 #from binpacking import BinPacking, Bin
-from harmonicIO.master.binpacking import BinPacking, Bin
 from harmonicIO.general.definition import Definition
-from harmonicIO.master.meta_table import LookUpTable
-from harmonicIO.master.messaging_system import MessagesQueue
-from harmonicIO.master.configuration import Setting, IRMSetting
+from .binpacking import BinPacking, Bin
+from .meta_table import LookUpTable
+from .messaging_system import MessagesQueue
+from .configuration import Setting, IRMSetting
     
 class ContainerQueue():
     

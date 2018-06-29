@@ -2,7 +2,7 @@ import queue
 from harmonicIO.general.services import Services, SysOut
 from harmonicIO.general.definition import Definition, CTuple
 
-from harmonicIO.master.resource_manager import IntelligentResourceManager
+from .resource_manager import IntelligentResourceManager
 
 
 

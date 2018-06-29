@@ -1,6 +1,6 @@
 from harmonicIO.master.irm_components import ContainerAllocator, ContainerQueue, WorkerProfiler, LoadPredictor
-from harmonicIO.master.binpacking import BinPacking
-from harmonicIO.master.meta_table import LookUpTable
+from .binpacking import BinPacking
+from .meta_table import LookUpTable
 
 import time
 import threading

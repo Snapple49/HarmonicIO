@@ -1,8 +1,8 @@
 from harmonicIO.general.services import SysOut
 from .jobqueue import JobManager
-from harmonicIO.master.resource_manager import IntelligentResourceManager
-from harmonicIO.master.binpacking import BinPacking
-from harmonicIO.master.meta_table import LookUpTable
+from .resource_manager import IntelligentResourceManager
+from .binpacking import BinPacking
+from .meta_table import LookUpTable
 
 """
 Master entry point

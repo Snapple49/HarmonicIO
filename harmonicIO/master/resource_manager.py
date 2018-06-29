@@ -1,6 +1,6 @@
-from harmonicIO.master.irm_components import ContainerAllocator as ca, ContainerQueue as cq, WorkerProfiler as prof, LoadPredictor as lp
-from harmonicIO.master.binpacking import BinPacking as bp
-from harmonicIO.master.meta_table import LookUpTable as lut
+from harmonicIO.master.irm_components import ContainerAllocator, ContainerQueue, WorkerProfiler, LoadPredictor
+from harmonicIO.master.binpacking import BinPacking
+from harmonicIO.master.meta_table import LookUpTable
 
 import time
 import threading
@@ -10,7 +10,7 @@ class IntelligentResourceManager():
 
     @staticmethod
     def start_irm(packing_algorithm):
-        IntelligentResourceManager.__container_manager = ca(packing_algorithm)
+        IntelligentResourceManager.__container_manager = ContainerAllocator(packing_algorithm)
         worker_scaling_thread = threading.Thread(target=IntelligentResourceManager.scale_workers)
         worker_scaling_thread.daemon = True
         worker_scaling_thread.start()
@@ -28,14 +28,14 @@ class IntelligentResourceManager():
     def scale_workers():
         while True:
             time.sleep(1)
-            current_workers = lut.Workers.active_workers() # the amount of workers currently available
+            current_workers = LookUpTable.Workers.active_workers() # the amount of workers currently available
             IntelligentResourceManager.__container_manager.target_worker_number # the amount of workers we need
             while not current_workers == IntelligentResourceManager.__container_manager.target_worker_number:
                 if current_workers < IntelligentResourceManager.__container_manager.target_worker_number:
                     # start more workers
-                    lut.Workers.enable_worker()
+                    LookUpTable.Workers.enable_worker()
                 else:
                     # disable workers
-                    lut.Workers.disable_worker()
+                    LookUpTable.Workers.disable_worker()
 
         

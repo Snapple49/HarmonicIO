@@ -1,8 +1,8 @@
 from harmonicIO.general.services import SysOut
 from .jobqueue import JobManager
-from harmonicIO.master.resource_manager import IntelligentResourceManager as IRM
-from harmonicIO.master.binpacking import BinPacking as BP
-from harmonicIO.master.meta_table import LookUpTable as LUT
+from harmonicIO.master.resource_manager import IntelligentResourceManager
+from harmonicIO.master.binpacking import BinPacking
+from harmonicIO.master.meta_table import LookUpTable
 
 """
 Master entry point
@@ -14,7 +14,7 @@ def run_irm():
     Starts the intelligent resource management system, which enables autoscaling features
     """
     if Setting.get_autoscaling():    
-        IRM.start_irm(BP.first_fit)
+        IntelligentResourceManager.start_irm(BinPacking.first_fit)
         SysOut.out_string("Autoscaling supervisor started")
 
 
@@ -59,7 +59,7 @@ if __name__ == '__main__':
     SysOut.out_string("Running Harmonic Master")
     debug = input("Debug mode?  y/n\n")
     if debug == "y":
-        LUT.debugging = True
+        LookUpTable.debugging = True
 
     # Load configuration from file
     from .configuration import Setting

@@ -4,7 +4,7 @@ from harmonicIO.general.definition import Definition, CStatus, CRole, JobStatus
 from .messaging_system import MessagesQueue
 from harmonicIO.general.services import SysOut, Services as LService
 from .meta_table import LookUpTable
-from harmonicIO.master.resource_manager import IntelligentResourceManager as IRM
+from harmonicIO.master.resource_manager import IntelligentResourceManager
 
 from urllib.request import urlopen
 from urllib3.request import urlencode
@@ -341,8 +341,8 @@ class RESTService(object):
         self.__server.serve_forever()
 
 def new_container(container_parameters):
-    for i in range(container_parameters.get('num', 1)):
-        IRM.queue_container(container_parameters)
+    for _ in range(container_parameters.get('num', 1)):
+        IntelligentResourceManager.queue_container(container_parameters)
     
 
 def new_job(job_params):

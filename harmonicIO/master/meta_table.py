@@ -2,7 +2,7 @@ import queue
 from harmonicIO.general.services import Services, SysOut
 from harmonicIO.general.definition import Definition, CTuple
 
-from .resource_manager import IntelligentResourceManager
+import resource_manager
 
 
 
@@ -139,7 +139,7 @@ class LookUpTable(object):
                 conts[:] = [con for con in conts if con.get(Definition.Container.Status.get_str_sid()) != short_id]
 
                 # notify IRM about container removal
-                IntelligentResourceManager.remove_container(container_name, short_id)
+                resource_manager.IntelligentResourceManager.remove_container(container_name, short_id)
 
             return True
 

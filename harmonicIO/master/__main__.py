@@ -4,6 +4,11 @@ from .resource_manager import IntelligentResourceManager
 from .binpacking import BinPacking
 from .meta_table import LookUpTable
 
+from .configuration import Setting
+from .server_socket import ThreadedTCPServer, ThreadedTCPRequestHandler
+from .rest_service import RESTService
+
+import threading
 """
 Master entry point
 """
@@ -22,7 +27,6 @@ def run_rest_service():
     """
     Run rest as in a thread function
     """
-    from .rest_service import RESTService
     rest = RESTService()
     rest.run()
 
@@ -31,9 +35,6 @@ def run_msg_service():
     """
     Run msg service to eliminate back pressure
     """
-    from .configuration import Setting
-    from .server_socket import ThreadedTCPServer, ThreadedTCPRequestHandler
-    import threading
     server = ThreadedTCPServer((Setting.get_node_addr(), Setting.get_data_port_start()),
                                ThreadedTCPRequestHandler, bind_and_activate=True)
 
@@ -62,7 +63,6 @@ if __name__ == '__main__':
         LookUpTable.debugging = True
 
     # Load configuration from file
-    from .configuration import Setting
     Setting.read_cfg_from_file()
 
     # Print instance information

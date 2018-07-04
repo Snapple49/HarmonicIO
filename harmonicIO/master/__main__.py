@@ -85,5 +85,5 @@ if __name__ == '__main__':
     pool.submit(run_rest_service)
 
     # Start the IRM system
-    pool.submit(run_irm)
+    run_irm()
     

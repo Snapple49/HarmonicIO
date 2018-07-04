@@ -128,7 +128,7 @@ class IRMSetting():
     def __init__(self):
         try:
             with open('harmonicIO/master/irm_configuration.json', 'r') as cfg_file:
-                data = json.load(cfg_file.read())
+                data = json.loads(cfg_file.read())
         except FileNotFoundError:
             SysOut.err_string("Config file for IRM missing!")
         else:

@@ -2,7 +2,7 @@ from .docker_master import DockerMaster
 
 
 class DockerService(object):
-    __docker_master = DockerMaster()
+    __docker_master = None
 
     @staticmethod
     def init():

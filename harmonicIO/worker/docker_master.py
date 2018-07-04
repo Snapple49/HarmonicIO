@@ -104,7 +104,10 @@ class DockerMaster(object):
         containers = {}
         sum_of_cpu = {}
         counters = {}
-        conts_to_check = self.__client.container.list()
+        try:
+            conts_to_check = self.__client.container.list()
+        except AttributeError:
+            conts_to_check = []
 
         for container in conts_to_check:
             name = (str(container.image)).split('\'')[1]

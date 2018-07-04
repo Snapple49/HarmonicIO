@@ -78,12 +78,11 @@ if __name__ == '__main__':
     from concurrent.futures import ThreadPoolExecutor
     pool = ThreadPoolExecutor()
 
+    # Start the IRM system
+    pool.submit(run_irm)
+
     # Run messaging system service
     pool.submit(run_msg_service)
 
     # Binding commander to the rest service and enable REST service
     pool.submit(run_rest_service)
-
-    # Start the IRM system
-    run_irm()
-    

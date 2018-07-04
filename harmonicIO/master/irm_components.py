@@ -67,6 +67,7 @@ class ContainerAllocator():
         self.bins = []
         self.bin_layout_lock = threading.Lock()
         self.size_descriptor = "avg_cpu"
+        self.target_worker_number = 0
 
         config = IRMSetting()
         self.default_cpu_share = config.default_cpu_share

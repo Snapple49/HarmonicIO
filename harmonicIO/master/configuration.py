@@ -167,5 +167,5 @@ class IRMSetting():
                     error += "large increment smaller than small increment\n"
                 if self.small_increment < 1:
                     error += "small increment not above 0\n"
-                if error == "":
+                if not error == "":
                     raise ValueError("Invalid value setting for option: {}".format(error)) 

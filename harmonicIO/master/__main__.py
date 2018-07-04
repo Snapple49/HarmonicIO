@@ -20,7 +20,7 @@ def run_irm():
     """
     if Setting.get_autoscaling():    
         IntelligentResourceManager.start_irm(BinPacking.first_fit)
-        if IntelligentResourceManager.__container_manager:
+        if IntelligentResourceManager.container_manager:
             SysOut.out_string("Autoscaling supervisor started")
         else:
             SysOut.terminate_string("Error: could not start IRM service")

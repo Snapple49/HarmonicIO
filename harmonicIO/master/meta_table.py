@@ -1,4 +1,3 @@
-import queue
 from harmonicIO.general.services import Services, SysOut
 from harmonicIO.general.definition import Definition, CTuple
 

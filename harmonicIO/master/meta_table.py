@@ -2,9 +2,6 @@ import queue
 from harmonicIO.general.services import Services, SysOut
 from harmonicIO.general.definition import Definition, CTuple
 
-import resource_manager
-
-
 
 class DataStatStatus(object):
     PENDING = 0
@@ -139,7 +136,8 @@ class LookUpTable(object):
                 conts[:] = [con for con in conts if con.get(Definition.Container.Status.get_str_sid()) != short_id]
 
                 # notify IRM about container removal
-                resource_manager.IntelligentResourceManager.remove_container(container_name, short_id)
+                from .resource_manager import IntelligentResourceManager # NOTE: local import required to avoid circular dependencies
+                IntelligentResourceManager.remove_container(container_name, short_id)
 
             return True
 

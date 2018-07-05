@@ -41,5 +41,5 @@ class IntelligentResourceManager():
                     # disable workers
                     print("Disabling worker, current active workers: {}".format(current_workers))
                     LookUpTable.Workers.disable_worker()
-
+                current_workers = LookUpTable.Workers.active_workers()
         

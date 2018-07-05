@@ -324,7 +324,6 @@ class LoadPredictor():
         while True:
             time.sleep(self.step_length)
 
-            self.c_manager.target_worker_number = None
             for image in self.image_data:
                 
                 last_start = self.image_data[image].get("last_start", 0)

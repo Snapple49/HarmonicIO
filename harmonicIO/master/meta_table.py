@@ -71,7 +71,7 @@ class LookUpTable(object):
             """
             index = LookUpTable.Workers.active_workers()
             for worker in LookUpTable.Workers.__workers:
-                if LookUpTable.Workers.__workers[worker].get("bin_index") == index:
+                if LookUpTable.Workers.__workers[worker].get("bin_index") == index-1:
                     LookUpTable.Workers.del_worker(LookUpTable.Workers.__workers[worker][Definition.get_str_node_addr()])
                     break
 

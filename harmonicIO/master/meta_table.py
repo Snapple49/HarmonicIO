@@ -38,7 +38,7 @@ class LookUpTable(object):
                 LookUpTable.Workers.__workers[worker_ip] = dict_input
             else:
                 LookUpTable.Workers.__workers[worker_ip]["bin_index"] = LookUpTable.Workers.active_workers()
-                LookUpTable.Workers.__workers[worker_ip]["active"] = True
+                LookUpTable.Workers.__workers[worker_ip]["active"] = False
 
 
         @staticmethod

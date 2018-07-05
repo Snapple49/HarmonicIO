@@ -36,6 +36,7 @@ class IntelligentResourceManager():
                     LookUpTable.Workers.enable_worker()
                 else:
                     # disable workers
+                    print("Disabling worker, active workers: {}".format(LookUpTable.Workers.active_workers()))
                     LookUpTable.Workers.disable_worker()
 
         

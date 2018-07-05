@@ -34,6 +34,7 @@ class LookUpTable(object):
             if not worker_ip in LookUpTable.Workers.__workers:
                 dict_input[Definition.get_str_last_update()] = Services.get_current_timestamp()
                 dict_input["bin_index"] = LookUpTable.Workers.active_workers()
+                print("Added worker with bin index {}!".format(dict_input["bin_index"]))
                 dict_input["active"] = True
                 LookUpTable.Workers.__workers[worker_ip] = dict_input
             else:

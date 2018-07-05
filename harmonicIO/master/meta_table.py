@@ -281,7 +281,7 @@ class LookUpTable(object):
             debug = {}
             debug["bins"] = IntelligentResourceManager.container_manager.bins
             debug["allocation queue"] = IntelligentResourceManager.container_manager.allocation_q.queue
-            debug["container queue"] = IntelligentResourceManager.container_manager.container_q.__queue.queue
+            debug["container queue"] = IntelligentResourceManager.container_manager.container_q.view_queue()
             debug["load predictor data"] = IntelligentResourceManager.container_manager.load_predictor.image_data
             ret['DEGUBBING_DATA'] = debug
 

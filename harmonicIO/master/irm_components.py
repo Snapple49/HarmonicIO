@@ -26,6 +26,9 @@ class ContainerQueue():
             if item[Definition.Container.get_str_con_image_name()] == c_image:
                 return True
         return False
+
+    def view_queue(self):
+        return self.__queue.queue
             
     def update_containers(self, c_image, update_data):
         self.container_queue_lock.acquire()

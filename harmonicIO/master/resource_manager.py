@@ -6,7 +6,7 @@ import time
 import threading
 
 class IntelligentResourceManager():
-    container_manager = None
+    container_manager = ContainerAllocator(packing_algorithm)
 
     @staticmethod
     def start_irm(packing_algorithm):

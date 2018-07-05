@@ -60,6 +60,7 @@ class ContainerQueue():
 class ContainerAllocator():
 
     def __init__(self, packing_algo):
+        self.target_worker_number = 0
         self.container_q = ContainerQueue()
         self.packing_algorithm = packing_algo 
         self.allocation_q = queue.Queue()
@@ -67,7 +68,6 @@ class ContainerAllocator():
         self.bins = []
         self.bin_layout_lock = threading.Lock()
         self.size_descriptor = "avg_cpu"
-        self.target_worker_number = 0
 
         config = IRMSetting()
         self.default_cpu_share = config.default_cpu_share
@@ -76,7 +76,7 @@ class ContainerAllocator():
                                             config.roc_minimum, config.queue_limit, config.waiting_time,
                                             config.large_increment, config.small_increment)
 
-
+        print("Settings loaded!")
         for _ in range(4):            
             queue_manager_thread = threading.Thread(target=self.queue_manager)
             queue_manager_thread.daemon=True

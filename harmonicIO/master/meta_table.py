@@ -30,30 +30,28 @@ class LookUpTable(object):
             return aw
 
         # CURRENTLY DOING
+        # ISSUE: every time worker checks in, add worker is called, need to only add worker if nonexistent
+        # otherwise update accordingly
         @staticmethod
-        def add_worker(dict_input):
+        def update_worker(dict_input):
             worker_ip = dict_input[Definition.get_str_node_addr()]
-            # if worker exists 
             if not worker_ip in LookUpTable.Workers.__workers:
                 dict_input[Definition.get_str_last_update()] = Services.get_current_timestamp()
-                dict_input["bin_index"] = LookUpTable.Workers.active_workers()
-                dict_input["active"] = True
                 LookUpTable.Workers.__workers[worker_ip] = dict_input
+                #dict_input["bin_index"] = LookUpTable.Workers.active_workers()
+                #dict_input["active"] = True
             else:
-                LookUpTable.Workers.__workers[worker_ip]["bin_index"] = LookUpTable.Workers.active_workers()
-                LookUpTable.Workers.__workers[Definition.get_str_last_update()] = Services.get_current_timestamp()
+                LookUpTable.Workers.__workers[worker_ip][Definition.get_str_last_update()] = Services.get_current_timestamp()
+                #LookUpTable.Workers.__workers[worker_ip]["bin_index"] = LookUpTable.Workers.active_workers()
 
 
         @staticmethod
         def del_worker(worker_addr):
-            # TODO: implement actual worker termination?
-            #del LookUpTable.Workers.__workers[worker_addr]
             """
-            In this version, for purpose of testing an unused worker is flagged as "active" : False
+            removes the entry of worker with provided address
             """
-            LookUpTable.Workers.__workers[worker_addr]["active"] = False
-            del LookUpTable.Workers.__workers[worker_addr]["bin_index"]
-
+            del LookUpTable.Workers.__workers[worker_addr]
+            
         @staticmethod
         def enable_worker():
             """
@@ -61,7 +59,8 @@ class LookUpTable(object):
             """
             for worker in LookUpTable.Workers.__workers:
                 if not LookUpTable.Workers.__workers[worker]["active"]:
-                    LookUpTable.Workers.add_worker(LookUpTable.Workers.__workers[worker])
+                    LookUpTable.Workers.__workers[worker]["active"] = True
+                    LookUpTable.Workers.__workers[worker]["bin_index"] = LookUpTable.Workers.active_workers()
                     return True
 
             # no more workers available
@@ -75,7 +74,8 @@ class LookUpTable(object):
             index = LookUpTable.Workers.active_workers()
             for worker in LookUpTable.Workers.__workers:
                 if LookUpTable.Workers.__workers[worker].get("bin_index") == index-1:
-                    LookUpTable.Workers.del_worker(LookUpTable.Workers.__workers[worker][Definition.get_str_node_addr()])
+                    LookUpTable.Workers.__workers[worker_addr]["active"] = False
+                    del LookUpTable.Workers.__workers[worker_addr]["bin_index"]
                     break
 
     class Containers(object):
@@ -250,7 +250,7 @@ class LookUpTable(object):
     
     @staticmethod
     def update_worker(dict_input):
-        LookUpTable.Workers.add_worker(dict_input)
+        LookUpTable.Workers.update_worker(dict_input)
 
     @staticmethod
     def get_candidate_container(image_name):

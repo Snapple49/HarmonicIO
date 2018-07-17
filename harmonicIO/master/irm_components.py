@@ -96,7 +96,7 @@ class ContainerAllocator():
             queue_manager_thread.start()
 
     def queue_manager(self):
-        SysOut.debug_string("Started a queue manager thread! ID: {}".format(threading.get_ident()))
+        SysOut.debug_string("Started a queue manager thread! ID: {}".format(threading.current_thread()))
         while True:
             try:
                 time.sleep(1)
@@ -125,7 +125,7 @@ class ContainerAllocator():
                 self.allocation_lock.release()
 
     def packing_manager(self):
-        SysOut.debug_string("Started bin packing manager! ID: {}".format(threading.get_ident()))
+        SysOut.debug_string("Started bin packing manager! ID: {}".format(threading.current_thread()))
         while True:
             time.sleep(self.packing_interval)
             self.pack_containers()

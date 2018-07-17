@@ -25,7 +25,7 @@ class LookUpTable(object):
             """
             aw = 0
             for worker in LookUpTable.Workers.__workers:
-                if LookUpTable.Workers.__workers[worker]["active"] == True:
+                if LookUpTable.Workers.__workers[worker].get("active") == True:
                     aw += 1
             return aw
 

@@ -58,7 +58,7 @@ class LookUpTable(object):
             for testing purposes, marks an inactive worker as active and updates its index 
             """
             for worker in LookUpTable.Workers.__workers:
-                if not LookUpTable.Workers.__workers[worker]["active"]:
+                if not LookUpTable.Workers.__workers[worker].get("active"):
                     LookUpTable.Workers.__workers[worker]["active"] = True
                     LookUpTable.Workers.__workers[worker]["bin_index"] = LookUpTable.Workers.active_workers()
                     return True
@@ -74,8 +74,8 @@ class LookUpTable(object):
             index = LookUpTable.Workers.active_workers()
             for worker in LookUpTable.Workers.__workers:
                 if LookUpTable.Workers.__workers[worker].get("bin_index") == index-1:
-                    LookUpTable.Workers.__workers[worker_addr]["active"] = False
-                    del LookUpTable.Workers.__workers[worker_addr]["bin_index"]
+                    LookUpTable.Workers.__workers[worker]["active"] = False
+                    del LookUpTable.Workers.__workers[worker]["bin_index"]
                     break
 
     class Containers(object):

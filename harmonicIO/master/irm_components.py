@@ -5,13 +5,14 @@ import json
 import time
 from urllib.request import urlopen
 
-#from binpacking import BinPacking, Bin
+from harmonicIO.general.services import SysOut
 from harmonicIO.general.definition import Definition
 from .binpacking import BinPacking, Bin
 from .meta_table import LookUpTable
 from .messaging_system import MessagesQueue
 from .configuration import Setting, IRMSetting
-    
+
+
 class ContainerQueue():
     
     def __init__(self, queue_cap=0):
@@ -43,8 +44,10 @@ class ContainerQueue():
 
     def put_container(self, container_data):
         self.container_queue_lock.acquire()
-        self.__queue.put(container_data)
-        self.container_queue_lock.release()
+        try:
+            self.__queue.put(container_data)
+        finally:
+            self.container_queue_lock.release()
 
     def get_current_queue_list(self):
         """
@@ -73,6 +76,7 @@ class ContainerAllocator():
         self.size_descriptor = "avg_cpu"
 
         config = IRMSetting()
+        self.packing_interval = config.packing_interval
         self.default_cpu_share = config.default_cpu_share
         self.profiler = WorkerProfiler(self.container_q, self, config.profiling_interval)
         self.load_predictor = LoadPredictor(self, config.step_length,config.roc_lower, config.roc_upper,
@@ -80,14 +84,22 @@ class ContainerAllocator():
                                             config.large_increment, config.small_increment)
 
         print("Settings loaded!")
+
+        # start threads that manage packing and queues
+        bin_packing_manager = threading.Thread(target=self.packing_manager)
+        bin_packing_manager.daemon=True
+        bin_packing_manager.start()
+
         for _ in range(4):            
             queue_manager_thread = threading.Thread(target=self.queue_manager)
             queue_manager_thread.daemon=True
             queue_manager_thread.start()
 
     def queue_manager(self):
+        SysOut.debug_string("Started a queue manager thread! ID: {}".format(threading.get_ident()))
         while True:
             try:
+                time.sleep(1)
                 sid = None
                 self.allocation_lock.acquire()
                 container = self.allocation_q.get()
@@ -112,6 +124,12 @@ class ContainerAllocator():
                 self.allocation_q.task_done()
                 self.allocation_lock.release()
 
+    def packing_manager(self):
+        SysOut.debug_string("Started bin packing manager! ID: {}".format(threading.get_ident()))
+        while True:
+            time.sleep(self.packing_interval)
+            self.pack_containers()
+
     def average_wasted_space(self, bins):
         total_wasted_space = 0.0
         for bin_ in bins:
@@ -127,12 +145,13 @@ class ContainerAllocator():
                 return False
         return True
 
-    def pack_containers(self, number_of_current_workers):
+    def pack_containers(self):
         """
         perform bin packing with containers in workers, giving each container a worker to be allocated on and the amount of workers
         """
         self.bin_layout_lock.acquire() # bin layout may not be mutated externally during packing
         try:
+            SysOut.debug_string("Performing bin packing with algorithm {}!".format(self.packing_algorithm.__name__))
             container_list = self.container_q.get_current_queue_list()
             bins_layout = self.packing_algorithm(container_list, self.bins, self.size_descriptor)
             self.bins = bins_layout
@@ -147,8 +166,7 @@ class ContainerAllocator():
                     self.allocation_q.put(item)
                     item["bin_status"] = Bin.ContainerBinStatus.QUEUED
 
-
-        self.target_worker_number = minimum_worker_number + self.calculate_overhead_workers(number_of_current_workers)
+        self.target_worker_number = minimum_worker_number + self.calculate_overhead_workers(LookUpTable.Workers.active_workers())
 
     def calculate_overhead_workers(self, number_of_current_workers):
         """
@@ -333,6 +351,7 @@ class LoadPredictor():
                 
                 if int(time.time()) - last_start > self.wait_time:
                     # a new container was not recently started so action should be taken if needed
+                    SysOut.debug_string("Checking image <{}> for scaling action".format(image[Definition.Container.get_str_con_image_name()]))
                     
                     self.calculate_roc_per_image
                     roc = self.image_data[image]["roc"]

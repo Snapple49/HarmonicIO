@@ -1,4 +1,5 @@
 {
+    "packing_interval" : 1,
     "default_cpu_share" : 50, 
     "profiling_interval" : 5,
     "predictor_interval" : 2,

@@ -133,6 +133,7 @@ class IRMSetting():
             SysOut.err_string("Config file for IRM missing!")
         else:
             try:
+                self.packing_interval = int(data["packing_interval"])
                 self.default_cpu_share = int(data["default_cpu_share"])
                 self.profiling_interval = int(data["profiling_interval"])
                 self.step_length = int(data["predictor_interval"])

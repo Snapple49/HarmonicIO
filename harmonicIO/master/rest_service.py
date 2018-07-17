@@ -343,31 +343,6 @@ class RESTService(object):
 def new_container(container_parameters):
     for _ in range(container_parameters.get('num', 1)):
         IntelligentResourceManager.queue_container(container_parameters)
-    
-
-def new_job(job_params):
-    ### below ID randomizer from: https://stackoverflow.com/questions/2257441/random-string-generation-with-upper-case-letters-and-digits-in-python
-    def rand_id(N):
-        from random import SystemRandom
-        import string
-        return ''.join(SystemRandom().choice(string.ascii_uppercase + string.digits) for _ in range(N))
-    ###
-
-    # create job ID, make sure ID is new
-    job_id = rand_id(5)
-    while LookUpTable.poll_id(job_id):
-        job_id = rand_id(5)
-    
-    # add job to table
-    job_params['job_id'] = job_id
-    job_params['job_status'] = JobStatus.INIT
-    if not LookUpTable.Jobs.new_job(job_params):
-        return None
-
-    # queue creation
-    JobQueue.queue_new_job(job_params)
-
-    return job_params
 
 def get_html_form(worker, msg, containers, tuples):
     html = """

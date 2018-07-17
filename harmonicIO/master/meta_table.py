@@ -20,12 +20,16 @@ class LookUpTable(object):
 
         @staticmethod
         def active_workers():
+            """
+            returns the number of workers currrently labeled with "active" : True
+            """
             aw = 0
             for worker in LookUpTable.Workers.__workers:
                 if LookUpTable.Workers.__workers[worker]["active"] == True:
                     aw += 1
             return aw
 
+        # CURRENTLY DOING
         @staticmethod
         def add_worker(dict_input):
             worker_ip = dict_input[Definition.get_str_node_addr()]
@@ -37,7 +41,7 @@ class LookUpTable(object):
                 LookUpTable.Workers.__workers[worker_ip] = dict_input
             else:
                 LookUpTable.Workers.__workers[worker_ip]["bin_index"] = LookUpTable.Workers.active_workers()
-                LookUpTable.Workers.__workers[worker_ip]["active"] = False
+                LookUpTable.Workers.__workers[Definition.get_str_last_update()] = Services.get_current_timestamp()
 
 
         @staticmethod

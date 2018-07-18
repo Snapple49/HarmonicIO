@@ -29,9 +29,6 @@ class LookUpTable(object):
                     aw += 1
             return aw
 
-        # CURRENTLY DOING
-        # ISSUE: every time worker checks in, add worker is called, need to only add worker if nonexistent
-        # otherwise update accordingly
         @staticmethod
         def update_worker(dict_input):
             worker_ip = dict_input[Definition.get_str_node_addr()]

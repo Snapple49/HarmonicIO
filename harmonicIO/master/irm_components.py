@@ -145,6 +145,8 @@ class ContainerAllocator():
                 return False
         return True
 
+    # CURRENTLY DOING
+    # ISSUE: default size is not transmitted to bin packing, key error on size descriptor
     def pack_containers(self):
         """
         perform bin packing with containers in workers, giving each container a worker to be allocated on and the amount of workers
@@ -153,6 +155,10 @@ class ContainerAllocator():
         try:
             SysOut.debug_string("Performing bin packing with algorithm {}!".format(self.packing_algorithm.__name__))
             container_list = self.container_q.get_current_queue_list()
+            # if any containers don't yet have average cpu usage, add default value now
+            for cont in container_list:
+                if cont.get(self.size_descriptor, None) == None:
+                    cont[self.size_descriptor] = self.default_cpu_share * 0.01
             bins_layout = self.packing_algorithm(container_list, self.bins, self.size_descriptor)
             self.bins = bins_layout
         finally:

@@ -1,6 +1,7 @@
-from harmonicIO.master.irm_components import ContainerAllocator, ContainerQueue, WorkerProfiler, LoadPredictor
+from .irm_components import ContainerAllocator, ContainerQueue, WorkerProfiler, LoadPredictor
 from .binpacking import BinPacking
 from .meta_table import LookUpTable
+from harmonicIO.general.services import SysOut
 
 import time
 import threading
@@ -32,14 +33,12 @@ class IntelligentResourceManager():
             IntelligentResourceManager.container_manager.target_worker_number # the amount of workers we need
             while not current_workers == IntelligentResourceManager.container_manager.target_worker_number:
                 time.sleep(1)
-                print("We are not at target worker number! {} {}".format(current_workers, IntelligentResourceManager.container_manager.target_worker_number))
+                SysOut.debug_string("We are not at target worker number! Current: {} Target: {}".format(current_workers, IntelligentResourceManager.container_manager.target_worker_number))
                 if current_workers < IntelligentResourceManager.container_manager.target_worker_number:
                     # start more workers
-                    print("Enabling worker, current active workers: {}".format(current_workers))
                     LookUpTable.Workers.enable_worker()
                 else:
                     # disable workers
-                    print("Disabling worker, current active workers: {}".format(current_workers))
                     LookUpTable.Workers.disable_worker()
                 current_workers = LookUpTable.Workers.active_workers()
         

@@ -57,7 +57,7 @@ class LookUpTable(object):
             for worker in LookUpTable.Workers.__workers:
                 if not LookUpTable.Workers.__workers[worker].get("active"):
                     LookUpTable.Workers.__workers[worker]["active"] = True
-                    LookUpTable.Workers.__workers[worker]["bin_index"] = LookUpTable.Workers.active_workers()
+                    LookUpTable.Workers.__workers[worker]["bin_index"] = LookUpTable.Workers.active_workers() - 1
                     return True
 
             # no more workers available

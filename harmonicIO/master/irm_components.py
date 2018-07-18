@@ -168,9 +168,9 @@ class ContainerAllocator():
         
         for bin_ in bins_layout:
             for item in bin_.items:
-                if item["bin_status"] == Bin.ContainerBinStatus.PACKED:
+                if item.data["bin_status"] == Bin.ContainerBinStatus.PACKED:
                     self.allocation_q.put(item)
-                    item["bin_status"] = Bin.ContainerBinStatus.QUEUED
+                    item.data["bin_status"] = Bin.ContainerBinStatus.QUEUED
 
         self.target_worker_number = minimum_worker_number + self.calculate_overhead_workers(LookUpTable.Workers.active_workers())
 
@@ -278,9 +278,6 @@ class WorkerProfiler():
 
                 # bins
                 self.c_allocator.update_binned_containers(container_data)
-
-        # TODO: finish this? or is it finished?
-
     
     def gather_container_metadata(self):
         """

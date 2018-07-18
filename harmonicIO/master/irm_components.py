@@ -103,10 +103,10 @@ class ContainerAllocator():
                 sid = None
                 self.allocation_lock.acquire()
                 container = self.allocation_q.get()
-                
-                for worker in LookUpTable.Workers.verbose():
-                    if worker["bin_index"] == container["bin_index"]:
-                        target_worker = (worker[Definition.get_str_node_addr()], worker[Definition.get_str_node_port()])
+                workers = LookUpTable.Workers.verbose()
+                for worker in workers:
+                    if workers["bin_index"] == container["bin_index"]:
+                        target_worker = (workers[Definition.get_str_node_addr()], workers[Definition.get_str_node_port()])
 
                 if target_worker:
                     try:

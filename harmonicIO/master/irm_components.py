@@ -104,7 +104,7 @@ class ContainerAllocator():
                 self.allocation_lock.acquire()
                 container = self.allocation_q.get()
                 
-                for worker in LookUpTable.Workers.__workers:
+                for worker in LookUpTable.Workers.verbose():
                     if worker["bin_index"] == container["bin_index"]:
                         target_worker = (worker[Definition.get_str_node_addr()], worker[Definition.get_str_node_port()])
 
@@ -113,12 +113,12 @@ class ContainerAllocator():
                         sid = self.start_container_on_worker(target_worker, container)
                         container["bin_status"] = Bin.ContainerBinStatus.RUNNING
                     except Exception as e:
-                        print(e)
+                        SysOut.debug_string(e)
                 
                 if sid:
                     container[Definition.Container.Status.get_str_sid()] = sid
                 else:
-                    print("Could not start container on target worker!\n")
+                    SysOut.err_string("Could not start container on target worker!\n")
 
             finally:
                 self.allocation_q.task_done()

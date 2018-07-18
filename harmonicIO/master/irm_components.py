@@ -102,7 +102,7 @@ class ContainerAllocator():
                 time.sleep(1)
                 sid = None
                 self.allocation_lock.acquire()
-                container = self.allocation_q.get()
+                container = self.allocation_q.get().data
                 workers = LookUpTable.Workers.verbose()
                 for worker in workers:
                     if workers[worker]["bin_index"] == container["bin_index"]:

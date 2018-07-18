@@ -105,7 +105,7 @@ class ContainerAllocator():
                 container = self.allocation_q.get().data
                 workers = LookUpTable.Workers.verbose()
                 for worker in workers:
-                    if workers[worker]["bin_index"] == container["bin_index"]:
+                    if workers[worker].get("bin_index", -99) == container["bin_index"]:
                         target_worker = (workers[worker][Definition.get_str_node_addr()], workers[worker][Definition.get_str_node_port()])
 
                 if target_worker:
@@ -153,7 +153,7 @@ class ContainerAllocator():
         """
         self.bin_layout_lock.acquire() # bin layout may not be mutated externally during packing
         try:
-            SysOut.debug_string("Performing bin packing with algorithm {}!".format(self.packing_algorithm.__name__))
+            #SysOut.debug_string("Performing bin packing with algorithm {}!".format(self.packing_algorithm.__name__))
             container_list = self.container_q.get_current_queue_list()
             # if any containers don't yet have average cpu usage, add default value now
             for cont in container_list:

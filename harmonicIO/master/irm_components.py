@@ -100,10 +100,12 @@ class ContainerAllocator():
         while True:
             try:
                 time.sleep(1)
+                target_worker = None
                 sid = None
                 self.allocation_lock.acquire()
                 container = self.allocation_q.get().data
                 workers = LookUpTable.Workers.verbose()
+
                 for worker in workers:
                     if workers[worker].get("bin_index", -99) == container["bin_index"]:
                         target_worker = (workers[worker][Definition.get_str_node_addr()], workers[worker][Definition.get_str_node_port()])
@@ -145,8 +147,6 @@ class ContainerAllocator():
                 return False
         return True
 
-    # CURRENTLY DOING
-    # ISSUE: default size is not transmitted to bin packing, key error on size descriptor
     def pack_containers(self):
         """
         perform bin packing with containers in workers, giving each container a worker to be allocated on and the amount of workers
@@ -261,11 +261,14 @@ class WorkerProfiler():
         self.updater_thread.start()
 
     def update_container_information(self):
+        SysOut.debug_string("Started a profiler thread! ID: {}".format(threading.current_thread()))
         while True:
             time.sleep(self.update_interval)
 
-            # update all containers in both container and allocation queues (as they are waiting) and in the bins with new data from the meta table
+            # gather metadata about containers and put in meta table
+            self.gather_container_metadata()
 
+            # update all containers in both container and allocation queues (as they are waiting) and in the bins with new data from the meta table
             for container_image in LookUpTable.ImageMetadata.verbose():
                 container_data = LookUpTable.ImageMetadata.verbose()[container_image]
                 container_data[Definition.Container.get_str_con_image_name()] = container_image
@@ -302,6 +305,8 @@ class WorkerProfiler():
 
 class LoadPredictor():
     
+    # CURRENTLY DOING
+    # issue: nothing is happening with analyzer, image data is empty
     def __init__(self, cm, step, lower, upper, minimum, q_size_limit, waiting_time, large, small):
         self.c_manager = cm
         self.step_length = step
@@ -345,18 +350,18 @@ class LoadPredictor():
         self.c_manager.container_q.put_container(container_data)
 
     def analyze_roc_for_autoscaling(self):
+        SysOut.debug_string("Started a load predictor thread! ID: {}".format(threading.current_thread()))
         while True:
             time.sleep(self.step_length)
+            self.calculate_roc_per_image()
 
             for image in self.image_data:
-                
+
                 last_start = self.image_data[image].get("last_start", 0)
-                
                 if int(time.time()) - last_start > self.wait_time:
                     # a new container was not recently started so action should be taken if needed
                     SysOut.debug_string("Checking image <{}> for scaling action".format(image[Definition.Container.get_str_con_image_name()]))
                     
-                    self.calculate_roc_per_image
                     roc = self.image_data[image]["roc"]
                     increment = 0
                     image_queue_length = MessagesQueue.verbose().get(image)

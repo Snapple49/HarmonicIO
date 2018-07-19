@@ -111,15 +111,9 @@ class DockerMaster(object):
 
         for container in conts_to_check:
             name = (str(container.image)).split('\'')[1]
-            if not sum_of_cpu.get(name):
-                sum_of_cpu[name] = self.calculate_cpu_usage(container)
-            else:
-                sum_of_cpu[name] += self.calculate_cpu_usage(container)
-            if not counters.get(name):
-                counters[name] = 0
-            else:
-                counters[name] += 1
-            
+            sum_of_cpu[name] = sum_of_cpu.get(name, 0) + self.calculate_cpu_usage(container)
+            counters[name] = counters.get(name, 0) + 1
+
         for container in sum_of_cpu:
             containers[container] = {"avg_cpu" : sum_of_cpu[container]/counters[container]}
         

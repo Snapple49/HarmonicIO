@@ -287,7 +287,7 @@ class WorkerProfiler():
         transfers data from individual containers in metadata to container image-based metadata which is more interesting
         for the resource manager, such as average cpu usage across all instances of a specific container image.
         """
-        running_containers = LookUpTable.Containers.verbose()
+        running_containers = LookUpTable.Containers.running_containers()
         current_workers = LookUpTable.Workers.verbose()
         for container_name in running_containers:
             total_counter = 0
@@ -296,11 +296,12 @@ class WorkerProfiler():
                 local_counter = 0
                 if container_name in current_workers[worker]["local_image_stats"]:
                     for local in current_workers[worker][Definition.REST.get_str_docker()]:
-                        if local[Definition.Container.get_str_con_image_name()] == container_name:
+                        if local[Definition.Container.Status.get_str_image()] == container_name:
                             local_counter +=1
-                    avg_sum += current_workers[worker]["local_image_stats"][container_name] * local_counter
+                    avg_sum += current_workers[worker]["local_image_stats"].get(container_name, 0) * local_counter
                 total_counter += local_counter
-            LookUpTable.ImageMetadata.push_metadata(container_name, {self.c_allocator.size_descriptor : avg_sum/total_counter})
+            if total_counter:
+                LookUpTable.ImageMetadata.push_metadata(container_name, {self.c_allocator.size_descriptor : avg_sum/total_counter})
 
 
 class LoadPredictor():

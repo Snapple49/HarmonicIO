@@ -38,6 +38,8 @@ class LookUpTable(object):
                 #dict_input["bin_index"] = LookUpTable.Workers.active_workers()
                 #dict_input["active"] = True
             else:
+                for field in dict_input:
+                    LookUpTable.Workers.__workers[worker_ip][field] = dict_input[field]
                 LookUpTable.Workers.__workers[worker_ip][Definition.get_str_last_update()] = Services.get_current_timestamp()
                 #LookUpTable.Workers.__workers[worker_ip]["bin_index"] = LookUpTable.Workers.active_workers()
 
@@ -93,6 +95,17 @@ class LookUpTable(object):
         def verbose():
             return LookUpTable.Containers.__containers
 
+        @staticmethod
+        def running_containers():
+            """
+            returns a list with the names of container images currently with running containers
+            """
+            running = []
+            for container in LookUpTable.Containers.__containers:
+                if len(LookUpTable.Containers.__containers[container]) > 0:
+                    running.append(container)
+            return running
+            
         @staticmethod
         def update_container(dict_input):
 

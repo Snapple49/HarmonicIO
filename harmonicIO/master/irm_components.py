@@ -124,7 +124,7 @@ class ContainerAllocator():
                     container[Definition.Container.Status.get_str_sid()] = "deleteme"
                     self.remove_container_by_id(container[Definition.Container.get_str_con_image_name()], "deleteme")
                     del container["bin_status"]
-                    del container[Definition.Container.get_str_con_image_name()]
+                    del container[Definition.Container.Status.get_str_sid()]
                     self.container_q.put_container(container)
                 # issue: containers that could not be started are lost, requeue in allocation queue? Or container queue to be repacked?
             finally:

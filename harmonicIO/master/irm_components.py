@@ -222,7 +222,7 @@ class ContainerAllocator():
         try:
             for _bin in self.bins:
                 for item in _bin.items:
-                    if item.get(Definition.Container.Status.get_str_sid(), "") == csid:
+                    if item.data.get(Definition.Container.Status.get_str_sid(), "") == csid:
                         target_bin = _bin.index
                         break
 

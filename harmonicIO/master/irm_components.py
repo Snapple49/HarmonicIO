@@ -120,8 +120,12 @@ class ContainerAllocator():
                 if sid:
                     container[Definition.Container.Status.get_str_sid()] = sid
                 else:
-                    SysOut.err_string("Could not start container on target worker!\n")
-
+                    SysOut.err_string("Could not start container on target worker! Requeueing as unpacked!\n")
+                    container[Definition.Container.Status.get_str_sid()] = "deleteme"
+                    self.remove_container_by_id(container[Definition.Container.get_str_con_image_name()], "deleteme")
+                    del container["bin_status"]
+                    self.container_q.put_container(container)
+                # issue: containers that could not be started are lost, requeue in allocation queue? Or container queue to be repacked?
             finally:
                 self.allocation_q.task_done()
                 self.allocation_lock.release()

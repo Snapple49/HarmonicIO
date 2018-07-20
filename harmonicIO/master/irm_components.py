@@ -359,7 +359,7 @@ class LoadPredictor():
                 last_start = self.image_data[image].get("last_start", 0)
                 if int(time.time()) - last_start > self.wait_time:
                     # a new container was not recently started so action should be taken if needed
-                    SysOut.debug_string("Checking image <{}> for scaling action".format(self.image_data[image][Definition.Container.get_str_con_image_name()]))
+                    SysOut.debug_string("Checking image <{}> for scaling action".format(self.image_data[image]))
 
                     roc = self.image_data[image]["roc"]
                     increment = 0

@@ -113,18 +113,18 @@ class ContainerAllocator():
                 if target_worker:
                     try:
                         sid = self.start_container_on_worker(target_worker, container)
-                        container["bin_status"] = Bin.ContainerBinStatus.RUNNING
                     except Exception as e:
                         SysOut.debug_string(e)
                 
                 if sid:
+                    container["bin_status"] = Bin.ContainerBinStatus.RUNNING
                     container[Definition.Container.Status.get_str_sid()] = sid
                 else:
-                    SysOut.err_string("Could not start container on target worker! Requeueing as unpacked!\n")
+                    SysOut.debug_string("Could not start container on target worker! Requeueing as unpacked!\n")
+                    del container["bin_status"]
+                    del container["bin_index"]
                     container[Definition.Container.Status.get_str_sid()] = "deleteme"
                     self.remove_container_by_id(container[Definition.Container.get_str_con_image_name()], "deleteme")
-                    del container["bin_status"]
-                    del container[Definition.Container.Status.get_str_sid()]
                     self.container_q.put_container(container)
                 # issue: containers that could not be started are lost, requeue in allocation queue? Or container queue to be repacked?
             finally:
@@ -224,12 +224,13 @@ class ContainerAllocator():
             for _bin in self.bins:
                 for item in _bin.items:
                     if item.data.get(Definition.Container.Status.get_str_sid(), "") == csid:
+                        del item.data[Definition.Container.Status.get_str_sid()]
                         target_bin = _bin.index
                         break
 
             if target_bin > -1:
                 self.bins[target_bin].remove_item_in_bin(Definition.Container.Status.get_str_sid(), csid)
-
+    
         finally:
             self.bin_layout_lock.release()
             return True if target_bin > -1 else False

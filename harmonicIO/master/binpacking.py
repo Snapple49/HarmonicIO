@@ -47,7 +47,7 @@ class Bin():
         self.items = []
         self.free_space = 1.0
         self.index = bin_index
-        self.space_margin = 0.05
+        self.space_margin = 0.0
 
     def pack(self, item_data, size_descriptor):
         item = self.Item(item_data, size_descriptor)

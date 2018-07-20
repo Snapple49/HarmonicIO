@@ -302,12 +302,10 @@ class WorkerProfiler():
                 total_counter += local_counter
             if total_counter:
                 LookUpTable.ImageMetadata.push_metadata(container_name, {self.c_allocator.size_descriptor : avg_sum/total_counter})
-
+        # issue: local image stats empty! :(
 
 class LoadPredictor():
     
-    # CURRENTLY DOING
-    # issue: nothing is happening with analyzer, image data is empty
     def __init__(self, cm, step, lower, upper, minimum, q_size_limit, waiting_time, large, small):
         self.c_manager = cm
         self.step_length = step
@@ -361,14 +359,11 @@ class LoadPredictor():
                 last_start = self.image_data[image].get("last_start", 0)
                 if int(time.time()) - last_start > self.wait_time:
                     # a new container was not recently started so action should be taken if needed
-                    SysOut.debug_string("Checking image <{}> for scaling action".format(image[Definition.Container.get_str_con_image_name()]))
-                    
+                    SysOut.debug_string("Checking image <{}> for scaling action".format(self.image_data[image][Definition.Container.get_str_con_image_name()]))
+
                     roc = self.image_data[image]["roc"]
                     increment = 0
-                    image_queue_length = MessagesQueue.verbose().get(image)
-                    if not image_queue_length:
-                        image_queue_length = 0
-
+                    image_queue_length = MessagesQueue.verbose().get(image, 0)
 
                     # decide how many containers should be added, if any, and send these to the container queue
                     # cases: RoC above either limit or RoC negative but queue length above limit

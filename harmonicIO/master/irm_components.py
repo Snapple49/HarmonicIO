@@ -341,7 +341,7 @@ class LoadPredictor():
         current_queue = MessagesQueue.verbose()
         for image in current_queue:
             if not self.image_data.get(image):
-                self.image_data[image]["roc"] = current_queue[image]
+                self.image_data[image] = {"roc" : current_queue[image]}
             else:
                 self.image_data[image]["roc"] = (current_queue[image] - self.image_data[image]["roc"]) / self.step_length
                 

@@ -67,6 +67,8 @@ class Bin():
                 self.free_space += self.items[i].size
                 if self.free_space > 1.0:
                     self.free_space = 1.0
+                del self.items[i].data["bin_index"]
+                del self.items[i].data["bin_status"]
                 del self.items[i]
                 break
 

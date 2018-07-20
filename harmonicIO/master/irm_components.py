@@ -343,7 +343,7 @@ class LoadPredictor():
             if not self.image_data.get(image):
                 self.image_data[image] = {"roc" : current_queue[image]}
             else:
-                self.image_data[image]["roc"] = (current_queue[image] - self.image_data[image]["roc"]) / self.step_length
+                self.image_data[image]["roc"] = int((current_queue[image] - self.image_data[image]["roc"]) / self.step_length)
                 
     def queue_container(self, container_data):
         self.c_manager.container_q.put_container(container_data)

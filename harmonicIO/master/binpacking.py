@@ -40,6 +40,9 @@ class Bin():
             self.size = data[self.size_descriptor]
             self.data = data
 
+        def __str__(self):
+            return "Item size: {} | data: {}".format(self.size, self.data)
+
     def __init__(self, bin_index):
         self.items = []
         self.free_space = 1.0
@@ -77,6 +80,9 @@ class Bin():
                 self.free_space -= item.size
 
     def __str__(self):
-        return ("Bin {}: {}. Free space: {}".format(self.index, self.items, self.free_space))
+        bin_items = []
+        for item in self.items:
+            bin_items.append(str(item))
+        return ("Bin index: {}, space: {}, items:\n{}\n".format(self.index, self.free_space, bin_items))
 
     

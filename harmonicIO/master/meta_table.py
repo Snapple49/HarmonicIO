@@ -293,7 +293,10 @@ class LookUpTable(object):
         if LookUpTable.debugging:
             from .resource_manager import IntelligentResourceManager # again, necessary local import
             debug = {}
-            debug["bins"] = IntelligentResourceManager.container_manager.bins
+            binlist = []
+            for _bin in IntelligentResourceManager.container_manager.bins:
+                binlist.append(str(_bin))
+            debug["bins"] = binlist
             debug["allocation queue"] = IntelligentResourceManager.container_manager.allocation_q.queue
             debug["container queue"] = IntelligentResourceManager.container_manager.container_q.view_queue()
             debug["load predictor data"] = IntelligentResourceManager.container_manager.load_predictor.image_data

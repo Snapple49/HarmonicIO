@@ -4,6 +4,7 @@ import threading
 import json
 import time
 from urllib.request import urlopen
+import copy
 
 from harmonicIO.general.services import SysOut
 from harmonicIO.general.definition import Definition
@@ -97,36 +98,48 @@ class ContainerAllocator():
 
     def queue_manager(self):
         SysOut.debug_string("Started a queue manager thread! ID: {}".format(threading.current_thread()))
+        deleteflag = "deleteme"
         while True:
             try:
                 time.sleep(1)
                 target_worker = None
                 sid = None
                 self.allocation_lock.acquire()
-                container = self.allocation_q.get().data
+                container_data = self.allocation_q.get().data
                 workers = LookUpTable.Workers.verbose()
-
-                for worker in workers:
-                    if workers[worker].get("bin_index", -99) == container["bin_index"]:
-                        target_worker = (workers[worker][Definition.get_str_node_addr()], workers[worker][Definition.get_str_node_port()])
-
-                if target_worker:
-                    try:
-                        sid = self.start_container_on_worker(target_worker, container)
-                    except Exception as e:
-                        SysOut.debug_string(e)
                 
-                if sid:
-                    container["bin_status"] = Bin.ContainerBinStatus.RUNNING
-                    container[Definition.Container.Status.get_str_sid()] = sid
-                else:
-                    SysOut.debug_string("Could not start container on target worker! Requeueing as unpacked!\n")
-                    del container["bin_status"]
-                    del container["bin_index"]
-                    container[Definition.Container.Status.get_str_sid()] = "deleteme"
-                    self.remove_container_by_id(container[Definition.Container.get_str_con_image_name()], "deleteme")
-                    self.container_q.put_container(container)
+                if container_data["bin_status"] == Bin.ContainerBinStatus.PACKED:
+                    
+                    for worker in workers:
+                        if workers[worker].get("bin_index", -99) == container_data["bin_index"]:
+                            target_worker = (workers[worker][Definition.get_str_node_addr()], workers[worker][Definition.get_str_node_port()])
+
+                    if target_worker:
+                        try:
+                            sid = self.start_container_on_worker(target_worker, container_data)
+                        except Exception as e:
+                            SysOut.debug_string(e)
+                    
+                    if sid and not sid == deleteflag:
+                        container_data["bin_status"] = Bin.ContainerBinStatus.RUNNING
+                        container_data[Definition.Container.Status.get_str_sid()] = sid
+                    else:
+                        SysOut.debug_string("Could not start container on target worker! Requeueing as failed!\n")
+                        container_data[Definition.Container.Status.get_str_sid()] = deleteflag
+                        
+                        # ensure fresh copy of data is requeued and remove item from bins
+                        new_container_data = copy.deepcopy(container_data)
+                        self.bins.remove_item_in_bin(Definition.Container.Status.get_str_sid(), deleteflag)
+                        for field in ["bin_index", "bin_status", Definition.Container.Status.get_str_sid()]:
+                            del new_container_data[field]
+
+                        SysOut.debug_string("Requeueing new container: {}".format(new_container_data))
+                        # requeue the copy
+                        self.container_q.put_container(new_container_data)
+
+                # CURRENTLY DOING
                 # issue: containers that could not be started are lost, requeue in allocation queue? Or container queue to be repacked?
+                # right now container objects are readded, because remove by ID does not work across threads. Solution = local purge?
             finally:
                 self.allocation_q.task_done()
                 self.allocation_lock.release()
@@ -174,8 +187,8 @@ class ContainerAllocator():
         for bin_ in bins_layout:
             for item in bin_.items:
                 if item.data["bin_status"] == Bin.ContainerBinStatus.PACKED:
-                    self.allocation_q.put(item)
                     item.data["bin_status"] = Bin.ContainerBinStatus.QUEUED
+                    self.allocation_q.put(item)
 
         self.target_worker_number = minimum_worker_number + self.calculate_overhead_workers(LookUpTable.Workers.active_workers())
 
@@ -214,9 +227,10 @@ class ContainerAllocator():
         finally:
             self.allocation_lock.release()
 
-    def remove_container_by_id(self, c_name, csid):
+    def remove_container_by_id(self, csid):
         """
         remove container with specified short_id. Should only be called via external event when a container finishes and exits the system
+        or when container could not be allocated after being packed and queued
         """
         target_bin = -1
         self.bin_layout_lock.acquire()
@@ -224,20 +238,19 @@ class ContainerAllocator():
             for _bin in self.bins:
                 for item in _bin.items:
                     if item.data.get(Definition.Container.Status.get_str_sid(), "") == csid:
-                        del item.data[Definition.Container.Status.get_str_sid()]
                         target_bin = _bin.index
                         break
 
             if target_bin > -1:
                 self.bins[target_bin].remove_item_in_bin(Definition.Container.Status.get_str_sid(), csid)
-    
+
         finally:
             self.bin_layout_lock.release()
             return True if target_bin > -1 else False
 
     def start_container_on_worker(self, target_worker, container):
         # send request to worker
-        cpu_share = LookUpTable.ImageMetadata.verbose().get(container[Definition.Container.get_str_con_image_name()], self.default_cpu_share)
+        cpu_share = LookUpTable.ImageMetadata.verbose().get(container[Definition.Container.get_str_con_image_name()], container[self.size_descriptor])
         cont = dict(container)
         cont[Definition.Container.get_str_cpu_share()] = cpu_share
         worker_url = "http://{}:{}/docker?token=None&command=create".format(target_worker[0], target_worker[1])

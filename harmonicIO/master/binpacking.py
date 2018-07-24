@@ -63,7 +63,7 @@ class Bin():
 
     def remove_item_in_bin(self, identifier, target):
         for i in range(len(self.items)):
-            if self.items[i].data[identifier] == target[identifier]:
+            if self.items[i].data[identifier] == target:
                 self.free_space += self.items[i].size
                 if self.free_space > 1.0:
                     self.free_space = 1.0

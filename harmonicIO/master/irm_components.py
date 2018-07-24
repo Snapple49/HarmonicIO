@@ -123,6 +123,8 @@ class ContainerAllocator():
                     if sid and not sid == deleteflag:
                         container_data["bin_status"] = Bin.ContainerBinStatus.RUNNING
                         container_data[Definition.Container.Status.get_str_sid()] = sid
+                        SysOut.debug_string("Added container with sid {}".format(sid))
+
                     else:
                         SysOut.debug_string("Could not start container on target worker! Requeueing as failed!\n")
                         container_data[Definition.Container.Status.get_str_sid()] = deleteflag

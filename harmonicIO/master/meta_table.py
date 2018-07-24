@@ -150,7 +150,7 @@ class LookUpTable(object):
 
                 # notify IRM about container removal
                 from .resource_manager import IntelligentResourceManager # NOTE: local import required to avoid circular dependencies
-                IntelligentResourceManager.remove_container(container_name, short_id)
+                IntelligentResourceManager.remove_container(short_id)
 
             return True
 

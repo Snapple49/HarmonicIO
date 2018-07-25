@@ -152,6 +152,7 @@ class ContainerAllocator():
         while True:
             time.sleep(self.packing_interval)
             self.pack_containers()
+            self.update_bins()
 
     def average_wasted_space(self, bins):
         total_wasted_space = 0.0
@@ -194,6 +195,18 @@ class ContainerAllocator():
                     self.allocation_q.put(item)
 
         self.target_worker_number = minimum_worker_number + self.calculate_overhead_workers(LookUpTable.Workers.active_workers())
+
+    def update_bins(self):
+        self.bin_layout_lock.acquire()
+        indices = []
+        try:
+            for i in range(len(self.bins)):
+                if not self.bins[i]:
+                    indices.insert(0, i)
+            for i in indices:
+                del self.bins[i]
+        finally:
+            self.bin_layout_lock.release()
 
     def calculate_overhead_workers(self, number_of_current_workers):
         """

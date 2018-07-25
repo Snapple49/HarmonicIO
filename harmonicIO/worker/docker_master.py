@@ -190,7 +190,7 @@ class DockerMaster(object):
                 SysOut.out_string("Container " + container_name + " is created!")
                 SysOut.out_string("Container " + container_name + " is " + res.status + " ")
                 # return short id of container
-                return res.short_id
+                return res.id[:12] # Docker API truncates short id to only 10 characters, while internally 12 are used
             else:
                 SysOut.out_string("Container " + container_name + " cannot be created!")
                 return False

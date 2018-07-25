@@ -8,7 +8,7 @@ class BinPacking():
         """
         bins = []
         if bin_layout:
-            bins = bin_layout
+            bins = sorted(bin_layout, key=lambda i: i.index)
 
         # for each item in the list, go through list from left to right and check if it fits in bin and pack it 
         for item in input_list:
@@ -24,6 +24,14 @@ class BinPacking():
                 if bins[len(bins)-1].pack(item, size_descriptor):
                     item_packed = True
 
+        # lastly check if any pre-existing bins are now empty, and remove
+        indices = []
+        for i in range(len(bins)):
+            if not bins[i]:
+                indices.insert(0, i)
+        for i in indices:
+            del bins[i]
+        
         return bins
 
 

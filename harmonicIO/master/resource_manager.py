@@ -23,7 +23,6 @@ class IntelligentResourceManager():
     @staticmethod
     def remove_container(csid):
         # called from metatable, update available containers accordingly
-        SysOut.debug_string("Got request from metatable to remove finished container!")
         IntelligentResourceManager.container_manager.remove_container_by_id(csid)
 
     @staticmethod
@@ -40,8 +39,6 @@ class IntelligentResourceManager():
                     LookUpTable.Workers.enable_worker()
                 else:
                     # disable workers
-                    # CURRENTLY DOING:
-                    # issue: we're not scaling down... 
                     LookUpTable.Workers.disable_worker()
                 current_workers = LookUpTable.Workers.active_workers()
         

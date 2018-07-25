@@ -39,6 +39,8 @@ class IntelligentResourceManager():
                     LookUpTable.Workers.enable_worker()
                 else:
                     # disable workers
+                    # CURRENTLY DOING:
+                    # issue: we're not scaling down... 
                     LookUpTable.Workers.disable_worker()
                 current_workers = LookUpTable.Workers.active_workers()
         

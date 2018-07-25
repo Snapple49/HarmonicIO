@@ -13,6 +13,7 @@ from .meta_table import LookUpTable
 from .messaging_system import MessagesQueue
 from .configuration import Setting, IRMSetting
 
+BinStatus = Bin.ContainerBinStatus
 
 class ContainerQueue():
     
@@ -108,7 +109,7 @@ class ContainerAllocator():
                 container_data = self.allocation_q.get().data
                 workers = LookUpTable.Workers.verbose()
                 
-                if container_data["bin_status"] == Bin.ContainerBinStatus.PACKED:
+                if container_data["bin_status"] in [BinStatus.PACKED, BinStatus.QUEUED]:
                     
                     for worker in workers:
                         if workers[worker].get("bin_index", -99) == container_data["bin_index"]:
@@ -121,8 +122,8 @@ class ContainerAllocator():
                             SysOut.debug_string(e)
                     
                     if sid and not sid == deleteflag:
-                        container_data["bin_status"] = Bin.ContainerBinStatus.RUNNING
                         container_data[Definition.Container.Status.get_str_sid()] = sid
+                        container_data["bin_status"] = BinStatus.RUNNING
                         SysOut.debug_string("Added container with sid {}".format(sid))
 
                     else:
@@ -141,7 +142,7 @@ class ContainerAllocator():
 
                 # CURRENTLY DOING
                 # issue: containers that could not be started are lost, requeue in allocation queue? Or container queue to be repacked?
-                # right now container objects are readded, because remove by ID does not work across threads. Solution = local purge?
+                # containers don't go to running status?
             finally:
                 self.allocation_q.task_done()
                 self.allocation_lock.release()
@@ -188,8 +189,8 @@ class ContainerAllocator():
         
         for bin_ in bins_layout:
             for item in bin_.items:
-                if item.data["bin_status"] == Bin.ContainerBinStatus.PACKED:
-                    item.data["bin_status"] = Bin.ContainerBinStatus.QUEUED
+                if item.data["bin_status"] == BinStatus.PACKED:
+                    item.data["bin_status"] = BinStatus.QUEUED
                     self.allocation_q.put(item)
 
         self.target_worker_number = minimum_worker_number + self.calculate_overhead_workers(LookUpTable.Workers.active_workers())

@@ -23,6 +23,7 @@ class IntelligentResourceManager():
     @staticmethod
     def remove_container(csid):
         # called from metatable, update available containers accordingly
+        SysOut.debug_string("Got request from metatable to remove finished container!")
         IntelligentResourceManager.container_manager.remove_container_by_id(csid)
 
     @staticmethod

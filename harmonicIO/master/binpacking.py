@@ -41,7 +41,8 @@ class Bin():
             self.data = data
 
         def __str__(self):
-            return "Item size: {} | data: {}".format(self.size, self.data)
+            return """Item size: {}
+    data: {}""".format(self.size, self.data)
 
     def __init__(self, bin_index):
         self.items = []
@@ -85,6 +86,10 @@ class Bin():
         bin_items = []
         for item in self.items:
             bin_items.append(str(item))
-        return ("Bin index: {}, space: {}, items:\n{}\n".format(self.index, self.free_space, bin_items))
+        return ("""
+Bin index: {}, space: {} 
+Items:
+    {}
+""".format(self.index, self.free_space, bin_items))
 
     

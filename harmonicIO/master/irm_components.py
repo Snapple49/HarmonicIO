@@ -235,6 +235,7 @@ class ContainerAllocator():
         remove container with specified short_id. Should only be called via external event when a container finishes and exits the system
         or when container could not be allocated after being packed and queued
         """
+        SysOut.debug_string("Got request to remove container id {}!".format(csid))
         target_bin = -1
         self.bin_layout_lock.acquire()
         try:
@@ -242,6 +243,7 @@ class ContainerAllocator():
                 for item in _bin.items:
                     if item.data.get(Definition.Container.Status.get_str_sid(), "") == csid:
                         target_bin = _bin.index
+                        SysOut.debug_string("Found bin containing item, index {}!".format(target_bin))
                         break
 
             if target_bin > -1:

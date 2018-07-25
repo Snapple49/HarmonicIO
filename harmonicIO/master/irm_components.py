@@ -201,7 +201,7 @@ class ContainerAllocator():
         indices = []
         try:
             for i in range(len(self.bins)):
-                if not self.bins[i]:
+                if not self.bins[i].items:
                     indices.insert(0, i)
             for i in indices:
                 del self.bins[i]

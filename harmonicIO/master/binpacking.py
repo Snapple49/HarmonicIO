@@ -27,7 +27,7 @@ class BinPacking():
         # lastly check if any pre-existing bins are now empty, and remove
         indices = []
         for i in range(len(bins)):
-            if not bins[i]:
+            if not bins[i].items:
                 indices.insert(0, i)
         for i in indices:
             del bins[i]

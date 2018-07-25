@@ -132,7 +132,7 @@ class ContainerAllocator():
                         
                         # ensure fresh copy of data is requeued and remove item from bins
                         new_container_data = copy.deepcopy(container_data)
-                        self.bins.remove_item_in_bin(Definition.Container.Status.get_str_sid(), deleteflag)
+                        self.bins[container_data["bin_index"]].remove_item_in_bin(Definition.Container.Status.get_str_sid(), deleteflag)
                         for field in ["bin_index", "bin_status", Definition.Container.Status.get_str_sid()]:
                             del new_container_data[field]
 
@@ -245,6 +245,7 @@ class ContainerAllocator():
                         break
 
             if target_bin > -1:
+                SysOut.debug_string("Sent request to bin {} to remove container with SID {}!".format(target_bin, csid))
                 self.bins[target_bin].remove_item_in_bin(Definition.Container.Status.get_str_sid(), csid)
 
         finally:

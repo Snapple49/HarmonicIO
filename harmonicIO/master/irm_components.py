@@ -140,9 +140,6 @@ class ContainerAllocator():
                         # requeue the copy
                         self.container_q.put_container(new_container_data)
 
-                # CURRENTLY DOING
-                # issue: containers that could not be started are lost, requeue in allocation queue? Or container queue to be repacked?
-                # containers don't go to running status?
             finally:
                 self.allocation_q.task_done()
                 self.allocation_lock.release()
@@ -175,7 +172,6 @@ class ContainerAllocator():
         """
         self.bin_layout_lock.acquire() # bin layout may not be mutated externally during packing
         try:
-            #SysOut.debug_string("Performing bin packing with algorithm {}!".format(self.packing_algorithm.__name__))
             container_list = self.container_q.get_current_queue_list()
             # if any containers don't yet have average cpu usage, add default value now
             for cont in container_list:
@@ -248,7 +244,6 @@ class ContainerAllocator():
         remove container with specified short_id. Should only be called via external event when a container finishes and exits the system
         or when container could not be allocated after being packed and queued
         """
-        SysOut.debug_string("Got request to remove container id {}!".format(csid))
         target_bin = -1
         self.bin_layout_lock.acquire()
         try:
@@ -256,11 +251,9 @@ class ContainerAllocator():
                 for item in _bin.items:
                     if item.data.get(Definition.Container.Status.get_str_sid(), "") == csid:
                         target_bin = _bin.index
-                        SysOut.debug_string("Found bin containing item, index {}!".format(target_bin))
                         break
 
             if target_bin > -1:
-                SysOut.debug_string("Sent request to bin {} to remove container with SID {}!".format(target_bin, csid))
                 self.bins[target_bin].remove_item_in_bin(Definition.Container.Status.get_str_sid(), csid)
 
         finally:
@@ -340,6 +333,8 @@ class WorkerProfiler():
                 total_counter += local_counter
             if total_counter:
                 LookUpTable.ImageMetadata.push_metadata(container_name, {self.c_allocator.size_descriptor : avg_sum/total_counter})
+
+        # CURRENTLY DOING:
         # issue: local image stats empty! :(
 
 class LoadPredictor():
@@ -361,9 +356,6 @@ class LoadPredictor():
         self.analyzer_thread = threading.Thread(target=self.analyze_roc_for_autoscaling)
         self.analyzer_thread.daemon = False
         self.analyzer_thread.start()
-
-
-        
 
     def calculate_messagequeue_total_roc(self):
         items_in_queue = 0
@@ -415,10 +407,10 @@ class LoadPredictor():
                     elif image_queue_length > self.queue_length_limit:
                         increment = self.small_increment
 
-                    
+                    # NOTE: design decision, should created from autoscaling containers be volatile or not?
                     if increment > 0:
                         for _ in range(increment):
-                            self.queue_container({Definition.Container.get_str_con_image_name() : image})
+                            self.queue_container({Definition.Container.get_str_con_image_name() : image, "volatile" : True})
                         self.image_data[image]["last_start"] = int(time.time()) 
 
 

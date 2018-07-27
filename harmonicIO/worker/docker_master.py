@@ -106,7 +106,7 @@ class DockerMaster(object):
         counters = {}
 
         try:
-            conts_to_check = self.__client.container.list()
+            conts_to_check = self.__client.containers.list()
         except AttributeError as e:
             SysOut.err_string(e)
             conts_to_check = []

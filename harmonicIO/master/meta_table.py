@@ -289,7 +289,6 @@ class LookUpTable(object):
         ret['WORKERS'] = LookUpTable.Workers.verbose()
         ret['CONTAINERS'] = LookUpTable.Containers.verbose()
         ret['TUPLES'] = LookUpTable.Tuples.verbose()
-        ret['JOBS'] = LookUpTable.Jobs.verbose()
         ret['IMAGEDATA'] = LookUpTable.ImageMetadata.verbose()
         if LookUpTable.debugging:
             from .resource_manager import IntelligentResourceManager # again, necessary local import
@@ -303,5 +302,6 @@ class LookUpTable(object):
             debug["load predictor data"] = IntelligentResourceManager.container_manager.load_predictor.image_data
             debug["target workers"] = IntelligentResourceManager.container_manager.target_worker_number
             ret['DEGUBBING_DATA'] = debug
+            del ret['TUPLES']
 
         return ret

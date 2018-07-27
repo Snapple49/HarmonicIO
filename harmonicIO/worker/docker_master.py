@@ -146,7 +146,8 @@ class DockerMaster(object):
         #if system_delta > 0.0 and cpu_delta > 0.0:
         return (cpu_delta / system_delta) * len(stats["cpu_stats"]["cpu_usage"]["percpu_usage"]) * 100.0
 
-
+        # CURRENTLY DOING:
+        # issue: got key error on "system cpu usage"
             
 
 

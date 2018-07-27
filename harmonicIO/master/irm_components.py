@@ -330,14 +330,14 @@ class WorkerProfiler():
                     for local in current_workers[worker][Definition.REST.get_str_docker()]:
                         if local[Definition.Container.Status.get_str_image()] == container_name:
                             local_counter +=1
-                    avg_sum += current_workers[worker]["local_image_stats"].get(container_name, 0) * local_counter
+                    avg_sum += current_workers[worker]["local_image_stats"].get(container_name, 0)["avg_cpu"] * local_counter
                 total_counter += local_counter
             if total_counter:
                 LookUpTable.ImageMetadata.push_metadata(container_name, {self.c_allocator.size_descriptor : avg_sum/total_counter})
                 SysOut.debug_string("Pushing metadata: sum {} population {}".format(avg_sum, total_counter))
 
         # CURRENTLY DOING:
-        # issue: local image stats empty! :(
+        # issue: avg cpu always 0
 
 class LoadPredictor():
     
@@ -390,16 +390,14 @@ class LoadPredictor():
 
                 last_start = self.image_data[image].get("last_start", 0)
                 if int(time.time()) - last_start > self.wait_time:
-                    # a new container was not recently started so action should be taken if needed
-                    SysOut.debug_string("Checking image {} for scaling action".format(image))
 
+                    # a new container was not recently started so action should be taken if needed
                     roc = self.image_data[image]["roc"]
                     increment = 0
                     image_queue_length = MessagesQueue.verbose().get(image, 0)
 
                     # decide how many containers should be added, if any, and send these to the container queue
                     # cases: RoC above either limit or RoC negative but queue length above limit
-
                     if roc > self.roc_positive_upper:
                         increment = self.large_increment
                     elif roc > self.roc_positive_lower:

@@ -133,6 +133,8 @@ class DockerMaster(object):
 
         SysOut.debug_string("Calculating cpu usage for container {}".format(container))
 
+
+
         # get worker stats via docker api
         stats = self.__client.api.stats(container.name, stream=False)
 
@@ -141,9 +143,8 @@ class DockerMaster(object):
         # calculate the change for the entire system between readings
         system_delta = stats["cpu_stats"]["system_cpu_usage"] - stats["precpu_stats"]["system_cpu_usage"]
         
-        if system_delta > 0.0 and cpu_delta > 0.0:
-            # put this data with the container's image name:tag
-            return (cpu_delta / system_delta) * len(stats["cpu_stats"]["cpu_usage"]["percpu_usage"]) * 100.0
+        #if system_delta > 0.0 and cpu_delta > 0.0:
+        return (cpu_delta / system_delta) * len(stats["cpu_stats"]["cpu_usage"]["percpu_usage"]) * 100.0
 
 
             

@@ -104,10 +104,13 @@ class DockerMaster(object):
         containers = {}
         sum_of_cpu = {}
         counters = {}
+
         try:
             conts_to_check = self.__client.container.list()
         except AttributeError:
             conts_to_check = []
+
+        SysOut.debug_string("Containers to check: {}".format(conts_to_check))
 
         for container in conts_to_check:
             name = (str(container.image)).split('\'')[1]
@@ -117,6 +120,7 @@ class DockerMaster(object):
         for container in sum_of_cpu:
             containers[container] = {"avg_cpu" : sum_of_cpu[container]/counters[container]}
         
+        SysOut.debug_string("")
         return containers
             
 
@@ -126,6 +130,8 @@ class DockerMaster(object):
         Returns CPU usage of container across instances on current worker. 
         Based on discussion here: https://stackoverflow.com/questions/30271942/get-docker-container-cpu-usage-as-percentage
         """
+
+        SysOut.debug_string("Calculating cpu usage for container {}".format(container))
 
         # get worker stats via docker api
         stats = self.__client.api.stats(container.name, stream=False)

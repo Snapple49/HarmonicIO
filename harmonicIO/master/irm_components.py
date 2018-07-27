@@ -320,6 +320,7 @@ class WorkerProfiler():
         """
         running_containers = LookUpTable.Containers.running_containers()
         current_workers = LookUpTable.Workers.verbose()
+        SysOut.debug_string("Gathering metadata for containers: {}".format(running_containers))
         for container_name in running_containers:
             total_counter = 0
             avg_sum = 0
@@ -333,6 +334,7 @@ class WorkerProfiler():
                 total_counter += local_counter
             if total_counter:
                 LookUpTable.ImageMetadata.push_metadata(container_name, {self.c_allocator.size_descriptor : avg_sum/total_counter})
+                SysOut.debug_string("Pushing metadata: sum {} population {}".format(avg_sum, total_counter))
 
         # CURRENTLY DOING:
         # issue: local image stats empty! :(

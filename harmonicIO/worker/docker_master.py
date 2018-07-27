@@ -107,7 +107,8 @@ class DockerMaster(object):
 
         try:
             conts_to_check = self.__client.container.list()
-        except AttributeError:
+        except AttributeError as e:
+            SysOut.err_string(e)
             conts_to_check = []
 
         SysOut.debug_string("Containers to check: {}".format(conts_to_check))
@@ -120,7 +121,6 @@ class DockerMaster(object):
         for container in sum_of_cpu:
             containers[container] = {"avg_cpu" : sum_of_cpu[container]/counters[container]}
         
-        SysOut.debug_string("")
         return containers
             
 

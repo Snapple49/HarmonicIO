@@ -133,19 +133,22 @@ class DockerMaster(object):
 
         SysOut.debug_string("Calculating cpu usage for container {}".format(container))
 
-
+        current_CPU = None
 
         # get worker stats via docker api
         stats = self.__client.api.stats(container.name, stream=False)
 
-        # calculate the change for the cpu usage of the container in between readings
-        cpu_delta = stats["cpu_stats"]["cpu_usage"]["total_usage"] - stats["precpu_stats"]["cpu_usage"]["total_usage"]
-        # calculate the change for the entire system between readings
-        system_delta = stats["cpu_stats"]["system_cpu_usage"] - stats["precpu_stats"]["system_cpu_usage"]
-        
-        #if system_delta > 0.0 and cpu_delta > 0.0:
-        return (cpu_delta / system_delta) * len(stats["cpu_stats"]["cpu_usage"]["percpu_usage"]) * 100.0
+        if stats:
+            # calculate the change for the cpu usage of the container in between readings
+            cpu_delta = stats["cpu_stats"]["cpu_usage"]["total_usage"] - stats["precpu_stats"]["cpu_usage"]["total_usage"]
+            # calculate the change for the entire system between readings
+            system_delta = stats["cpu_stats"]["system_cpu_usage"] - stats["precpu_stats"]["system_cpu_usage"]
+            
+            #if system_delta > 0.0 and cpu_delta > 0.0:
+            current_CPU = (cpu_delta / system_delta) * len(stats["cpu_stats"]["cpu_usage"]["percpu_usage"]) * 100.0
 
+        return current_CPU
+        
         # CURRENTLY DOING:
         # issue: got key error on "system cpu usage"
             

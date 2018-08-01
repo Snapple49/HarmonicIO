@@ -180,11 +180,11 @@ class ContainerAllocator():
             bins_layout = self.packing_algorithm(container_list, self.bins, self.size_descriptor)
             self.bins = bins_layout
         
-        for bin_ in bins_layout:
-            for item in bin_.items:
-                if item.data["bin_status"] == BinStatus.PACKED:
-                    item.data["bin_status"] = BinStatus.QUEUED
-                    self.allocation_q.put(item)
+            for bin_ in bins_layout:
+                for item in bin_.items:
+                    if item.data["bin_status"] == BinStatus.PACKED:
+                        item.data["bin_status"] = BinStatus.QUEUED
+                        self.allocation_q.put(item)
         
         finally:
             self.bin_layout_lock.release()

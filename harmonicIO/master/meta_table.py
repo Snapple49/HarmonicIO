@@ -239,7 +239,7 @@ class LookUpTable(object):
             Data is dictionary of fields to update, such as CPU usage
             """
             container_dataset = LookUpTable.ImageMetadata.__container_data
-            c_data = container_dataset.get(container_image_name, None)
+            c_data = container_dataset.get(container_image_name, {})
             SysOut.debug_string("Got request to update metadata for {}: update data {} available data {}".format(container_image_name, data, c_data))
             
             history = c_data.get("update_count", None)

@@ -244,7 +244,7 @@ class LookUpTable(object):
             
             history = c_data.get("update_count", 0)
             if history < 10000:
-                c_data["update_count"] += history + 1
+                c_data["update_count"] = history + 1
             for field in data:
                 c_data[field] = (history * float(c_data.get(field, 0)) + float(data[field])) / (history + 1)
 

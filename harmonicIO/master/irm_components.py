@@ -296,6 +296,7 @@ class WorkerProfiler():
             time.sleep(self.update_interval)
 
             # gather metadata about containers and put in meta table
+            SysOut.debug_string("Profiling container metadata")
             self.gather_container_metadata()
 
             # update all containers in both container and allocation queues (as they are waiting) and in the bins with new data from the meta table
@@ -336,7 +337,7 @@ class WorkerProfiler():
                 SysOut.debug_string("Pushing metadata: sum {} population {}".format(avg_sum, total_counter))
 
         # CURRENTLY DOING:
-        # issue: avg cpu always 0
+        # issue: only pushes first time
 
 class LoadPredictor():
     

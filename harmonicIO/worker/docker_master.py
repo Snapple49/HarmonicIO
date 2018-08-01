@@ -121,6 +121,7 @@ class DockerMaster(object):
         for container in sum_of_cpu:
             containers[container] = {"avg_cpu" : sum_of_cpu[container]/counters[container]}
         
+        SysOut.debug_string("CPU per container: {}".format(containers))
         return containers
             
 
@@ -148,7 +149,7 @@ class DockerMaster(object):
             current_CPU = (cpu_delta / system_delta) * len(stats["cpu_stats"]["cpu_usage"]["percpu_usage"]) * 100.0
 
         return current_CPU
-        
+
 
     def run_container(self, container_name, cpu_share=50, volatile=False):
 

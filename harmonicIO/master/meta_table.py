@@ -241,14 +241,14 @@ class LookUpTable(object):
             container_dataset = LookUpTable.ImageMetadata.__container_data
             c_data = container_dataset.get(container_image_name, None)
             SysOut.debug_string("Got request to update metadata for {}: update data {} available data {}".format(container_image_name, data, c_data))
-            if c_data:
-                history = c_data.get("update_count", None)
-                if not history:
-                    c_data["update_count"] = 1
-                for field in data:
-                    c_data[field] = (history * float(c_data.get(field, 0)) + float(data[field])) / (history + 1)
-                if history < 10000:
-                    c_data["update_count"] += 1
+            
+            history = c_data.get("update_count", None)
+            if not history:
+                c_data["update_count"] = 1
+            for field in data:
+                c_data[field] = (history * float(c_data.get(field, 0)) + float(data[field])) / (history + 1)
+            if history < 10000:
+                c_data["update_count"] += 1
 
         
         @staticmethod

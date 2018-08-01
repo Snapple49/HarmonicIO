@@ -248,6 +248,9 @@ class LookUpTable(object):
             for field in data:
                 c_data[field] = (history * float(c_data.get(field, 0)) + float(data[field])) / (history + 1)
 
+            SysOut.debug_string("New data: {}".format(c_data))
+            container_dataset[container_image_name] = c_data
+
         
         @staticmethod
         def verbose():

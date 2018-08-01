@@ -179,18 +179,17 @@ class ContainerAllocator():
                     cont[self.size_descriptor] = self.default_cpu_share * 0.01
             bins_layout = self.packing_algorithm(container_list, self.bins, self.size_descriptor)
             self.bins = bins_layout
-        finally:
-            self.bin_layout_lock.release()
-
-        minimum_worker_number = len(bins_layout)
         
         for bin_ in bins_layout:
             for item in bin_.items:
                 if item.data["bin_status"] == BinStatus.PACKED:
                     item.data["bin_status"] = BinStatus.QUEUED
                     self.allocation_q.put(item)
+        
+        finally:
+            self.bin_layout_lock.release()
 
-        self.target_worker_number = minimum_worker_number + self.calculate_overhead_workers(LookUpTable.Workers.active_workers())
+        self.target_worker_number = len(bins_layout) + self.calculate_overhead_workers(LookUpTable.Workers.active_workers())
 
     def update_bins(self):
         self.bin_layout_lock.acquire()

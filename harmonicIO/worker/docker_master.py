@@ -149,10 +149,6 @@ class DockerMaster(object):
 
         return current_CPU
         
-        # CURRENTLY DOING:
-        # issue: got key error on "system cpu usage"
-            
-
 
     def run_container(self, container_name, cpu_share=50, volatile=False):
 

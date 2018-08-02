@@ -261,9 +261,8 @@ class ContainerAllocator():
 
     def start_container_on_worker(self, target_worker, container):
         # send request to worker
-        cpu_share = LookUpTable.ImageMetadata.verbose().get(container[Definition.Container.get_str_con_image_name()], container[self.size_descriptor])
         cont = dict(container)
-        cont[Definition.Container.get_str_cpu_share()] = cpu_share
+        cont[Definition.Container.get_str_cpu_share()] = container[self.size_descriptor]
         worker_url = "http://{}:{}/docker?token=None&command=create".format(target_worker[0], target_worker[1])
         req_data = bytes(json.dumps(cont), 'utf-8') 
         resp = urlopen(worker_url, req_data) 
@@ -274,6 +273,7 @@ class ContainerAllocator():
             return sid
         return None
 
+        # CURRENTLY DOING:
 
 
 

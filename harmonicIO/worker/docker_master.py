@@ -140,13 +140,17 @@ class DockerMaster(object):
         stats = self.__client.api.stats(container.name, stream=False)
 
         if stats:
-            # calculate the change for the cpu usage of the container in between readings
-            cpu_delta = stats["cpu_stats"]["cpu_usage"]["total_usage"] - stats["precpu_stats"]["cpu_usage"]["total_usage"]
-            # calculate the change for the entire system between readings
-            system_delta = stats["cpu_stats"]["system_cpu_usage"] - stats["precpu_stats"]["system_cpu_usage"]
+            try:
+                # calculate the change for the cpu usage of the container in between readings
+                cpu_delta = stats["cpu_stats"]["cpu_usage"]["total_usage"] - stats["precpu_stats"]["cpu_usage"]["total_usage"]
+                # calculate the change for the entire system between readings
+                system_delta = stats["cpu_stats"]["system_cpu_usage"] - stats["precpu_stats"]["system_cpu_usage"]
+                
+                #if system_delta > 0.0 and cpu_delta > 0.0:
+                current_CPU = (cpu_delta / system_delta) * len(stats["cpu_stats"]["cpu_usage"]["percpu_usage"]) * 100.0
             
-            #if system_delta > 0.0 and cpu_delta > 0.0:
-            current_CPU = (cpu_delta / system_delta) * len(stats["cpu_stats"]["cpu_usage"]["percpu_usage"]) * 100.0
+            except KeyError:
+                current_CPU = None
 
         return current_CPU
 

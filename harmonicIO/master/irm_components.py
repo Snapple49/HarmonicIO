@@ -273,8 +273,6 @@ class ContainerAllocator():
             return sid
         return None
 
-        # CURRENTLY DOING:
-
 
 
 
@@ -333,8 +331,8 @@ class WorkerProfiler():
                     avg_sum += current_workers[worker]["local_image_stats"].get(container_name, 0)["avg_cpu"] * local_counter
                 total_counter += local_counter
             if total_counter:
-                LookUpTable.ImageMetadata.push_metadata(container_name, {self.c_allocator.size_descriptor : avg_sum/total_counter})
                 SysOut.debug_string("Pushing metadata: sum {} population {}".format(avg_sum, total_counter))
+                LookUpTable.ImageMetadata.push_metadata(container_name, {self.c_allocator.size_descriptor : avg_sum/total_counter})
 
         # CURRENTLY DOING:
         # issue: only pushes first time

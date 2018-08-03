@@ -304,12 +304,15 @@ class WorkerProfiler():
 
                 # container queue
                 self.c_queue.update_containers(container_image, container_data)
+                SysOut.debug_string("Updated container queue")
                     
                 # allocation queue
                 self.c_allocator.update_queued_containers(container_image, container_data)
+                SysOut.debug_string("Updated allocation queue")
 
                 # bins
                 self.c_allocator.update_binned_containers(container_data)
+                SysOut.debug_string("Updated bins")
     
     def gather_container_metadata(self):
         """

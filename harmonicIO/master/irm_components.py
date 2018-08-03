@@ -232,9 +232,9 @@ class ContainerAllocator():
         self.allocation_lock.acquire()
         try:
             for item in self.allocation_q.queue:
-                if item[Definition.Container.get_str_con_image_name()] == c_name:
+                if item.data[Definition.Container.get_str_con_image_name()] == c_name:
                     for field in update_data:
-                        item[field] = update_data[field]
+                        item.data[field] = update_data[field]
         finally:
             self.allocation_lock.release()
 

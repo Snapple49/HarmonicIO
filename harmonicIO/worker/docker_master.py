@@ -115,11 +115,12 @@ class DockerMaster(object):
 
         for container in conts_to_check:
             name = (str(container.image)).split('\'')[1]
-            sum_of_cpu[name] = sum_of_cpu.get(name, 0) + self.calculate_cpu_usage(container)
+            cpu = self.calculate_cpu_usage(container)
+            sum_of_cpu[name] = sum_of_cpu.get(name, 0) + cpu if cpu else 0
             counters[name] = counters.get(name, 0) + 1
 
         for container in sum_of_cpu:
-            containers[container] = {"avg_cpu" : sum_of_cpu[container]/counters[container]}
+            containers[container] = {Definition.get_str_size_desc() : sum_of_cpu[container]/counters[container]}
         
         SysOut.debug_string("CPU per container: {}".format(containers))
         return containers
@@ -189,7 +190,7 @@ class DockerMaster(object):
                                                detach=True,
                                                stderr=True,
                                                stdout=True,
-                                               cpu_shares=int(1024*(cpu_share/100)),
+                                               cpu_shares=max(2, int(1024*(cpu_share/100))),
                                                mem_limit='1g',
                                                ports=get_ports_setting(expose_port, port),
                                                environment=get_env_setting(expose_port, port, volatile))

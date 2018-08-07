@@ -4,6 +4,7 @@ import threading
 import json
 import time
 from urllib.request import urlopen
+from urllib.error import HTTPError
 import copy
 
 from harmonicIO.general.services import SysOut
@@ -38,7 +39,7 @@ class ContainerQueue():
         try:
             for item in self.__queue.queue:
                 if item[Definition.Container.get_str_con_image_name()] == c_image:
-                    for field in ["avg_cpu"]:
+                    for field in [Definition.get_str_size_desc()]:
                         item[field] = update_data[field]
         finally:
             self.container_queue_lock.release()
@@ -78,7 +79,7 @@ class ContainerAllocator():
         self.allocation_lock = threading.Lock()
         self.bins = []
         self.bin_layout_lock = threading.Lock()
-        self.size_descriptor = "avg_cpu"
+        self.size_descriptor = Definition.get_str_size_desc()
 
         config = IRMSetting()
         self.packing_interval = config.packing_interval
@@ -121,8 +122,8 @@ class ContainerAllocator():
                     if target_worker:
                         try:
                             sid = self.start_container_on_worker(target_worker, container_data)
-                        except Exception as e:
-                            SysOut.debug_string(e)
+                        except HTTPError as h:
+                            SysOut.debug_string(h.msg)
                     
                     if sid and not sid == deleteflag:
                         container_data[Definition.Container.Status.get_str_sid()] = sid
@@ -335,8 +336,7 @@ class WorkerProfiler():
                     for local in current_workers[worker][Definition.REST.get_str_docker()]:
                         if local[Definition.Container.Status.get_str_image()] == container_name:
                             local_counter +=1
-                    # TODO: fix, this is broken???
-                    avg_sum += current_workers[worker]["local_image_stats"].get(container_name, 0)[self.c_allocator.size_descriptor] * local_counter
+                    avg_sum += current_workers[worker]["local_image_stats"][container_name][self.c_allocator.size_descriptor] * local_counter
                 total_counter += local_counter
             if total_counter:
                 SysOut.debug_string("Pushing metadata: sum {} population {}".format(avg_sum, total_counter))

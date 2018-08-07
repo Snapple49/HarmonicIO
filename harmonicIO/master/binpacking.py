@@ -1,3 +1,5 @@
+from harmonicIO.general.definition import Definition
+
 
 class BinPacking():
 
@@ -43,7 +45,7 @@ class Bin():
         RUNNING = "running"
     
     class Item():
-        def __init__(self, data, size_descriptor):
+        def __init__(self, data, size_descriptor=Definition.get_str_size_desc()):
             self.size_descriptor = size_descriptor
             self.size = data[self.size_descriptor]
             self.data = data
@@ -85,7 +87,7 @@ class Bin():
         for item in self.items:
             if item.data[identifier] == update_data[identifier]:
                 self.free_space += item.size
-                for field in update_data:
+                for field in set(update_data).intersection(item.size_descriptor):
                     item.data[field] = update_data[field]
                 item.size = item.data[item.size_descriptor]
                 self.free_space -= item.size

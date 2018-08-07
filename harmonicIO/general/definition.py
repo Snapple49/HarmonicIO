@@ -23,18 +23,14 @@ class CTuple:
     RT = 3
 
 
-class JobStatus:
-    INIT = "INITIALIZING"
-    READY = "READY"
-    ACTIVE = "ACTIVE"
-    IDLE = "IDLE"
-    FAILED = "FAILED"
-
-
 class Definition(object):
     @staticmethod
     def get_str_node_name():
         return "node_name"
+
+    @staticmethod
+    def get_str_size_desc():
+        return "avg_cpu"
 
     @staticmethod
     def get_str_node_role():

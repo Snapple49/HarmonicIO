@@ -38,7 +38,7 @@ class ContainerQueue():
         try:
             for item in self.__queue.queue:
                 if item[Definition.Container.get_str_con_image_name()] == c_image:
-                    for field in update_data:
+                    for field in ["avg_cpu"]:
                         item[field] = update_data[field]
         finally:
             self.container_queue_lock.release()
@@ -50,6 +50,9 @@ class ContainerQueue():
             self.__queue.put(container_data)
         finally:
             self.container_queue_lock.release()
+
+        #CURRENTLY DOING:
+        # issue: avg size not taken from data when queued
 
     def get_current_queue_list(self):
         """
@@ -233,7 +236,7 @@ class ContainerAllocator():
         try:
             for item in self.allocation_q.queue:
                 if item.data[Definition.Container.get_str_con_image_name()] == c_name:
-                    for field in update_data:
+                    for field in [self.size_descriptor]:
                         item.data[field] = update_data[field]
         finally:
             self.allocation_lock.release()
@@ -307,6 +310,7 @@ class WorkerProfiler():
                 SysOut.debug_string("Updated container queue")
                     
                 # allocation queue
+                # issue: stuck here???
                 self.c_allocator.update_queued_containers(container_image, container_data)
                 SysOut.debug_string("Updated allocation queue")
 
@@ -331,14 +335,15 @@ class WorkerProfiler():
                     for local in current_workers[worker][Definition.REST.get_str_docker()]:
                         if local[Definition.Container.Status.get_str_image()] == container_name:
                             local_counter +=1
-                    avg_sum += current_workers[worker]["local_image_stats"].get(container_name, 0)["avg_cpu"] * local_counter
+                    # TODO: fix, this is broken???
+                    avg_sum += current_workers[worker]["local_image_stats"].get(container_name, 0)[self.c_allocator.size_descriptor] * local_counter
                 total_counter += local_counter
             if total_counter:
                 SysOut.debug_string("Pushing metadata: sum {} population {}".format(avg_sum, total_counter))
                 LookUpTable.ImageMetadata.push_metadata(container_name, {self.c_allocator.size_descriptor : avg_sum/total_counter})
 
         # CURRENTLY DOING:
-        # issue: only pushes first time
+        # issue: only pushes when new containers are created?
 
 class LoadPredictor():
     

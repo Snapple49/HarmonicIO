@@ -1,5 +1,4 @@
 from harmonicIO.general.services import SysOut
-#from .jobqueue import JobManager
 from .resource_manager import IntelligentResourceManager
 from .binpacking import BinPacking
 from .meta_table import LookUpTable

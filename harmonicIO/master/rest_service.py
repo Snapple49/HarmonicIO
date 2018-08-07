@@ -1,16 +1,15 @@
 import falcon
 from .configuration import Setting
 from harmonicIO.general.definition import Definition, CStatus, CRole
-from .messaging_system import MessagesQueue
 from harmonicIO.general.services import SysOut, Services as LService
+from .messaging_system import MessagesQueue
 from .meta_table import LookUpTable
-from harmonicIO.master.resource_manager import IntelligentResourceManager
+from .resource_manager import IntelligentResourceManager
 
 from urllib.request import urlopen
 from urllib3.request import urlencode
-
 import json
-from .jobqueue import JobQueue
+
 
 def format_response_string(res, http_code, msg):
     res.body = msg + '\n'

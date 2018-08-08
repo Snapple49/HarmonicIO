@@ -305,6 +305,7 @@ class WorkerProfiler():
             for container_image in LookUpTable.ImageMetadata.verbose():
                 container_data = LookUpTable.ImageMetadata.verbose()[container_image]
                 container_data[Definition.Container.get_str_con_image_name()] = container_image
+                SysOut.debug_string("Updating containers with image name {} with following data: {}".format(container_image, container_data))
 
                 # container queue
                 self.c_queue.update_containers(container_image, container_data)

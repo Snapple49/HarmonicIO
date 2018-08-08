@@ -66,7 +66,7 @@ class DockerMaster(object):
 
         def get_container_status(cont):
             res = dict()
-            res[Definition.Container.Status.get_str_sid()] = cont.short_id
+            res[Definition.Container.Status.get_str_sid()] = cont.id[:12]
             res[Definition.Container.Status.get_str_image()] = (str(cont.image)).split('\'')[1]
             res[Definition.Container.Status.get_str_status()] = cont.status
             return res

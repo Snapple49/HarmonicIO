@@ -109,6 +109,8 @@ class ContainerAllocator():
                 time.sleep(1)
                 target_worker = None
                 sid = None
+                # lock order important, avoid deadlocks with bin lock first
+                self.bin_layout_lock.acquire()
                 self.allocation_lock.acquire()
                 container_data = self.allocation_q.get().data
                 workers = LookUpTable.Workers.verbose()
@@ -147,6 +149,7 @@ class ContainerAllocator():
             finally:
                 self.allocation_q.task_done()
                 self.allocation_lock.release()
+                self.bin_layout_lock.release()
 
     def packing_manager(self):
         SysOut.debug_string("Started bin packing manager! ID: {}".format(threading.current_thread()))
@@ -155,29 +158,15 @@ class ContainerAllocator():
             self.pack_containers()
             self.update_bins()
 
-    def average_wasted_space(self, bins):
-        total_wasted_space = 0.0
-        for bin_ in bins:
-            total_wasted_space += bin_.free_space
-        return total_wasted_space/len(bins)
-
-    def acceptable_wasted_space(self, bins):
-        """
-        check that each bin except the last has at most 10% wasted space
-        """
-        for bin_ in bins[:-1]:
-            if bin_.free_space < 0.9:
-                return False
-        return True
-
     def pack_containers(self):
         """
         perform bin packing with containers in workers, giving each container a worker to be allocated on and the amount of workers
         """
+        # lock order important, avoid deadlocks with bin lock first (allocation queue lock is used below)
         self.bin_layout_lock.acquire() # bin layout may not be mutated externally during packing
         try:
             container_list = self.container_q.get_current_queue_list()
-            # if any containers don't yet have average cpu usage, add default value now
+            # if any containers don't yet have average cpu usage, add default value now # TODO: change to container queue already?
             for cont in container_list:
                 if cont.get(self.size_descriptor, None) == None:
                     cont[self.size_descriptor] = self.default_cpu_share * 0.01
@@ -186,10 +175,14 @@ class ContainerAllocator():
         
             for bin_ in bins_layout:
                 for item in bin_.items:
-                    if item.data["bin_status"] == BinStatus.PACKED:
-                        item.data["bin_status"] = BinStatus.QUEUED
-                        self.allocation_q.put(item)
-        
+                    try:
+                        if item.data["bin_status"] == BinStatus.PACKED:
+                            item.data["bin_status"] = BinStatus.QUEUED
+                            self.__enqueue_container(item)
+                    except KeyError as k:
+                        SysOut.err_string("--------- WARNING: bin packing didn't mark all items correctly, might be deleteme items left ---------\nMissing key:{}".format(k.args))
+
+                        
         finally:
             self.bin_layout_lock.release()
 
@@ -219,7 +212,11 @@ class ContainerAllocator():
             return math.trunc(math.log(number_of_current_workers))
 
     def __enqueue_container(self, container):
-        self.allocation_q.put(container)
+        self.allocation_lock.acquire()
+        try:
+            self.allocation_q.put(container)
+        finally:
+            self.allocation_lock.release()
 
     def update_binned_containers(self, update_data):
         """

@@ -29,19 +29,7 @@ class ContainerQueue():
     def queue_unlock(self):
         self.container_queue_lock.release()
         SysOut.debug_string("Released container queue lock! I am {}".format(threading.current_thread()))
-
-    def get_queue_length(self):
-        return self.__queue.qsize()
-
-    def is_container_in_queue(self, c_image):
-        for item in self.__queue.queue:
-            if item[Definition.Container.get_str_con_image_name()] == c_image:
-                return True
-        return False
-
-    def view_queue(self):
-        return self.__queue.queue
-            
+        
     def update_containers(self, c_image, update_data):
         self.queue_lock()
         try:
@@ -130,35 +118,33 @@ class ContainerAllocator():
         SysOut.debug_string("Started a queue manager thread! ID: {}".format(threading.current_thread()))
         deleteflag = "deleteme"
         while True:
-            try:
-                time.sleep(1)
-                target_worker = None
-                sid = None
-                workers = LookUpTable.Workers.verbose()
+            time.sleep(1)
+            target_worker = None
+            sid = None
+            workers = LookUpTable.Workers.verbose()
+            
+            container_data = self.allocation_q.get().data
+            
+            if container_data["bin_status"] in [BinStatus.PACKED, BinStatus.QUEUED]:
                 
-                # lock order important, avoid deadlocks with bin lock first
-                container_data = self.allocation_q.get().data
-                self.queue_lock()
+                for worker in workers:
+                    if workers[worker].get("bin_index", -99) == container_data["bin_index"]:
+                        target_worker = (workers[worker][Definition.get_str_node_addr()], workers[worker][Definition.get_str_node_port()])
+
+                if target_worker:
+                    try:
+                        sid = self.start_container_on_worker(target_worker, container_data)
+                    except HTTPError as h:
+                        SysOut.debug_string(h.msg)
                 
-                if container_data["bin_status"] in [BinStatus.PACKED, BinStatus.QUEUED]:
-                    
-                    for worker in workers:
-                        if workers[worker].get("bin_index", -99) == container_data["bin_index"]:
-                            target_worker = (workers[worker][Definition.get_str_node_addr()], workers[worker][Definition.get_str_node_port()])
+                if sid and not sid == deleteflag:
+                    container_data[Definition.Container.Status.get_str_sid()] = sid
+                    container_data["bin_status"] = BinStatus.RUNNING
+                    SysOut.debug_string("Added container with sid {}".format(sid))
 
-                    if target_worker:
-                        try:
-                            sid = self.start_container_on_worker(target_worker, container_data)
-                        except HTTPError as h:
-                            SysOut.debug_string(h.msg)
-                    
-                    if sid and not sid == deleteflag:
-                        container_data[Definition.Container.Status.get_str_sid()] = sid
-                        container_data["bin_status"] = BinStatus.RUNNING
-                        SysOut.debug_string("Added container with sid {}".format(sid))
-
-                    else:
-                        self.bin_lock() 
+                else:
+                    self.bin_lock() 
+                    try:
 
                         SysOut.debug_string("Could not start container on target worker! Requeueing as failed!\n")
                         container_data[Definition.Container.Status.get_str_sid()] = deleteflag
@@ -169,15 +155,14 @@ class ContainerAllocator():
                         for field in ["bin_index", "bin_status", Definition.Container.Status.get_str_sid()]:
                             del new_container_data[field]
 
-                        SysOut.debug_string("Requeueing new container: {}".format(new_container_data))
-                        # requeue the copy
-                        self.container_q.put_container(new_container_data)
-                        
+                    finally:
                         self.bin_unlock()
 
-            finally:
-                self.allocation_q.task_done()
-                self.queue_unlock()
+                    # requeue the copy
+                    SysOut.debug_string("Requeueing new container: {}".format(new_container_data))
+                    self.container_q.put_container(new_container_data)
+
+            self.allocation_q.task_done()
 
     def packing_manager(self):
         SysOut.debug_string("Started bin packing manager! ID: {}".format(threading.current_thread()))
@@ -190,10 +175,9 @@ class ContainerAllocator():
         """
         perform bin packing with containers in workers, giving each container a worker to be allocated on and the amount of workers
         """
-        # lock order important, avoid deadlocks with bin lock first (allocation queue lock is used below)
+        container_list = self.container_q.get_current_queue_list()
         self.bin_lock() # bin layout may not be mutated externally during packing
         try:
-            container_list = self.container_q.get_current_queue_list()
             # if any containers don't yet have average cpu usage, add default value now # TODO: change to container queue already?
             for cont in container_list:
                 if cont.get(self.size_descriptor, None) == None:

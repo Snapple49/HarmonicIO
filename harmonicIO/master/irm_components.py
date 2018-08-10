@@ -48,6 +48,7 @@ class ContainerQueue():
     def put_container(self, container_data):
         self.container_queue_lock.acquire()
         try:
+            container_data.pop("num", "")
             self.__queue.put(container_data)
         finally:
             self.container_queue_lock.release()
@@ -109,11 +110,12 @@ class ContainerAllocator():
                 time.sleep(1)
                 target_worker = None
                 sid = None
+                workers = LookUpTable.Workers.verbose()
+                
                 # lock order important, avoid deadlocks with bin lock first
                 self.bin_layout_lock.acquire()
                 self.allocation_lock.acquire()
                 container_data = self.allocation_q.get().data
-                workers = LookUpTable.Workers.verbose()
                 
                 if container_data["bin_status"] in [BinStatus.PACKED, BinStatus.QUEUED]:
                     
@@ -180,13 +182,13 @@ class ContainerAllocator():
                             item.data["bin_status"] = BinStatus.QUEUED
                             self.__enqueue_container(item)
                     except KeyError as k:
-                        SysOut.err_string("--------- WARNING: bin packing didn't mark all items correctly, might be deleteme items left ---------\nMissing key:{}".format(k.args))
+                        SysOut.err_string("--------- WARNING: bin packing didn't mark all items correctly, might be deleteme items left ---------\nMissing key:{}".format(str(k)))
 
                         
         finally:
+            self.target_worker_number = len(bins_layout) + self.calculate_overhead_workers(LookUpTable.Workers.active_workers())
             self.bin_layout_lock.release()
 
-        self.target_worker_number = len(bins_layout) + self.calculate_overhead_workers(LookUpTable.Workers.active_workers())
 
     def update_bins(self):
         self.bin_layout_lock.acquire()

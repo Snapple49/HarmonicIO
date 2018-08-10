@@ -22,6 +22,14 @@ class ContainerQueue():
         self.__queue = queue.Queue(maxsize=queue_cap)
         self.container_queue_lock = threading.Lock()
         
+    def queue_lock(self):
+        self.queue_lock()
+        SysOut.debug_string("Acquired container queue lock! I am {}".format(threading.current_thread()))
+
+    def queue_unlock(self):
+        self.queue_unlock()
+        SysOut.debug_string("Released container queue lock! I am {}".format(threading.current_thread()))
+
     def get_queue_length(self):
         return self.__queue.qsize()
 
@@ -35,23 +43,23 @@ class ContainerQueue():
         return self.__queue.queue
             
     def update_containers(self, c_image, update_data):
-        self.container_queue_lock.acquire()
+        self.queue_lock()
         try:
             for item in self.__queue.queue:
                 if item[Definition.Container.get_str_con_image_name()] == c_image:
                     for field in [Definition.get_str_size_desc()]:
                         item[field] = update_data[field]
         finally:
-            self.container_queue_lock.release()
+            self.queue_unlock()
 
 
     def put_container(self, container_data):
-        self.container_queue_lock.acquire()
+        self.queue_lock()
         try:
             container_data.pop("num", "")
             self.__queue.put(container_data)
         finally:
-            self.container_queue_lock.release()
+            self.queue_unlock()
 
         #CURRENTLY DOING:
         # issue: avg size not taken from data when queued
@@ -61,12 +69,12 @@ class ContainerQueue():
         dequeue all items currently available in queue and put into a list
         """
         current_list = []
-        self.container_queue_lock.acquire()
+        self.queue_lock()
         try:
             for _ in range(len(self.__queue.queue)):
                 current_list.append(self.__queue.get())
         finally:
-            self.container_queue_lock.release()
+            self.queue_unlock()
         return current_list 
 
 
@@ -102,6 +110,22 @@ class ContainerAllocator():
             queue_manager_thread.daemon=True
             queue_manager_thread.start()
 
+    def bin_lock(self):
+        self.bin_layout_lock.acquire()
+        SysOut.debug_string("Acquired bin lock! I am {}".format(threading.current_thread()))
+
+    def bin_unlock(self):
+        self.bin_layout_lock.release()
+        SysOut.debug_string("Released bin lock! I am {}".format(threading.current_thread()))
+    
+    def queue_lock(self):
+        self.allocation_lock.acquire()
+        SysOut.debug_string("Acquired allocation queue lock! I am {}".format(threading.current_thread()))
+
+    def queue_unlock(self):
+        self.allocation_lock.release()
+        SysOut.debug_string("Released allocation queue lock! I am {}".format(threading.current_thread()))
+
     def queue_manager(self):
         SysOut.debug_string("Started a queue manager thread! ID: {}".format(threading.current_thread()))
         deleteflag = "deleteme"
@@ -113,8 +137,8 @@ class ContainerAllocator():
                 workers = LookUpTable.Workers.verbose()
                 
                 # lock order important, avoid deadlocks with bin lock first
-                self.bin_layout_lock.acquire()
-                self.allocation_lock.acquire()
+                self.bin_lock()
+                self.queue_lock()
                 container_data = self.allocation_q.get().data
                 
                 if container_data["bin_status"] in [BinStatus.PACKED, BinStatus.QUEUED]:
@@ -150,8 +174,8 @@ class ContainerAllocator():
 
             finally:
                 self.allocation_q.task_done()
-                self.allocation_lock.release()
-                self.bin_layout_lock.release()
+                self.queue_unlock()
+                self.bin_unlock()
 
     def packing_manager(self):
         SysOut.debug_string("Started bin packing manager! ID: {}".format(threading.current_thread()))
@@ -165,7 +189,7 @@ class ContainerAllocator():
         perform bin packing with containers in workers, giving each container a worker to be allocated on and the amount of workers
         """
         # lock order important, avoid deadlocks with bin lock first (allocation queue lock is used below)
-        self.bin_layout_lock.acquire() # bin layout may not be mutated externally during packing
+        self.bin_lock() # bin layout may not be mutated externally during packing
         try:
             container_list = self.container_q.get_current_queue_list()
             # if any containers don't yet have average cpu usage, add default value now # TODO: change to container queue already?
@@ -187,11 +211,11 @@ class ContainerAllocator():
                         
         finally:
             self.target_worker_number = len(bins_layout) + self.calculate_overhead_workers(LookUpTable.Workers.active_workers())
-            self.bin_layout_lock.release()
+            self.bin_unlock()
 
 
     def update_bins(self):
-        self.bin_layout_lock.acquire()
+        self.bin_lock()
         indices = []
         try:
             for i in range(len(self.bins)):
@@ -200,7 +224,7 @@ class ContainerAllocator():
             for i in indices:
                 del self.bins[i]
         finally:
-            self.bin_layout_lock.release()
+            self.bin_unlock()
 
     def calculate_overhead_workers(self, number_of_current_workers):
         """
@@ -214,32 +238,32 @@ class ContainerAllocator():
             return math.trunc(math.log(number_of_current_workers))
 
     def __enqueue_container(self, container):
-        self.allocation_lock.acquire()
+        self.queue_lock()
         try:
             self.allocation_q.put(container)
         finally:
-            self.allocation_lock.release()
+            self.queue_unlock()
 
     def update_binned_containers(self, update_data):
         """
         update all containers of the same image as in update_data within all bins
         """
-        self.bin_layout_lock.acquire()
+        self.bin_lock()
         try:
             for bin_ in self.bins:
                 bin_.update_items_in_bin(Definition.Container.get_str_con_image_name(), update_data)
         finally:
-            self.bin_layout_lock.release()
+            self.bin_unlock()
 
     def update_queued_containers(self, c_name, update_data):
-        self.allocation_lock.acquire()
+        self.queue_lock()
         try:
             for item in self.allocation_q.queue:
                 if item.data[Definition.Container.get_str_con_image_name()] == c_name:
                     for field in [self.size_descriptor]:
                         item.data[field] = update_data[field]
         finally:
-            self.allocation_lock.release()
+            self.queue_unlock()
 
     def remove_container_by_id(self, csid):
         """
@@ -247,7 +271,7 @@ class ContainerAllocator():
         or when container could not be allocated after being packed and queued
         """
         target_bin = -1
-        self.bin_layout_lock.acquire()
+        self.bin_lock()
         try:
             for _bin in self.bins:
                 for item in _bin.items:
@@ -259,7 +283,7 @@ class ContainerAllocator():
                 self.bins[target_bin].remove_item_in_bin(Definition.Container.Status.get_str_sid(), csid)
 
         finally:
-            self.bin_layout_lock.release()
+            self.bin_unlock()
             return True if target_bin > -1 else False
 
     def start_container_on_worker(self, target_worker, container):

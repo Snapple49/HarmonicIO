@@ -137,9 +137,8 @@ class ContainerAllocator():
                 workers = LookUpTable.Workers.verbose()
                 
                 # lock order important, avoid deadlocks with bin lock first
-                self.bin_lock()
-                self.queue_lock()
                 container_data = self.allocation_q.get().data
+                self.queue_lock()
                 
                 if container_data["bin_status"] in [BinStatus.PACKED, BinStatus.QUEUED]:
                     
@@ -159,6 +158,8 @@ class ContainerAllocator():
                         SysOut.debug_string("Added container with sid {}".format(sid))
 
                     else:
+                        self.bin_lock() 
+
                         SysOut.debug_string("Could not start container on target worker! Requeueing as failed!\n")
                         container_data[Definition.Container.Status.get_str_sid()] = deleteflag
                         
@@ -171,11 +172,12 @@ class ContainerAllocator():
                         SysOut.debug_string("Requeueing new container: {}".format(new_container_data))
                         # requeue the copy
                         self.container_q.put_container(new_container_data)
+                        
+                        self.bin_unlock()
 
             finally:
                 self.allocation_q.task_done()
                 self.queue_unlock()
-                self.bin_unlock()
 
     def packing_manager(self):
         SysOut.debug_string("Started bin packing manager! ID: {}".format(threading.current_thread()))

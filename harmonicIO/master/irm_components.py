@@ -23,11 +23,11 @@ class ContainerQueue():
         self.container_queue_lock = threading.Lock()
         
     def queue_lock(self):
-        self.queue_lock()
+        self.container_queue_lock.acquire()
         SysOut.debug_string("Acquired container queue lock! I am {}".format(threading.current_thread()))
 
     def queue_unlock(self):
-        self.queue_unlock()
+        self.container_queue_lock.release()
         SysOut.debug_string("Released container queue lock! I am {}".format(threading.current_thread()))
 
     def get_queue_length(self):

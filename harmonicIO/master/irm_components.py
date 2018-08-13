@@ -24,11 +24,11 @@ class ContainerQueue():
         
     def queue_lock(self):
         self.container_queue_lock.acquire()
-        SysOut.debug_string("Acquired container queue lock! I am {}".format(threading.current_thread()))
+        #SysOut.debug_string("Acquired container queue lock! I am {}".format(threading.current_thread()))
 
     def queue_unlock(self):
         self.container_queue_lock.release()
-        SysOut.debug_string("Released container queue lock! I am {}".format(threading.current_thread()))
+        #SysOut.debug_string("Released container queue lock! I am {}".format(threading.current_thread()))
         
     def update_containers(self, c_image, update_data):
         self.queue_lock()
@@ -45,12 +45,10 @@ class ContainerQueue():
         self.queue_lock()
         try:
             container_data.pop("num", "")
+            container_data[Definition.get_str_size_desc()] = LookUpTable.ImageMetadata.verbose().get(container_data[Definition.Container.get_str_con_image_name()], {}).get(Definition.get_str_size_desc())
             self.__queue.put(container_data)
         finally:
             self.queue_unlock()
-
-        #CURRENTLY DOING:
-        # issue: avg size not taken from data when queued
 
     def get_current_queue_list(self):
         """
@@ -100,19 +98,19 @@ class ContainerAllocator():
 
     def bin_lock(self):
         self.bin_layout_lock.acquire()
-        SysOut.debug_string("Acquired bin lock! I am {}".format(threading.current_thread()))
+        #SysOut.debug_string("Acquired bin lock! I am {}".format(threading.current_thread()))
 
     def bin_unlock(self):
         self.bin_layout_lock.release()
-        SysOut.debug_string("Released bin lock! I am {}".format(threading.current_thread()))
+        #SysOut.debug_string("Released bin lock! I am {}".format(threading.current_thread()))
     
     def queue_lock(self):
         self.allocation_lock.acquire()
-        SysOut.debug_string("Acquired allocation queue lock! I am {}".format(threading.current_thread()))
+        #SysOut.debug_string("Acquired allocation queue lock! I am {}".format(threading.current_thread()))
 
     def queue_unlock(self):
         self.allocation_lock.release()
-        SysOut.debug_string("Released allocation queue lock! I am {}".format(threading.current_thread()))
+        #SysOut.debug_string("Released allocation queue lock! I am {}".format(threading.current_thread()))
 
     def queue_manager(self):
         SysOut.debug_string("Started a queue manager thread! ID: {}".format(threading.current_thread()))
@@ -180,7 +178,7 @@ class ContainerAllocator():
         try:
             # if any containers don't yet have average cpu usage, add default value now # TODO: change to container queue already?
             for cont in container_list:
-                if cont.get(self.size_descriptor, None) == None:
+                if cont.get(self.size_descriptor) == None:
                     cont[self.size_descriptor] = self.default_cpu_share * 0.01
             bins_layout = self.packing_algorithm(container_list, self.bins, self.size_descriptor)
             self.bins = bins_layout
@@ -321,11 +319,11 @@ class WorkerProfiler():
                 SysOut.debug_string("Updated container queue")
                     
                 # allocation queue
-                # issue: stuck here???
                 self.c_allocator.update_queued_containers(container_image, container_data)
                 SysOut.debug_string("Updated allocation queue")
 
                 # bins
+                # ISSUE: does not update binned avg size!
                 self.c_allocator.update_binned_containers(container_data)
                 SysOut.debug_string("Updated bins")
     
@@ -352,8 +350,6 @@ class WorkerProfiler():
                 SysOut.debug_string("Pushing metadata: sum {} population {}".format(avg_sum, total_counter))
                 LookUpTable.ImageMetadata.push_metadata(container_name, {self.c_allocator.size_descriptor : avg_sum/total_counter})
 
-        # CURRENTLY DOING:
-        # issue: only pushes when new containers are created?
 
 class LoadPredictor():
     

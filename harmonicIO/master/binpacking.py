@@ -14,6 +14,7 @@ class BinPacking():
 
         # for each item in the list, go through list from left to right and check if it fits in bin and pack it 
         for item in input_list:
+            print("Packing item {}".format(item))
             item_packed = False
             for bin_ in bins:
                 if bin_.pack(item, size_descriptor):
@@ -25,7 +26,8 @@ class BinPacking():
                 bins.append(Bin(len(bins)))
                 if bins[len(bins)-1].pack(item, size_descriptor):
                     item_packed = True
-
+                    
+            print("Item was packed! {}".format(item))
         # lastly check if any pre-existing bins are now empty, and remove
         indices = []
         for i in range(len(bins)):

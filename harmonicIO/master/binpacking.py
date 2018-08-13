@@ -92,9 +92,8 @@ class Bin():
         for item in self.items:
             if item.data[identifier] == update_data[identifier]:
                 self.free_space += item.size
-                for field in set(update_data).intersection(item.size_descriptor):
+                for field in [item.size_descriptor]:
                     item.data[field] = update_data[field]
-                    print("______ updated bin: field {} <- data {}".format(field, update_data[field]))
                 item.size = item.data[item.size_descriptor]
                 self.free_space -= item.size
 

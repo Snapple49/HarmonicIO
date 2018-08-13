@@ -81,7 +81,9 @@ class Bin():
                 del self.items[i].data["bin_index"]
                 del self.items[i].data["bin_status"]
                 del self.items[i]
-                break
+                return True
+
+        return False
 
     def update_items_in_bin(self, identifier, update_data):
         for item in self.items:

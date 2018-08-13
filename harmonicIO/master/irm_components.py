@@ -29,6 +29,9 @@ class ContainerQueue():
     def queue_unlock(self):
         self.container_queue_lock.release()
         #SysOut.debug_string("Released container queue lock! I am {}".format(threading.current_thread()))
+
+    def view_queue(self):
+        return self.__queue.queue
         
     def update_containers(self, c_image, update_data):
         self.queue_lock()
@@ -149,7 +152,9 @@ class ContainerAllocator():
                         
                         # ensure fresh copy of data is requeued and remove item from bins
                         new_container_data = copy.deepcopy(container_data)
-                        self.bins[container_data["bin_index"]].remove_item_in_bin(Definition.Container.Status.get_str_sid(), deleteflag)
+                        
+                        deleted = self.bins[container_data["bin_index"]].remove_item_in_bin(Definition.Container.Status.get_str_sid(), deleteflag)
+                        SysOut.debug_string("Tried to delete container {} from bins, result: {}".format(container_data, deleted))
                         for field in ["bin_index", "bin_status", Definition.Container.Status.get_str_sid()]:
                             del new_container_data[field]
 

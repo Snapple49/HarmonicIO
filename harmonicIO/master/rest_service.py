@@ -341,6 +341,7 @@ class RESTService(object):
 
 def new_container(container_parameters):
     for _ in range(container_parameters.get('num', 1)):
+        SysOut.debug_string("Got request to start container:{}".format(container_parameters))
         IntelligentResourceManager.queue_container(container_parameters)
 
 def get_html_form(worker, msg, containers, tuples):

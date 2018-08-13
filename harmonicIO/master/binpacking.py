@@ -20,7 +20,7 @@ class BinPacking():
                     item_packed = True
                     break
                     
-            # otherwise make new bin
+            # otherwise make new bin and pack item there
             if not item_packed:
                 bins.append(Bin(len(bins)))
                 if bins[len(bins)-1].pack(item, size_descriptor):
@@ -43,6 +43,7 @@ class Bin():
         PACKED = "packed"
         QUEUED = "queued"
         RUNNING = "running"
+        REQUEUED = "requeued"
     
     class Item():
         def __init__(self, data, size_descriptor=Definition.get_str_size_desc()):
@@ -63,10 +64,10 @@ class Bin():
     def pack(self, item_data, size_descriptor):
         item = self.Item(item_data, size_descriptor)
         if item.size < self.free_space - self.space_margin:
-            self.items.append(item)
-            self.free_space -= item.size
             item.data["bin_index"] = self.index
             item.data["bin_status"] = self.ContainerBinStatus.PACKED
+            self.items.append(item)
+            self.free_space -= item.size
             return True
         else:
             del item  
@@ -91,6 +92,7 @@ class Bin():
                 self.free_space += item.size
                 for field in set(update_data).intersection(item.size_descriptor):
                     item.data[field] = update_data[field]
+                    print("______ updated bin: field {} <- data {}".format(field, update_data[field]))
                 item.size = item.data[item.size_descriptor]
                 self.free_space -= item.size
 

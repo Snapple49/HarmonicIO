@@ -60,8 +60,10 @@ class ContainerQueue():
         current_list = []
         self.queue_lock()
         try:
-            for _ in range(len(self.__queue.queue)):
-                current_list.append(self.__queue.get())
+            while True:
+                current_list.append(self.__queue.get_nowait())
+        except queue.Empty:
+            pass
         finally:
             self.queue_unlock()
         return current_list 
@@ -126,7 +128,7 @@ class ContainerAllocator():
             
             container_data = self.allocation_q.get().data
             
-            if container_data["bin_status"] in [BinStatus.PACKED, BinStatus.QUEUED]:
+            if container_data["bin_status"] in [BinStatus.PACKED, BinStatus.QUEUED, BinStatus.REQUEUED]:
                 
                 for worker in workers:
                     if workers[worker].get("bin_index", -99) == container_data["bin_index"]:
@@ -179,28 +181,28 @@ class ContainerAllocator():
         perform bin packing with containers in workers, giving each container a worker to be allocated on and the amount of workers
         """
         container_list = self.container_q.get_current_queue_list()
-        self.bin_lock() # bin layout may not be mutated externally during packing
-        try:
-            # if any containers don't yet have average cpu usage, add default value now # TODO: change to container queue already?
-            for cont in container_list:
-                if cont.get(self.size_descriptor) == None:
-                    cont[self.size_descriptor] = self.default_cpu_share * 0.01
-            bins_layout = self.packing_algorithm(container_list, self.bins, self.size_descriptor)
-            self.bins = bins_layout
-        
-            for bin_ in bins_layout:
-                for item in bin_.items:
-                    try:
-                        if item.data["bin_status"] == BinStatus.PACKED:
-                            item.data["bin_status"] = BinStatus.QUEUED
-                            self.__enqueue_container(item)
-                    except KeyError as k:
-                        SysOut.err_string("--------- WARNING: bin packing didn't mark all items correctly, might be deleteme items left ---------\nMissing key:{}".format(str(k)))
+        if len(container_list) > 0:
+            self.bin_lock() # bin layout may not be mutated externally during packing
+            try:
+                # if any containers don't yet have average cpu usage, add default value now
+                for cont in container_list:
+                    if cont.get(self.size_descriptor) == None:
+                        cont[self.size_descriptor] = self.default_cpu_share * 0.01
+                bins_layout = self.packing_algorithm(container_list, self.bins, self.size_descriptor)
+                self.bins = bins_layout
+            
+                for bin_ in self.bins:
+                    for item in bin_.items:
+                        try:
+                            if item.data["bin_status"] == BinStatus.PACKED:
+                                item.data["bin_status"] = BinStatus.QUEUED
+                                self.__enqueue_container(item)
+                        except KeyError as k:
+                            SysOut.err_string("--------- WARNING: bin packing didn't mark all items correctly, might be deleteme items left ---------\nMissing key:{}".format(str(k)))
 
-                        
-        finally:
-            self.target_worker_number = len(bins_layout) + self.calculate_overhead_workers(LookUpTable.Workers.active_workers())
-            self.bin_unlock()
+            finally:
+                self.target_worker_number = len(bins_layout) + self.calculate_overhead_workers(LookUpTable.Workers.active_workers())
+                self.bin_unlock()
 
 
     def update_bins(self):

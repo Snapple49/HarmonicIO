@@ -71,6 +71,7 @@ if __name__ == "__main__":
     Entry point
     """
     SysOut.out_string("Running Harmonic Worker")
+    SysOut.debug = True
 
     # Load configuration from file
     Setting.read_cfg_from_file()

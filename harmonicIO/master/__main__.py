@@ -64,6 +64,7 @@ if __name__ == '__main__':
     SysOut.out_string("Running Harmonic Master")
     debug = input("Debug mode?  y/n\n")
     if debug == "y":
+        SysOut.debug = True
         LookUpTable.debugging = True
 
     # Load configuration from file

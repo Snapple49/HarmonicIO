@@ -4,8 +4,9 @@ from sys import platform
 from .colors import red, green, yellow, blue
 from .definition import Definition, CRole
 
-
 class SysOut(object):
+    
+    debug = False
 
     @staticmethod
     def warn_string(msg):
@@ -26,9 +27,7 @@ class SysOut(object):
 
     @staticmethod
     def debug_string(msg):
-        # local import to avoid cyclic import loop
-        from harmonicIO.master.__main__ import debug
-        if debug == "y":
+        if SysOut.debug:
             print(blue("[DEB: " + msg + "]"))
 
     @staticmethod

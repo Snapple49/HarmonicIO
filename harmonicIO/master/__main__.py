@@ -12,7 +12,7 @@ import threading
 Master entry point
 """
 
-debug = input("Debug mode?  y/n\n")
+debug = None
 
 def run_irm():
     """
@@ -62,6 +62,7 @@ if __name__ == '__main__':
     Entry point
     """
     SysOut.out_string("Running Harmonic Master")
+    debug = input("Debug mode?  y/n\n")
     if debug == "y":
         LookUpTable.debugging = True
 

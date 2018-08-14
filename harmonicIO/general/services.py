@@ -3,6 +3,7 @@ import subprocess
 from sys import platform
 from .colors import red, green, yellow, blue
 from .definition import Definition, CRole
+from harmonicIO.master.__main__ import debug
 
 
 class SysOut(object):
@@ -26,7 +27,8 @@ class SysOut(object):
 
     @staticmethod
     def debug_string(msg):
-        print(blue("[DEB: " + msg + "]"))
+        if debug == "y":
+            print(blue("[DEB: " + msg + "]"))
 
     @staticmethod
     def usr_string(msg):

@@ -142,20 +142,20 @@ class ContainerAllocator():
                 if sid and not sid == deleteflag:
                     container_data[Definition.Container.Status.get_str_sid()] = sid
                     container_data["bin_status"] = BinStatus.RUNNING
-                    SysOut.debug_string("Added container with sid {}".format(sid))
+                    #SysOut.debug_string("Added container with sid {}".format(sid))
 
                 else:
                     self.bin_lock() 
                     try:
 
-                        SysOut.debug_string("Could not start container on target worker! Requeueing as failed!\n")
+                        #SysOut.debug_string("Could not start container on target worker! Requeueing as failed!\n")
                         container_data[Definition.Container.Status.get_str_sid()] = deleteflag
                         
                         # ensure fresh copy of data is requeued and remove item from bins
                         new_container_data = copy.deepcopy(container_data)
                         
-                        deleted = self.bins[container_data["bin_index"]].remove_item_in_bin(Definition.Container.Status.get_str_sid(), deleteflag)
-                        SysOut.debug_string("Tried to delete container {} from bins, result: {}".format(container_data, deleted))
+                        self.bins[container_data["bin_index"]].remove_item_in_bin(Definition.Container.Status.get_str_sid(), deleteflag)
+                        #SysOut.debug_string("Tried to delete container {} from bins, result: {}".format(container_data, deleted))
                         for field in ["bin_index", "bin_status", Definition.Container.Status.get_str_sid()]:
                             del new_container_data[field]
 
@@ -318,20 +318,20 @@ class WorkerProfiler():
             for container_image in LookUpTable.ImageMetadata.verbose():
                 container_data = LookUpTable.ImageMetadata.verbose()[container_image]
                 container_data[Definition.Container.get_str_con_image_name()] = container_image
-                SysOut.debug_string("Updating containers with image name {} with following data: {}".format(container_image, container_data))
+                #SysOut.debug_string("Updating containers with image name {} with following data: {}".format(container_image, container_data))
 
                 # container queue
                 self.c_queue.update_containers(container_image, container_data)
-                SysOut.debug_string("Updated container queue")
+                #SysOut.debug_string("Updated container queue")
                     
                 # allocation queue
                 self.c_allocator.update_queued_containers(container_image, container_data)
-                SysOut.debug_string("Updated allocation queue")
+                #SysOut.debug_string("Updated allocation queue")
 
                 # bins
                 # ISSUE: does not update binned avg size!
                 self.c_allocator.update_binned_containers(container_data)
-                SysOut.debug_string("Updated bins")
+                #SysOut.debug_string("Updated bins")
     
     def gather_container_metadata(self):
         """
@@ -353,7 +353,7 @@ class WorkerProfiler():
                     avg_sum += current_workers[worker]["local_image_stats"][container_name][self.c_allocator.size_descriptor] * local_counter
                 total_counter += local_counter
             if total_counter:
-                SysOut.debug_string("Pushing metadata: sum {} population {}".format(avg_sum, total_counter))
+                #SysOut.debug_string("Pushing metadata: sum {} population {}".format(avg_sum, total_counter))
                 LookUpTable.ImageMetadata.push_metadata(container_name, {self.c_allocator.size_descriptor : avg_sum/total_counter})
 
 

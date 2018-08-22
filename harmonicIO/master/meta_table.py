@@ -1,6 +1,7 @@
 from harmonicIO.general.services import Services, SysOut
 from harmonicIO.general.definition import Definition, CTuple
 
+import threading
 
 class DataStatStatus(object):
     PENDING = 0
@@ -35,13 +36,10 @@ class LookUpTable(object):
             if not worker_ip in LookUpTable.Workers.__workers:
                 dict_input[Definition.get_str_last_update()] = Services.get_current_timestamp()
                 LookUpTable.Workers.__workers[worker_ip] = dict_input
-                #dict_input["bin_index"] = LookUpTable.Workers.active_workers()
-                #dict_input["active"] = True
             else:
                 for field in dict_input:
                     LookUpTable.Workers.__workers[worker_ip][field] = dict_input[field]
                 LookUpTable.Workers.__workers[worker_ip][Definition.get_str_last_update()] = Services.get_current_timestamp()
-                #LookUpTable.Workers.__workers[worker_ip]["bin_index"] = LookUpTable.Workers.active_workers()
 
 
         @staticmethod
@@ -231,6 +229,17 @@ class LookUpTable(object):
     class ImageMetadata():
         
         __container_data = {}
+        datalock = threading.Lock()
+
+        @staticmethod
+        def get_metadata(container_image_name):
+            LookUpTable.ImageMetadata.datalock.acquire()
+            try:
+                ret = LookUpTable.ImageMetadata.__container_data.get(container_image_name)
+            finally:
+                LookUpTable.ImageMetadata.datalock.release()
+            return ret
+
 
         @staticmethod
         def push_metadata(container_image_name, data):
@@ -238,21 +247,29 @@ class LookUpTable(object):
             Updates data of specified container with a cumulative moving average, with a history of maximum 10000 previous averages.
             Data is dictionary of fields to update, such as CPU usage
             """
-            container_dataset = LookUpTable.ImageMetadata.__container_data
-            c_data = container_dataset.get(container_image_name, {})
-            
-            history = c_data.get("update_count", 0)
-            if history < 10000:
-                c_data["update_count"] = history + 1
-            for field in data:
-                c_data[field] = (history * float(c_data.get(field, 0)) + float(data[field])) / (history + 1)
+            LookUpTable.ImageMetadata.datalock.acquire()
+            try:
+                container_dataset = LookUpTable.ImageMetadata.__container_data
+                c_data = container_dataset.get(container_image_name, {})
+                
+                history = c_data.get("update_count", 0)
+                if history < 10000:
+                    c_data["update_count"] = history + 1
+                for field in data:
+                    c_data[field] = (history * float(c_data.get(field, 0)) + float(data[field])) / (history + 1)
 
-            container_dataset[container_image_name] = c_data
-
+                container_dataset[container_image_name] = c_data
+            finally:
+                LookUpTable.ImageMetadata.datalock.release()
         
         @staticmethod
         def verbose():
-            return LookUpTable.ImageMetadata.__container_data
+            LookUpTable.ImageMetadata.datalock.acquire()
+            try:
+                ret = LookUpTable.ImageMetadata.__container_data
+            finally:
+                LookUpTable.ImageMetadata.datalock.release()
+            return ret
             
 
         

@@ -129,7 +129,7 @@ class DockerMaster(object):
     def calculate_cpu_usage(self, container):
         """
         calculate given container stats
-        Returns CPU usage of container across instances on current worker. 
+        Returns CPU usage of container across instances on current worker as a percentage of maximum cpu usage. 
         Based on discussion here: https://stackoverflow.com/questions/30271942/get-docker-container-cpu-usage-as-percentage
         """
 
@@ -148,7 +148,7 @@ class DockerMaster(object):
                 system_delta = stats["cpu_stats"]["system_cpu_usage"] - stats["precpu_stats"]["system_cpu_usage"]
                 
                 #if system_delta > 0.0 and cpu_delta > 0.0:
-                current_CPU = (cpu_delta / system_delta) * len(stats["cpu_stats"]["cpu_usage"]["percpu_usage"]) * 100.0
+                current_CPU = (cpu_delta / system_delta) * 100.0 # Num of cpu's: len(stats["cpu_stats"]["cpu_usage"]["percpu_usage"])
             
             except KeyError:
                 current_CPU = None
@@ -156,7 +156,7 @@ class DockerMaster(object):
         return current_CPU
 
 
-    def run_container(self, container_name, cpu_share=50, volatile=False):
+    def run_container(self, container_name, cpu_share=0.5, volatile=False):
 
         def get_ports_setting(expose, ports):
             return {str(expose) + '/tcp': ports}
@@ -190,7 +190,7 @@ class DockerMaster(object):
                                                detach=True,
                                                stderr=True,
                                                stdout=True,
-                                               cpu_shares=max(2, int(1024*(cpu_share/100))),
+                                               cpu_shares=max(2, int(1024*cpu_share)),
                                                mem_limit='1g',
                                                ports=get_ports_setting(expose_port, port),
                                                environment=get_env_setting(expose_port, port, volatile))

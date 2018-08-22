@@ -30,15 +30,18 @@ class IntelligentResourceManager():
         while True:
             time.sleep(1)
             current_workers = LookUpTable.Workers.active_workers() # the amount of workers currently available
-            IntelligentResourceManager.container_manager.target_worker_number # the amount of workers we need
-            while not current_workers == IntelligentResourceManager.container_manager.target_worker_number:
+            target_workers = IntelligentResourceManager.container_manager.target_worker_number # the amount of workers we need
+            while not current_workers == target_workers:
                 time.sleep(1)
-                SysOut.debug_string("We are not at target worker number! Current: {} Target: {}".format(current_workers, IntelligentResourceManager.container_manager.target_worker_number))
-                if current_workers < IntelligentResourceManager.container_manager.target_worker_number:
+                SysOut.debug_string("We are not at target worker number! Current: {} Target: {}".format(current_workers, target_workers))
+                if current_workers < target_workers:
                     # start more workers
                     LookUpTable.Workers.enable_worker()
                 else:
                     # disable workers
                     LookUpTable.Workers.disable_worker()
                 current_workers = LookUpTable.Workers.active_workers()
+                target_workers = IntelligentResourceManager.container_manager.target_worker_number
         
+# CURRENTLY DOING
+# ISSUE: does not scale down target number!?

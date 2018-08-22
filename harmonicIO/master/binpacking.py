@@ -14,7 +14,6 @@ class BinPacking():
 
         # for each item in the list, go through list from left to right and check if it fits in bin and pack it 
         for item in input_list:
-            print("Packing item {}".format(item))
             item_packed = False
             for bin_ in bins:
                 if bin_.pack(item, size_descriptor):
@@ -27,7 +26,6 @@ class BinPacking():
                 if bins[len(bins)-1].pack(item, size_descriptor):
                     item_packed = True
                     
-            print("Item was packed! {}".format(item))
         # lastly check if any pre-existing bins are now empty, and remove
         indices = []
         for i in range(len(bins)):
@@ -54,8 +52,7 @@ class Bin():
             self.data = data
 
         def __str__(self):
-            return """Item size: {}
-    data: {}""".format(self.size, self.data)
+            return "Item size: {} data: {}".format(self.size, self.data)
 
     def __init__(self, bin_index):
         self.items = []
@@ -90,21 +87,19 @@ class Bin():
 
     def update_items_in_bin(self, identifier, update_data):
         for item in self.items:
-            if item.data[identifier] == update_data[identifier]:
+            if item.data[identifier] == update_data[identifier] and not item.data.get("bin_status") == Bin.ContainerBinStatus.RUNNING:
                 self.free_space += item.size
                 for field in [item.size_descriptor]:
                     item.data[field] = update_data[field]
                 item.size = item.data[item.size_descriptor]
                 self.free_space -= item.size
+                if self.free_space < 0.0:
+                    self.free_space = 0.0
 
     def __str__(self):
         bin_items = []
         for item in self.items:
             bin_items.append(str(item))
-        return ("""
-Bin index: {}, space: {} 
-Items:
-    {}
-""".format(self.index, self.free_space, bin_items))
+        return ("Bin index: {}, space: {}, Items: {}".format(self.index, self.free_space, bin_items))
 
     

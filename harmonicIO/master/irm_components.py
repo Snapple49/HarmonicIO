@@ -47,7 +47,7 @@ class ContainerQueue():
     def put_container(self, container_data):
         self.queue_lock()
         try:
-            container_data[Definition.get_str_size_desc()] = LookUpTable.ImageMetadata.verbose().get(container_data[Definition.Container.get_str_con_image_name()], {}).get(Definition.get_str_size_desc())
+            container_data[Definition.get_str_size_desc()] = 0.01 * LookUpTable.ImageMetadata.verbose().get(container_data[Definition.Container.get_str_con_image_name()], {}).get(Definition.get_str_size_desc())
             self.__queue.put(container_data)
         finally:
             self.queue_unlock()
@@ -159,6 +159,8 @@ class ContainerAllocator():
                         for field in ["bin_index", "bin_status", Definition.Container.Status.get_str_sid()]:
                             del new_container_data[field]
 
+                            # ISSUE: something crashed here on Salman's run, deleteflag popped up!
+
                     finally:
                         self.bin_unlock()
 
@@ -200,7 +202,7 @@ class ContainerAllocator():
                             SysOut.err_string("--------- WARNING: bin packing didn't mark all items correctly, might be deleteme items left ---------\nMissing key:{}".format(str(k)))
 
             finally:
-                self.target_worker_number = len(bins_layout) + self.calculate_overhead_workers(LookUpTable.Workers.active_workers())
+                self.target_worker_number = len(bins_layout) + self.calculate_overhead_workers(len(bins_layout))
                 self.bin_unlock()
 
 
@@ -316,7 +318,7 @@ class WorkerProfiler():
 
             # update all containers in both container and allocation queues (as they are waiting) and in the bins with new data from the meta table
             for container_image in LookUpTable.ImageMetadata.verbose():
-                container_data = LookUpTable.ImageMetadata.verbose()[container_image]
+                container_data = LookUpTable.ImageMetadata.get_metadata(container_image)
                 container_data[Definition.Container.get_str_con_image_name()] = container_image
                 #SysOut.debug_string("Updating containers with image name {} with following data: {}".format(container_image, container_data))
 
@@ -329,7 +331,6 @@ class WorkerProfiler():
                 #SysOut.debug_string("Updated allocation queue")
 
                 # bins
-                # ISSUE: does not update binned avg size!
                 self.c_allocator.update_binned_containers(container_data)
                 #SysOut.debug_string("Updated bins")
     
@@ -353,7 +354,6 @@ class WorkerProfiler():
                     avg_sum += current_workers[worker]["local_image_stats"][container_name][self.c_allocator.size_descriptor] * local_counter
                 total_counter += local_counter
             if total_counter:
-                #SysOut.debug_string("Pushing metadata: sum {} population {}".format(avg_sum, total_counter))
                 LookUpTable.ImageMetadata.push_metadata(container_name, {self.c_allocator.size_descriptor : avg_sum/total_counter})
 
 
@@ -418,14 +418,13 @@ class LoadPredictor():
                     # cases: RoC above either limit or RoC negative but queue length above limit
                     if roc > self.roc_positive_upper:
                         increment = self.large_increment
-                    elif roc > self.roc_positive_lower:
-                        increment = self.small_increment
                     elif image_queue_length > self.queue_length_limit and roc > self.roc_minimum:
                         increment = self.large_increment
+                    elif roc > self.roc_positive_lower:
+                        increment = self.small_increment
                     elif image_queue_length > self.queue_length_limit:
                         increment = self.small_increment
 
-                    # NOTE: design decision, should created from autoscaling containers be volatile or not?
                     if increment > 0:
                         for _ in range(increment):
                             self.queue_container({Definition.Container.get_str_con_image_name() : image, "volatile" : True})

@@ -42,6 +42,3 @@ class IntelligentResourceManager():
                     LookUpTable.Workers.disable_worker()
                 current_workers = LookUpTable.Workers.active_workers()
                 target_workers = IntelligentResourceManager.container_manager.target_worker_number
-        
-# CURRENTLY DOING
-# ISSUE: does not scale down target number!?

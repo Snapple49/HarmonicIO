@@ -205,8 +205,8 @@ class ContainerAllocator():
                             SysOut.err_string("--------- WARNING: bin packing didn't mark all items correctly, might be deleteme items left ---------\nMissing key:{}".format(str(k)))
 
             finally:
-                self.target_worker_number = len(bins_layout) + self.calculate_overhead_workers(len(bins_layout))
                 self.bin_unlock()
+        self.target_worker_number = len(self.bins) + self.calculate_overhead_workers(len(self.bins))
 
 
     def update_bins(self):

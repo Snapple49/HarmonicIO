@@ -98,7 +98,7 @@ class ContainerAllocator():
         bin_packing_manager.daemon=True
         bin_packing_manager.start()
 
-        for _ in range(4):            
+        for _ in range(1):            
             queue_manager_thread = threading.Thread(target=self.queue_manager)
             queue_manager_thread.daemon=True
             queue_manager_thread.start()
@@ -127,10 +127,17 @@ class ContainerAllocator():
             target_worker = None
             sid = None
             workers = LookUpTable.Workers.verbose()
+
+            self.queue_lock()
+            try:
+                container_data = self.allocation_q.get_nowait().data
+            except queue.Empty:
+                continue
+            finally:
+                self.queue_unlock()
+                
             
-            container_data = self.allocation_q.get().data
-            
-            if container_data["bin_status"] in [BinStatus.PACKED, BinStatus.QUEUED, BinStatus.REQUEUED]:
+            if container_data["bin_status"] in [BinStatus.QUEUED, BinStatus.REQUEUED]:
                 
                 for worker in workers:
                     if workers[worker].get("bin_index", -99) == container_data["bin_index"]:
@@ -162,7 +169,7 @@ class ContainerAllocator():
                         for field in ["bin_index", "bin_status", Definition.Container.Status.get_str_sid()]:
                             del new_container_data[field]
 
-                            # ISSUE: something crashed here on Salman's run, deleteflag popped up!
+                            # ISSUE: something crashed here on Salman's run, self.bins did not have 
 
                     finally:
                         self.bin_unlock()

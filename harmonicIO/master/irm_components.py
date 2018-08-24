@@ -222,12 +222,13 @@ class ContainerAllocator():
         """
         self.bin_lock()
         try:
-            while True:
-                last_bin = len(self.bins) - 1
-                if not self.bins[last_bin].items:
-                    del self.bins[last_bin]
-                else:
-                    break
+            if len(self.bins) > 0:
+                while True:
+                    last_bin = len(self.bins) - 1
+                    if not self.bins[last_bin].items:
+                        del self.bins[last_bin]
+                    else:
+                        break
         finally:
             self.bin_unlock()
 

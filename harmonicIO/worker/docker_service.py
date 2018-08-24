@@ -9,7 +9,7 @@ class DockerService(object):
         DockerService.__docker_master = DockerMaster()
 
     @staticmethod
-    def create_container(container_name, cpu_share=50, volatile=False):
+    def create_container(container_name, cpu_share=0.5, volatile=False):
         return DockerService.__docker_master.run_container(container_name, cpu_share, volatile)
 
     @staticmethod

@@ -48,8 +48,6 @@ class ContainerQueue():
         self.queue_lock()
         try:
             size = LookUpTable.ImageMetadata.verbose().get(container_data[Definition.Container.get_str_con_image_name()], {}).get(Definition.get_str_size_desc())
-            if not size == None:
-                size = size * 0.01
             container_data[Definition.get_str_size_desc()] = size
             self.__queue.put(container_data)
         finally:
@@ -198,7 +196,7 @@ class ContainerAllocator():
                 # if any containers don't yet have average cpu usage, add default value now
                 for cont in container_list:
                     if cont.get(self.size_descriptor) == None:
-                        cont[self.size_descriptor] = self.default_cpu_share * 0.01
+                        cont[self.size_descriptor] = self.default_cpu_share
                 bins_layout = self.packing_algorithm(container_list, self.bins, self.size_descriptor)
                 self.bins = bins_layout
             

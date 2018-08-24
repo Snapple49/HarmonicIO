@@ -129,7 +129,7 @@ class DockerMaster(object):
     def calculate_cpu_usage(self, container):
         """
         calculate given container stats
-        Returns CPU usage of container across instances on current worker as a percentage of maximum cpu usage. 
+        Returns CPU usage of container across instances on current worker as a fraction of maximum cpu usage (1.0). 
         Based on discussion here: https://stackoverflow.com/questions/30271942/get-docker-container-cpu-usage-as-percentage
         """
 
@@ -148,7 +148,7 @@ class DockerMaster(object):
                 system_delta = stats["cpu_stats"]["system_cpu_usage"] - stats["precpu_stats"]["system_cpu_usage"]
                 
                 #if system_delta > 0.0 and cpu_delta > 0.0:
-                current_CPU = (cpu_delta / system_delta) * 100.0 # Num of cpu's: len(stats["cpu_stats"]["cpu_usage"]["percpu_usage"])
+                current_CPU = (cpu_delta / system_delta) # Num of cpu's: len(stats["cpu_stats"]["cpu_usage"]["percpu_usage"])
             
             except KeyError:
                 current_CPU = None

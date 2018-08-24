@@ -222,9 +222,9 @@ class ContainerAllocator():
         try:
             if len(self.bins) > 0:
                 while True:
-                    last_bin = len(self.bins) - 1
-                    if not self.bins[last_bin].items:
-                        del self.bins[last_bin]
+                    last_bin_index = len(self.bins) - 1
+                    if not self.bins[last_bin_index].items:
+                        del self.bins[last_bin_index]
                     else:
                         break
         finally:

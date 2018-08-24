@@ -98,7 +98,7 @@ class ContainerAllocator():
         bin_packing_manager.daemon=True
         bin_packing_manager.start()
 
-        for _ in range(1):            
+        for _ in range(4):            
             queue_manager_thread = threading.Thread(target=self.queue_manager)
             queue_manager_thread.daemon=True
             queue_manager_thread.start()
@@ -217,14 +217,17 @@ class ContainerAllocator():
 
 
     def update_bins(self):
+        """
+        Updates the bins, removing the last ones that are not currently used
+        """
         self.bin_lock()
-        indices = []
         try:
-            for i in range(len(self.bins)):
-                if not self.bins[i].items:
-                    indices.insert(0, i)
-            for i in indices:
-                del self.bins[i]
+            while True:
+                last_bin = len(self.bins) - 1
+                if not self.bins[last_bin].items:
+                    del self.bins[last_bin]
+                else:
+                    break
         finally:
             self.bin_unlock()
 
@@ -401,7 +404,7 @@ class LoadPredictor():
         current_queue = MessagesQueue.verbose()
         for image in current_queue:
             if not self.image_data.get(image):
-                self.image_data[image] = {"roc" : current_queue[image]}
+                self.image_data[image] = {"roc" : current_queue[image]/self.step_length}
             else:
                 self.image_data[image]["roc"] = int((current_queue[image] - self.image_data[image]["roc"]) / self.step_length)
                 

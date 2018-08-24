@@ -25,14 +25,6 @@ class BinPacking():
                 bins.append(Bin(len(bins)))
                 if bins[len(bins)-1].pack(item, size_descriptor):
                     item_packed = True
-                    
-        # lastly check if any pre-existing bins are now empty, and remove
-        indices = []
-        for i in range(len(bins)):
-            if not bins[i].items:
-                indices.insert(0, i)
-        for i in indices:
-            del bins[i]
         
         return bins
 
@@ -95,6 +87,8 @@ class Bin():
                 self.free_space -= item.size
                 if self.free_space < 0.0:
                     self.free_space = 0.0
+                elif self.free_space > 1.0:
+                    self.free_space = 1.0
 
     def __str__(self):
         bin_items = []

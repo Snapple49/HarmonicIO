@@ -203,10 +203,9 @@ class ContainerAllocator():
             
                 for bin_ in self.bins:
                     for item in bin_.items:
-                        try:
-                            if item.data["bin_status"] == BinStatus.PACKED:
-                                item.data["bin_status"] = BinStatus.QUEUED
-                                self.__enqueue_container(item)
+                        if item.data["bin_status"] == BinStatus.PACKED:
+                            item.data["bin_status"] = BinStatus.QUEUED
+                            self.__enqueue_container(item)
             finally:
                 self.bin_unlock()
         self.target_worker_number = len(self.bins) + self.calculate_overhead_workers(len(self.bins))

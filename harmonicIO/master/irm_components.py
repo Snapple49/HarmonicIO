@@ -374,7 +374,6 @@ class LoadPredictor():
     def __init__(self, cm, step, lower, upper, minimum, q_size_limit, waiting_time, large, small):
         self.c_manager = cm
         self.step_length = step
-        self.previous_total = 0
         self.image_data = {}
 
         self.roc_positive_lower = lower
@@ -389,23 +388,14 @@ class LoadPredictor():
         self.analyzer_thread.daemon = False
         self.analyzer_thread.start()
 
-    def calculate_messagequeue_total_roc(self):
-        items_in_queue = 0
-        current_queue = MessagesQueue.verbose()
-        for name in current_queue:
-            items_in_queue += current_queue[name]
-
-        self.roc_total = (items_in_queue - self.previous_total) / self.step_length
-        self.previous_total = items_in_queue
-        return self.roc_total
-
     def calculate_roc_per_image(self):
         current_queue = MessagesQueue.verbose()
         for image in current_queue:
             if not self.image_data.get(image):
-                self.image_data[image] = {"roc" : current_queue[image]/self.step_length}
+                self.image_data[image] = {"roc" : current_queue[image]/self.step_length, "previous" : current_queue[image]}
             else:
-                self.image_data[image]["roc"] = int((current_queue[image] - self.image_data[image]["roc"]) / self.step_length)
+                self.image_data[image]["roc"] = int((current_queue[image] - self.image_data[image]["previous"]) / self.step_length)
+                self.image_data[image]["previous"] = current_queue[image]
                 
     def queue_container(self, container_data):
         self.c_manager.container_q.put_container(container_data)

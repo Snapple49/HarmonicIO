@@ -197,6 +197,7 @@ class ContainerAllocator():
                 for cont in container_list:
                     if cont.get(self.size_descriptor) == None:
                         cont[self.size_descriptor] = self.default_cpu_share
+                        SysOut.debug_string("Container {} added size".format(cont))
                 bins_layout = self.packing_algorithm(container_list, self.bins, self.size_descriptor)
                 self.bins = bins_layout
             

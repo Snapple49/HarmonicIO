@@ -134,7 +134,7 @@ class IRMSetting():
         else:
             try:
                 self.packing_interval = int(data["packing_interval"])
-                self.default_cpu_share = int(data["default_cpu_share"])
+                self.default_cpu_share = float(data["default_cpu_share"])
                 self.profiling_interval = int(data["profiling_interval"])
                 self.step_length = int(data["predictor_interval"])
                 self.roc_lower = int(data["lower_rate_limit"])

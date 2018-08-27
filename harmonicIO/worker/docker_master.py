@@ -4,7 +4,7 @@ from .configuration import Setting
 from harmonicIO.general.definition import CStatus, Definition
 from harmonicIO.general.services import SysOut
 
-from docker.errors import APIError
+from docker.errors import APIError, NotFound
 from requests.exceptions import HTTPError
 
 class ChannelStatus(object):
@@ -138,7 +138,11 @@ class DockerMaster(object):
         current_CPU = None
 
         # get worker stats via docker api
-        stats = self.__client.api.stats(container.name, stream=False)
+        try:
+            stats = self.__client.api.stats(container.name, stream=False)
+        except (NotFound, HTTPError):
+            stats = None
+
 
         if stats:
             try:

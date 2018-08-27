@@ -167,8 +167,6 @@ class ContainerAllocator():
                         for field in ["bin_index", "bin_status", Definition.Container.Status.get_str_sid()]:
                             del new_container_data[field]
 
-                            # ISSUE: something crashed here on Salman's run, self.bins did not have 
-
                     finally:
                         self.bin_unlock()
 
@@ -220,15 +218,16 @@ class ContainerAllocator():
         """
         self.bin_lock()
         try:
-            if len(self.bins) > 0:
-                while True:
-                    last_bin_index = len(self.bins) - 1
-                    if not self.bins[last_bin_index].items:
-                        del self.bins[last_bin_index]
-                    else:
-                        break
+            while len(self.bins) > 0:
+                last_bin_index = len(self.bins) - 1
+                if not self.bins[last_bin_index].items:
+                    del self.bins[last_bin_index]
+                else:
+                    break
         finally:
             self.bin_unlock()
+
+    #ISSUE: had list index out of range on 224
 
     def calculate_overhead_workers(self, number_of_current_workers):
         """

@@ -142,15 +142,14 @@ class LookUpTable(object):
             else: 
                 # conts is list of containers with same c_name
                 
-                # List filter code based on: https://stackoverflow.com/questions/1235618/python-remove-dictionary-from-list
-                # Removes item with specified short_id from list
-                conts[:] = [con for con in conts if con.get(Definition.Container.Status.get_str_sid()) != short_id]
-
                 # notify IRM about container removal
                 from .resource_manager import IntelligentResourceManager # NOTE: local import required to avoid circular dependencies
                 IntelligentResourceManager.remove_container(short_id)
-
-            return True
+                
+                # List filter code based on: https://stackoverflow.com/questions/1235618/python-remove-dictionary-from-list
+                # Removes item with specified short_id from list
+                conts[:] = [con for con in conts if con.get(Definition.Container.Status.get_str_sid()) != short_id]
+                return True
 
     class Tuples(object):
         __tuples = {}

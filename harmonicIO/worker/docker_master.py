@@ -96,7 +96,7 @@ class DockerMaster(object):
         try:
             self.__client.containers.get(cont_shortid).remove()
             return True
-        except (ApiError, HTTPError) as e:
+        except (ApiError, HTTPError, NotFound) as e:
             SysOut.err_string("Could not remove requested container, exception:\n{}".format(e))
             return False
 
@@ -106,7 +106,7 @@ class DockerMaster(object):
         counters = {}
 
         try:
-            conts_to_check = self.__client.containers.list()
+            conts_to_check = self.__client.containers.list(all=False)
         except AttributeError as e:
             SysOut.err_string(e)
             conts_to_check = []

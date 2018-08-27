@@ -47,8 +47,10 @@ class ContainerQueue():
     def put_container(self, container_data):
         self.queue_lock()
         try:
-            size = LookUpTable.ImageMetadata.verbose().get(container_data[Definition.Container.get_str_con_image_name()], {}).get(Definition.get_str_size_desc())
-            container_data[Definition.get_str_size_desc()] = size
+            size_data = LookUpTable.ImageMetadata.get_metadata(container_data[Definition.Container.get_str_con_image_name()])
+            if size_data:
+                size_data = size_data.get(Definition.get_str_size_desc())
+            container_data[Definition.get_str_size_desc()] = size_data
             self.__queue.put(container_data)
         finally:
             self.queue_unlock()
@@ -191,10 +193,6 @@ class ContainerAllocator():
         if len(container_list) > 0:
             self.bin_lock() # bin layout may not be mutated externally during packing
             try:
-                # if any containers don't yet have average cpu usage, add default value now
-                for cont in container_list:
-                    if cont.get(self.size_descriptor) == None:
-                        cont[self.size_descriptor] = self.default_cpu_share
                 bins_layout = self.packing_algorithm(container_list, self.bins, self.size_descriptor)
                 self.bins = bins_layout
             
@@ -204,8 +202,6 @@ class ContainerAllocator():
                             if item.data["bin_status"] == BinStatus.PACKED:
                                 item.data["bin_status"] = BinStatus.QUEUED
                                 self.__enqueue_container(item)
-                        except KeyError as k:
-                            SysOut.err_string("--------- WARNING: bin packing didn't mark all items correctly, might be deleteme items left ---------\nMissing key:{}".format(str(k)))
 
             finally:
                 self.bin_unlock()

@@ -193,6 +193,10 @@ class ContainerAllocator():
         if len(container_list) > 0:
             self.bin_lock() # bin layout may not be mutated externally during packing
             try:
+                # if any containers don't yet have average cpu usage, add default value now
+                for cont in container_list:
+                    if cont.get(self.size_descriptor) == None:
+                        cont[self.size_descriptor] = self.default_cpu_share
                 bins_layout = self.packing_algorithm(container_list, self.bins, self.size_descriptor)
                 self.bins = bins_layout
             
@@ -202,7 +206,6 @@ class ContainerAllocator():
                             if item.data["bin_status"] == BinStatus.PACKED:
                                 item.data["bin_status"] = BinStatus.QUEUED
                                 self.__enqueue_container(item)
-
             finally:
                 self.bin_unlock()
         self.target_worker_number = len(self.bins) + self.calculate_overhead_workers(len(self.bins))

@@ -6,6 +6,7 @@ from harmonicIO.general.services import SysOut
 
 from docker.errors import APIError, NotFound
 from requests.exceptions import HTTPError
+from json.decoder import JSONDecodeError
 
 class ChannelStatus(object):
     def __init__(self, port):
@@ -154,7 +155,7 @@ class DockerMaster(object):
                 #if system_delta > 0.0 and cpu_delta > 0.0:
                 current_CPU = (cpu_delta / system_delta) # Num of cpu's: len(stats["cpu_stats"]["cpu_usage"]["percpu_usage"])
             
-            except KeyError:
+            except (KeyError, JSONDecodeError):
                 current_CPU = None
 
         return current_CPU

@@ -10,6 +10,7 @@ class Setting(object):
     __std_idle_time = None
     __token = "None"
     __autoscaling = None
+    __min_CPU = None
 
     @staticmethod
     def set_node_addr(addr=None):
@@ -64,6 +65,10 @@ class Setting(object):
         return Setting.__autoscaling
 
     @staticmethod
+    def get_min_cpu():
+        return Setting.__min_CPU
+
+    @staticmethod
     def read_cfg_from_file():
         from harmonicIO.general.services import Services, SysOut
         if not Services.is_file_exist('harmonicIO/master/configuration.json'):
@@ -97,6 +102,8 @@ class Setting(object):
                         elif cfg[Definition.get_str_data_port_range()][0] > \
                              cfg[Definition.get_str_data_port_range()][1]:
                             SysOut.terminate_string("Start port range must greater than stop port range!")
+                        elif not cfg.get("minimum_CPU_size") or cfg.get("minimum_CPU_size") > 1.0:
+                            SysOut.terminate_string("Minimum CPU usage must be above 0.0 and below 1.0")
                         else:
                             Setting.__node_name = cfg[Definition.get_str_node_name()].strip()
                             Setting.__node_port = cfg[Definition.get_str_node_port()]
@@ -104,6 +111,7 @@ class Setting(object):
                             Setting.__node_data_port_stop = cfg[Definition.get_str_data_port_range()][1]
                             Setting.__std_idle_time = cfg[Definition.get_str_idle_time()]
                             Setting.__autoscaling = cfg.get('auto_scaling_enabled')
+                            Setting.__min_CPU = float(cfg.get('minimum_CPU_size'))
                             SysOut.out_string("Load setting successful.")
 
                         try:

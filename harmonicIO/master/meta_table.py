@@ -1,5 +1,6 @@
 from harmonicIO.general.services import Services, SysOut
 from harmonicIO.general.definition import Definition, CTuple
+from .configuration import Setting
 
 import threading
 
@@ -256,6 +257,8 @@ class LookUpTable(object):
                     c_data["update_count"] = history + 1
                 for field in data:
                     c_data[field] = (history * float(c_data.get(field, 0)) + float(data[field])) / (history + 1)
+                    if field == Definition.get_str_size_desc():
+                        c_data[field] = max(Setting.get_min_cpu(), c_data[field])
 
                 container_dataset[container_image_name] = c_data
             finally:

@@ -3,19 +3,21 @@ Worker entry point.
 """
 import threading
 import urllib3
+import json
+import time
+from concurrent.futures import ThreadPoolExecutor
+
 from .configuration import Setting
 from harmonicIO.general.services import SysOut, Services
 from harmonicIO.general.definition import Definition, CRole
 from harmonicIO.worker.docker_service import DockerService
 from .garbage_collector import GarbageCollector
-import json
-from concurrent.futures import ThreadPoolExecutor
+from .rest_service import RESTService
 
 def run_rest_service():
     """
     Run rest as in a thread function
     """
-    from .rest_service import RESTService
     rest = RESTService()
     rest.run()
 
@@ -38,7 +40,8 @@ def update_worker_status():
     """
     while True:
         # Get machine status by calling a unix command and fetch for load average
-
+        time.sleep(5)
+        SysOut.debug_string("Currently running threads: {}".format(threading.enumerate()))
         try:
             content = Services.get_machine_status(Setting, CRole.WORKER)
             content[Definition.REST.get_str_docker()] = DockerService.get_containers_status()

@@ -34,6 +34,13 @@ def start_gc_thread():
     SysOut.out_string("Garbage collector started")
 
 
+def start_worker_updater():
+    updater_thread = threading.Thread(target=update_worker_status)
+    updater_thread.daemon = True
+    updater_thread.start()
+
+    SysOut.out_string("Started worker update loop")
+
 def update_worker_status():
     """
     Update the worker status to the master as well as container info.
@@ -105,7 +112,7 @@ if __name__ == "__main__":
     pool.submit(run_rest_service)
 
     # Update the worker status
-    pool.submit(update_worker_status)
+    pool.submit(start_worker_updater)
 
     # Start garbage collector thread
     pool.submit(start_gc_thread)

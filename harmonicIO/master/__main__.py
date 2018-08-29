@@ -99,14 +99,9 @@ if __name__ == '__main__':
     
     lut_ctr = classtracker.ClassTracker()
     lut_ctr.track_class(LookUpTable)
-    lut_ctr.track_object(LookUpTable.Containers.__containers)
-    lut_ctr.track_object(LookUpTable.ImageMetadata.__container_data)
-    lut_ctr.track_object(LookUpTable.Tuples.__tuples)
-    lut_ctr.track_object(LookUpTable.Workers.__workers)
-    
+       
     irm_ctr = classtracker.ClassTracker()
     irm_ctr.track_class(IntelligentResourceManager)
-    irm_ctr.track_object(IntelligentResourceManager.container_manager)
     
     logging.basicConfig(filename=profiler_log_file)
     SysOut.out_string("Logging started!")

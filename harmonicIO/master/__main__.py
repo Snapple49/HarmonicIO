@@ -118,6 +118,8 @@ if __name__ == '__main__':
         while True:
             time.sleep(60)
             logging.info("\nSummaryTracker:\n{}\n".format(tr.format_diff()))
+            from .messaging_system import MessagesQueue
+            logging.info("Queue length: {}\n".format(MessagesQueue.verbose()))
 
 
     except KeyboardInterrupt:

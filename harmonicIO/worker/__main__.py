@@ -47,8 +47,6 @@ def update_worker_status():
     """
     while True:
         # Get machine status by calling a unix command and fetch for load average
-        time.sleep(5)
-        SysOut.debug_string("Currently running threads: {}".format(threading.enumerate()))
         try:
             content = Services.get_machine_status(Setting, CRole.WORKER)
             content[Definition.REST.get_str_docker()] = DockerService.get_containers_status()
@@ -76,6 +74,9 @@ def update_worker_status():
         except Exception as e:
             SysOut.err_string("Master is not available!")
             print(e)
+        
+        time.sleep(5)
+
 
 
 if __name__ == "__main__":
@@ -116,3 +117,7 @@ if __name__ == "__main__":
 
     # Start garbage collector thread
     pool.submit(start_gc_thread)
+
+    while True:
+        SysOut.debug_string("Currently running threads: {}".format(threading.enumerate()))
+        time.sleep(1)

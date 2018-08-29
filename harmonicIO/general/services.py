@@ -74,19 +74,19 @@ class Services(object):
     @staticmethod
     def get_machine_status(setting, role):
 
-        # Get load value
-        res = str(subprocess.check_output(Definition.get_cpu_load_command())).strip()
-        res = res.replace(",", "").replace("\\n", "").replace("'", "")
-        *_, load1, load5, load15 = res.split(" ")
+        # Get load value # OS: this is not used anywhere, commented out for now
+        #res = str(subprocess.check_output(Definition.get_cpu_load_command())).strip()
+        #res = res.replace(",", "").replace("\\n", "").replace("'", "")
+        #*_, load1, load5, load15 = res.split(" ")
 
         body = dict()
         body[Definition.get_str_node_name()] = setting.get_node_name()
         body[Definition.get_str_node_role()] = role
         body[Definition.get_str_node_addr()] = setting.get_node_addr()
         body[Definition.get_str_node_port()] = setting.get_node_port()
-        body[Definition.get_str_load1()] = load1
-        body[Definition.get_str_load5()] = load5
-        body[Definition.get_str_load15()] = load15
+        #body[Definition.get_str_load1()] = load1
+        #body[Definition.get_str_load5()] = load5
+        #body[Definition.get_str_load15()] = load15
 
         return body
 

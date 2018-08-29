@@ -36,34 +36,36 @@ def update_worker_status():
     """
     Update the worker status to the master as well as container info.
     """
+    while True:
+        # Get machine status by calling a unix command and fetch for load average
 
-    threading.Timer(5, update_worker_status).start()
-    """
-    Get machine status by calling a unix command and fetch for load average
-    """
+        try:
+            content = Services.get_machine_status(Setting, CRole.WORKER)
+            content[Definition.REST.get_str_docker()] = DockerService.get_containers_status()
+            content[Definition.REST.get_str_local_imgs()] = DockerService.get_local_images()
+            content["local_image_stats"] = DockerService.get_local_image_stats()
+        except KeyboardInterrupt:
+            break
+        except Exception as e:
+            SysOut.err_string("Encountered exception! {}".format(e))
+        
+        s_content = bytes(json.dumps(content), 'utf-8')
 
-    content = Services.get_machine_status(Setting, CRole.WORKER)
-    content[Definition.REST.get_str_docker()] = DockerService.get_containers_status()
-    content[Definition.REST.get_str_local_imgs()] = DockerService.get_local_images()
-    content["local_image_stats"] = DockerService.get_local_image_stats()
-    
-    s_content = bytes(json.dumps(content), 'utf-8')
+        html = urllib3.PoolManager()
+        try:
+            r = html.request('PUT', Definition.Master.get_str_check_master(Setting.get_master_addr(),
+                                                                        Setting.get_master_port(),
+                                                                        Setting.get_token()),
+                            body=s_content)
 
-    html = urllib3.PoolManager()
-    try:
-        r = html.request('PUT', Definition.Master.get_str_check_master(Setting.get_master_addr(),
-                                                                       Setting.get_master_port(),
-                                                                       Setting.get_token()),
-                         body=s_content)
+            if r.status != 200:
+                SysOut.err_string("Cannot update worker status to the master!")
+            else:
+                SysOut.debug_string("Reports status to master node complete.")
 
-        if r.status != 200:
-            SysOut.err_string("Cannot update worker status to the master!")
-        else:
-            SysOut.debug_string("Reports status to master node complete.")
-
-    except Exception as e:
-        SysOut.err_string("Master is not available!")
-        print(e)
+        except Exception as e:
+            SysOut.err_string("Master is not available!")
+            print(e)
 
 
 if __name__ == "__main__":

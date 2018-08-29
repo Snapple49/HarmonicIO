@@ -8,6 +8,10 @@ from .server_socket import ThreadedTCPServer, ThreadedTCPRequestHandler
 from .rest_service import RESTService
 
 import threading
+from pympler import classtracker, tracker
+import logging
+import sys
+import time
 """
 Master entry point
 """
@@ -87,3 +91,45 @@ if __name__ == '__main__':
 
     # Binding commander to the rest service and enable REST service
     pool.submit(run_rest_service)
+
+    ### profiling work
+    profiler_log_file = "profiling_out.txt"
+
+    tr = tracker.SummaryTracker()
+    
+    lut_ctr = classtracker.ClassTracker()
+    lut_ctr.track_class(LookUpTable)
+    lut_ctr.track_object(LookUpTable.Containers.__containers)
+    lut_ctr.track_object(LookUpTable.ImageMetadata.__container_data)
+    lut_ctr.track_object(LookUpTable.Tuples.__tuples)
+    lut_ctr.track_object(LookUpTable.Workers.__workers)
+    
+    irm_ctr = classtracker.ClassTracker()
+    irm_ctr.track_class(IntelligentResourceManager)
+    irm_ctr.track_object(IntelligentResourceManager.container_manager)
+    
+    logging.basicConfig(filename=profiler_log_file)
+    SysOut.out_string("Logging started!")
+    logging.info("Started logging!")
+    
+    lut_ctr.create_snapshot()
+    irm_ctr.create_snapshot()
+    try:
+        while True:
+            time.sleep(60)
+            logging.info("\nSummaryTracker:\n{}\n".format(tr.format_diff()))
+
+
+    except KeyboardInterrupt:
+        lut_ctr.create_snapshot()
+        irm_ctr.create_snapshot()
+        with open(profiler_log_file, "a") as f:
+            sys.stdout = f
+            print(" ------------- RESULTS ------------- \n")
+            print("LookUpTable:\n")
+            lut_ctr.stats.print_summary()
+            print("\n\nIRM:\n")
+            irm_ctr.stats.print_summary()
+
+        exit
+

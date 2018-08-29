@@ -38,6 +38,8 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
             image_name_string = data[3:tcr].decode('UTF-8')
 
             # Then, push data messaging system.
+            # NOTE: maybe add check first to see if queue length is not too large? solution in comment below?
+            # if MessagesQueue.is_queue_available(image_name_string):
             MessagesQueue.push_to_queue(image_name_string, data[tcr:])
 
         except:

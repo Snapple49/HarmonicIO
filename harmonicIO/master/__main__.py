@@ -18,12 +18,12 @@ def run_irm():
     """
     Starts the intelligent resource management system, which enables autoscaling features
     """
-    if Setting.get_autoscaling():    
-        IntelligentResourceManager.start_irm(BinPacking.first_fit)
-        if IntelligentResourceManager.container_manager:
-            SysOut.out_string("IRM Service started!")
-        else:
-            SysOut.terminate_string("Error: could not start IRM service")
+    autoscaling = Setting.get_autoscaling()   
+    IntelligentResourceManager.start_irm(BinPacking.first_fit, autoscaling)
+    if IntelligentResourceManager.container_manager:
+        SysOut.out_string("IRM Service started!")
+    else:
+        SysOut.terminate_string("Error: could not start IRM service")
 
 
 

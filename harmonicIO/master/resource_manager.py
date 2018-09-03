@@ -10,11 +10,12 @@ class IntelligentResourceManager():
     container_manager = None
 
     @staticmethod
-    def start_irm(packing_algorithm):
-        IntelligentResourceManager.container_manager = ContainerAllocator(packing_algorithm)
-        worker_scaling_thread = threading.Thread(target=IntelligentResourceManager.scale_workers)
-        worker_scaling_thread.daemon = True
-        worker_scaling_thread.start()
+    def start_irm(packing_algorithm, autoscaling):
+        IntelligentResourceManager.container_manager = ContainerAllocator(packing_algorithm, autoscaling)
+        if autoscaling:
+            worker_scaling_thread = threading.Thread(target=IntelligentResourceManager.scale_workers)
+            worker_scaling_thread.daemon = True
+            worker_scaling_thread.start()
 
     @staticmethod
     def queue_container(container_data):

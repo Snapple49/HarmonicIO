@@ -73,7 +73,7 @@ class ContainerQueue():
 
 class ContainerAllocator():
 
-    def __init__(self, packing_algo):
+    def __init__(self, packing_algo, autoscaling):
         self.target_worker_number = 0
         self.container_q = ContainerQueue()
         self.packing_algorithm = packing_algo 
@@ -87,9 +87,10 @@ class ContainerAllocator():
         self.packing_interval = config.packing_interval
         self.default_cpu_share = config.default_cpu_share
         self.profiler = WorkerProfiler(self.container_q, self, config.profiling_interval)
-        self.load_predictor = LoadPredictor(self, config.step_length,config.roc_lower, config.roc_upper,
-                                            config.roc_minimum, config.queue_limit, config.waiting_time,
-                                            config.large_increment, config.small_increment)
+        if autoscaling:
+            self.load_predictor = LoadPredictor(self, config.step_length,config.roc_lower, config.roc_upper,
+                                                config.roc_minimum, config.queue_limit, config.waiting_time,
+                                                config.large_increment, config.small_increment)
 
         print("Settings loaded!")
 

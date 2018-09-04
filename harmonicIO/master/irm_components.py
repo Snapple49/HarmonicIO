@@ -47,10 +47,11 @@ class ContainerQueue():
     def put_container(self, container_data):
         self.queue_lock()
         try:
-            size_data = LookUpTable.ImageMetadata.get_metadata(container_data[Definition.Container.get_str_con_image_name()])
-            if size_data:
-                size_data = size_data.get(Definition.get_str_size_desc())
-            container_data[Definition.get_str_size_desc()] = size_data
+            if not container_data.get(Definition.get_str_size_desc()) == None:
+                size_data = LookUpTable.ImageMetadata.get_metadata(container_data[Definition.Container.get_str_con_image_name()])
+                if size_data:
+                    size_data = size_data.get(Definition.get_str_size_desc())
+                container_data[Definition.get_str_size_desc()] = size_data
             self.__queue.put(container_data)
         finally:
             self.queue_unlock()

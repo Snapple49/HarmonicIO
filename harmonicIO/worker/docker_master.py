@@ -76,7 +76,7 @@ class DockerMaster(object):
         try:
             for item in self.__client.containers.list(all=True):
                 res.append(get_container_status(item))
-        except (ApiError, HTTPError, NotFound) as e:
+        except (APIError, HTTPError, NotFound) as e:
             SysOut.err_string("Could not find requested container, exception:\n{}".format(e))
             # To print all logs:
             #print(item.logs(stdout=True, stderr=True))
@@ -97,7 +97,7 @@ class DockerMaster(object):
         try:
             self.__client.containers.get(cont_shortid).remove()
             return True
-        except (ApiError, HTTPError, NotFound) as e:
+        except (APIError, HTTPError, NotFound) as e:
             SysOut.err_string("Could not remove requested container, exception:\n{}".format(e))
             return False
 

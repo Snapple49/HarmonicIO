@@ -117,7 +117,3 @@ if __name__ == "__main__":
 
     # Start garbage collector thread
     pool.submit(start_gc_thread)
-
-    while True:
-        SysOut.debug_string("Currently running threads: {}".format(threading.enumerate()))
-        time.sleep(1)

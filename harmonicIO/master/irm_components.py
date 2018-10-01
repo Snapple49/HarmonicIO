@@ -54,12 +54,15 @@ class ContainerQueue():
                     size_data = size_data.get(Definition.get_str_size_desc())
                 container_data[Definition.get_str_size_desc()] = size_data
             
-            if container_data.get("TTL"):
+            ttl = container_data.get("TTL")
+            if ttl > 0:
                 container_data["TTL"] -= 1
-            else:
+            elif ttl == None:
                 container_data["TTL"] = self.initial_TTL
+            else:
+                SysOut.debug_string("Dropped container, TTL 0")
             
-            if container_data["TTL"] > 0:
+            if container_data["TTL"] >= 0:
                 self.__queue.put(container_data)
 
         finally:

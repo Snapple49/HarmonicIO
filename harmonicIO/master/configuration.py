@@ -152,7 +152,7 @@ class IRMSetting():
                 self.waiting_time = int(data["scaleup_waiting_time"])
                 self.large_increment = int(data["large_scaleup_amount"])
                 self.small_increment = int(data["small_scaleup_amount"])
-                self.ttl = int(data["initial_container_TTL"])
+                self.ttl = int(data["container_request_TTL"])
             except KeyError as e:
                 raise KeyError("Missing config settings for following option: {}".format(e.args[0]))
             except TypeError as e:

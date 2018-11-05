@@ -18,9 +18,10 @@ BinStatus = Bin.ContainerBinStatus
 
 class ContainerQueue():
     
-    def __init__(self, queue_cap=0):
+    def __init__(self, ttl, queue_cap=0):
         self.__queue = queue.Queue(maxsize=queue_cap)
         self.container_queue_lock = threading.Lock()
+        self.initial_TTL = ttl
         
     def queue_lock(self):
         self.container_queue_lock.acquire()
@@ -52,7 +53,20 @@ class ContainerQueue():
                 if size_data:
                     size_data = size_data.get(Definition.get_str_size_desc())
                 container_data[Definition.get_str_size_desc()] = size_data
-            self.__queue.put(container_data)
+            
+            ttl = container_data.get("TTL")
+            if ttl == None:
+                container_data["TTL"] = self.initial_TTL
+            elif ttl > 0:
+                container_data["TTL"] -= 1
+            else:
+                del container_data
+                container_data = False
+                SysOut.debug_string("Dropped container, TTL 0")
+            
+            if container_data:
+                self.__queue.put(container_data)
+
         finally:
             self.queue_unlock()
 
@@ -75,8 +89,10 @@ class ContainerQueue():
 class ContainerAllocator():
 
     def __init__(self, packing_algo, autoscaling):
+        config = IRMSetting()
+
         self.target_worker_number = 0
-        self.container_q = ContainerQueue()
+        self.container_q = ContainerQueue(ttl=config.ttl)
         self.packing_algorithm = packing_algo 
         self.allocation_q = queue.Queue()
         self.allocation_lock = threading.Lock()
@@ -84,7 +100,6 @@ class ContainerAllocator():
         self.bin_layout_lock = threading.Lock()
         self.size_descriptor = Definition.get_str_size_desc()
 
-        config = IRMSetting()
         self.packing_interval = config.packing_interval
         self.default_cpu_share = config.default_cpu_share
         self.profiler = WorkerProfiler(self.container_q, self, config.profiling_interval)
@@ -154,6 +169,7 @@ class ContainerAllocator():
                 if sid and not sid == deleteflag:
                     container_data[Definition.Container.Status.get_str_sid()] = sid
                     container_data["bin_status"] = BinStatus.RUNNING
+                    del container_data["TTL"]
                     #SysOut.debug_string("Added container with sid {}".format(sid))
 
                 else:

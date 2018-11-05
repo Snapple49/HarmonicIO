@@ -9,5 +9,6 @@
     "queue_size_limit" : 100,
     "scaleup_waiting_time" : 5,
     "large_scaleup_amount" : 4,
-    "small_scaleup_amount" : 1
+    "small_scaleup_amount" : 1,
+    "container_request_TTL" : 50
 }

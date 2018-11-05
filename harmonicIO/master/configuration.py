@@ -152,6 +152,7 @@ class IRMSetting():
                 self.waiting_time = int(data["scaleup_waiting_time"])
                 self.large_increment = int(data["large_scaleup_amount"])
                 self.small_increment = int(data["small_scaleup_amount"])
+                self.ttl = int(data["container_request_TTL"])
             except KeyError as e:
                 raise KeyError("Missing config settings for following option: {}".format(e.args[0]))
             except TypeError as e:
@@ -176,5 +177,7 @@ class IRMSetting():
                     error += "large increment smaller than small increment\n"
                 if self.small_increment < 1:
                     error += "small increment not above 0\n"
+                if self.ttl < 1:
+                    error += "initial TTL must be above 0\n"
                 if not error == "":
                     raise ValueError("Invalid value setting for option: {}".format(error)) 

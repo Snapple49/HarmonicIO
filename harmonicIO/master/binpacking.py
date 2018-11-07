@@ -43,6 +43,9 @@ class Bin():
             self.size = data[self.size_descriptor]
             self.data = data
 
+        def jsonify(self):
+            return {"item size" : self.size, "data" : self.data}
+
         def __str__(self):
             return "Item size: {} data: {}".format(self.size, self.data)
 
@@ -93,7 +96,14 @@ class Bin():
     def __str__(self):
         bin_items = []
         for item in self.items:
-            bin_items.append(str(item))
-        return ("Bin index: {}, space: {}, Items: {}".format(self.index, self.free_space, bin_items))
+            if isinstance(item, Bin.Item):
+                bin_items.append(item.jsonify)
+        return ("bin index: {}, space: {}, Items: {}".format(self.index, self.free_space, bin_items))
 
-    
+    def jsonify(self):
+        bin_items = []
+        for item in self.items:
+            if isinstance(item, Bin.Item):
+                bin_items.append(item.jsonify)
+        return {"bin index" : self.index, "space" : self.free_space, "items" : bin_items}
+

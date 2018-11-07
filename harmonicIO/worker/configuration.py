@@ -143,7 +143,7 @@ class Setting(object):
                             Setting.__master_addr = cfg[Definition.get_str_master_addr()].strip()
                             Setting.__master_port = cfg[Definition.get_str_master_port()]
                             Setting.__node_external_addr = cfg[Definition.get_str_node_external_addr()].strip().lower()
-                            Setting.__container_idle_timeout = cfg[Definition.get_str_container_idle_timeout()]
+
 
                             # Check for auto node name
                             if Setting.__node_name.lower() == "auto":
@@ -179,3 +179,10 @@ class Setting(object):
                 except Exception as e:
                     print(e)
                     SysOut.terminate_string("Invalid data in configuration file.")
+
+
+            with open('harmonicIO/worker/params.json', 'rt') as p:
+                import json
+                params = json.loads(p.read())
+                Setting.__container_idle_timeout = params.get(Definition.get_str_container_idle_timeout(), 60)
+

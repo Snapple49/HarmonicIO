@@ -48,3 +48,6 @@ fabric.properties
 
 **/__pycache__
 **.egg-info
+
+# worker specific parameters
+harmonicIO/worker/configuration.json

@@ -84,10 +84,6 @@ class Setting(object):
     @staticmethod
     def get_min_worker():
         return 1
-
-    @staticmethod
-    def get_node_external_addr():
-        return Setting.__node_external_addr
         
     @staticmethod
     def get_container_idle_timeout():
@@ -108,37 +104,22 @@ class Setting(object):
                     # Check for the json structure
                     if  Definition.get_str_node_name() in cfg and \
                         Definition.get_str_node_port() in cfg and \
-                        Definition.get_str_data_port_range() in cfg and \
                         Definition.get_str_idle_time() in cfg and \
                         Definition.get_str_master_addr() in cfg and \
                         Definition.get_str_master_port() in cfg and \
-                        Definition.get_str_container_idle_timeout() in cfg and \
                         Definition.get_str_node_internal_addr() in cfg and \
                         Definition.get_str_node_internal_addr():
                         # Check port number is int or not
                         if not isinstance(cfg[Definition.get_str_node_port()], int):
                             SysOut.terminate_string("Node port must be integer.")
-                        elif not isinstance(cfg[Definition.get_str_data_port_range()], list):
-                            SysOut.terminate_string("Port range must be list.")
-                        elif not (isinstance(cfg[Definition.get_str_data_port_range()][0], int) and \
-                                  isinstance(cfg[Definition.get_str_data_port_range()][1], int)):
-                            SysOut.terminate_string("Port range must be integer.")
                         elif not isinstance(cfg[Definition.get_str_master_port()], int):
                             SysOut.terminate_string("Master port must be integer.")
-                        elif len(cfg[Definition.get_str_data_port_range()]) != 2:
-                            SysOut.terminate_string("Port range must compost of two elements: start, stop.")
                         elif not isinstance(cfg[Definition.get_str_idle_time()], int):
                             SysOut.terminate_string("Idle time must be integer.")
-                        elif cfg[Definition.get_str_data_port_range()][0] > \
-                             cfg[Definition.get_str_data_port_range()][1]:
-                            SysOut.terminate_string("Start port range must greater than stop port range.")
                         else:
                             Setting.set_node_addr()
-                            import multiprocessing
                             Setting.__node_name = cfg[Definition.get_str_node_name()].strip()
                             Setting.__node_port = cfg[Definition.get_str_node_port()]
-                            Setting.__node_data_port_start = cfg[Definition.get_str_data_port_range()][0]
-                            Setting.__node_data_port_stop = cfg[Definition.get_str_data_port_range()][1]
                             Setting.__std_idle_time = cfg[Definition.get_str_idle_time()]
                             Setting.__master_addr = cfg[Definition.get_str_master_addr()].strip()
                             Setting.__master_port = cfg[Definition.get_str_master_port()]
@@ -185,4 +166,5 @@ class Setting(object):
                 import json
                 params = json.loads(p.read())
                 Setting.__container_idle_timeout = params.get(Definition.get_str_container_idle_timeout(), 60)
-
+                Setting.__node_data_port_start = params[Definition.get_str_data_port_range()][0]
+                Setting.__node_data_port_stop = params[Definition.get_str_data_port_range()][1]

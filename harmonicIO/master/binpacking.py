@@ -97,13 +97,13 @@ class Bin():
         bin_items = []
         for item in self.items:
             if isinstance(item, Bin.Item):
-                bin_items.append(item.jsonify)
+                bin_items.append(item.jsonify())
         return ("bin index: {}, space: {}, Items: {}".format(self.index, self.free_space, bin_items))
 
     def jsonify(self):
         bin_items = []
         for item in self.items:
             if isinstance(item, Bin.Item):
-                bin_items.append(item.jsonify)
+                bin_items.append(item.jsonify())
         return {"bin index" : self.index, "space" : self.free_space, "items" : bin_items}
 

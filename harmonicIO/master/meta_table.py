@@ -315,12 +315,12 @@ class LookUpTable(object):
             # prepare and stringify the list of bins and the container and allocation queues
             binlist = []
             for _bin in IntelligentResourceManager.container_manager.bins:
-                binlist.append(_bin.jsonify)
+                binlist.append(_bin.jsonify())
             debug["bins"] = binlist
 
             alloc_queue = []
             for item in list(IntelligentResourceManager.container_manager.allocation_q.queue):
-                alloc_queue.append(item.jsonify)
+                alloc_queue.append(item.jsonify())
             debug["allocation queue"] = alloc_queue
             
             debug["container queue"] = list(IntelligentResourceManager.container_manager.container_q.view_queue())

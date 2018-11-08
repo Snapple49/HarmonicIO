@@ -114,15 +114,22 @@ class DockerMaster(object):
 
         SysOut.debug_string("Containers to check: {}".format(conts_to_check))
 
+        deb_individual_cpu = {}
         for container in conts_to_check:
             name = (str(container.image)).split('\'')[1]
             cpu = self.calculate_cpu_usage(container)
             sum_of_cpu[name] = sum_of_cpu.get(name, 0) + cpu if cpu else 0
             counters[name] = counters.get(name, 0) + 1
+            if not name in deb_individual_cpu:
+                deb_individual_cpu[name] = []
+            deb_individual_cpu[name].append(cpu)
+                
 
         for container in sum_of_cpu:
             containers[container] = {Definition.get_str_size_desc() : sum_of_cpu[container]/counters[container]}
         
+        containers["DEBUG"] = deb_individual_cpu
+
         SysOut.debug_string("CPU per container: {}".format(containers))
         return containers
             

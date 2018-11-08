@@ -51,3 +51,5 @@ fabric.properties
 
 # worker specific parameters
 harmonicIO/worker/configuration.json
+
+*.vscode*

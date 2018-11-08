@@ -311,12 +311,20 @@ class LookUpTable(object):
         if LookUpTable.debugging:
             from .resource_manager import IntelligentResourceManager # again, necessary local import
             debug = {}
+
+            # prepare and stringify the list of bins and the container and allocation queues
             binlist = []
             for _bin in IntelligentResourceManager.container_manager.bins:
-                binlist.append(str(_bin))
+                binlist.append(_bin.jsonify())
             debug["bins"] = binlist
-            debug["allocation queue"] = IntelligentResourceManager.container_manager.allocation_q.queue
-            debug["container queue"] = IntelligentResourceManager.container_manager.container_q.view_queue()
+
+            alloc_queue = []
+            for item in list(IntelligentResourceManager.container_manager.allocation_q.queue):
+                alloc_queue.append(item.jsonify())
+            debug["allocation queue"] = alloc_queue
+            
+            debug["container queue"] = list(IntelligentResourceManager.container_manager.container_q.view_queue())
+
             debug["load predictor data"] = IntelligentResourceManager.container_manager.load_predictor.image_data
             debug["target workers"] = IntelligentResourceManager.container_manager.target_worker_number
             ret['DEGUBBING_DATA'] = debug

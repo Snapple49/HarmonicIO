@@ -15,6 +15,17 @@ class Setting(object):
     __container_idle_timeout = None
 
     @staticmethod
+    def get_setting():
+        return {
+            Setting.get_node_name() : {
+                "node_addr": Setting.get_node_addr(),
+                "node_port": Setting.get_node_port(),
+                "node_data_port_range": "{}-{}".format(Setting.get_data_port_start(), Setting.get_data_port_stop()),
+                "container_idle_timeout": Setting.get_container_idle_timeout()
+            }
+        }
+
+    @staticmethod
     def set_node_addr(addr=None):
         if addr:
             Setting.__node_addr = addr
@@ -84,7 +95,7 @@ class Setting(object):
     @staticmethod
     def get_min_worker():
         return 1
-        
+
     @staticmethod
     def get_container_idle_timeout():
         return Setting.__container_idle_timeout

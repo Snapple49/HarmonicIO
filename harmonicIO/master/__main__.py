@@ -19,7 +19,7 @@ def run_irm():
     Starts the intelligent resource management system, which enables autoscaling features
     """
     SysOut.debug_string("Loading IRM configuration...")
-    autoscaling = Setting.get_autoscaling()   
+    autoscaling = Setting.get_autoscaling()
     IntelligentResourceManager.start_irm(BinPacking.first_fit, autoscaling)
     if IntelligentResourceManager.container_manager:
         SysOut.out_string("IRM Service started! Autoscaling is {}.".format("enabled" if autoscaling else "disabled"))

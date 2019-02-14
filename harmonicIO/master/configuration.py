@@ -12,6 +12,7 @@ class Setting(object):
     __autoscaling = None
     __min_CPU = None
 
+
     @staticmethod
     def set_node_addr(addr=None):
         if addr:
@@ -67,6 +68,18 @@ class Setting(object):
     @staticmethod
     def get_min_cpu():
         return Setting.__min_CPU
+
+    @staticmethod
+    def get_settings():
+        return json.dumps({
+            Setting.get_node_name(): {
+                "node_addr": Setting.get_node_addr(),
+                "node_port": Setting.get_node_port(),
+                "node_data_port_range": "{}-{}".format(Setting.get_data_port_start(), Setting.get_data_port_stop()),
+                "autoscaling": Setting.get_autoscaling(),
+                "minimum CPU": Setting.get_min_cpu()
+            }
+        })
 
     @staticmethod
     def read_cfg_from_file():
@@ -180,4 +193,20 @@ class IRMSetting():
                 if self.ttl < 1:
                     error += "initial TTL must be above 0\n"
                 if not error == "":
-                    raise ValueError("Invalid value setting for option: {}".format(error)) 
+                    raise ValueError("Invalid value setting for option: {}".format(error))
+
+    def get_config(self):
+        return json.dumps({
+            "packing_interval" : self.packing_interval,
+            "default_cpu_share" : self.default_cpu_share,
+            "profiling_interval" : self.profiling_interval,
+            "predictor_interval" : self.step_length,
+            "lower_rate_limit" : self.roc_lower,
+            "upper_rate_limit" : self.roc_upper,
+            "slowdown_rate" : self.roc_minimum,
+            "queue_size_limit" : self.queue_limit,
+            "scaleup_waiting_time" : self.waiting_time,
+            "large_scaleup_amount" : self.large_increment,
+            "small_scaleup_amount" : self.small_increment,
+            "container_request_TTL" : self.ttl
+        })

@@ -1,5 +1,5 @@
 import falcon
-from .configuration import Setting
+from .configuration import Setting, IRMSetting
 from harmonicIO.general.definition import Definition, CStatus, CRole
 from harmonicIO.general.services import SysOut, Services as LService
 from .messaging_system import MessagesQueue
@@ -33,7 +33,7 @@ class RequestStatus(object):
         if req.params[Definition.get_str_token()] == Setting.get_token():
             result = LService.get_machine_status(Setting, CRole.MASTER)
             format_response_string(res, falcon.HTTP_200, str(result))
-            
+
         else:
             format_response_string(res, falcon.HTTP_401,"Invalid token ID")
 
@@ -250,6 +250,7 @@ class MessagesQuery(object):
             res.body = str(data)
             res.content_type = "String"
             res.status = falcon.HTTP_200
+            return
 
         if req.params[Definition.MessagesQueue.get_str_command()] == "verbose_html":
             data = LookUpTable.verbose()
@@ -258,11 +259,34 @@ class MessagesQuery(object):
             res.body = get_html_form(data['WORKERS'], data['MSG'], data['CONTAINERS'], data['TUPLES'])
             res.content_type = "String"
             res.status = falcon.HTTP_200
+            return
+
+        if req.params[Definition.MessagesQueue.get_str_command()] == "get_config":
+
+            master_config = json.loads(Setting.get_settings())
+            irm = IRMSetting()
+            irm_config = json.loads(irm.get_config())
+
+            worker_configs = []
+            for worker in LookUpTable.Workers.verbose():
+                worker_url = "http://{}:8081/status?config=true".format(worker)
+                resp = urlopen(worker_url)
+
+                if resp.getcode() == 200:
+                    cfg = json.loads(str(resp.read(), 'utf-8'))
+                    worker_configs.append(cfg)
+
+            config_set = {"master_cfg": master_config, "irm_cfg": irm_config, "worker_cfgs": worker_configs}
+            res.body = json.dumps(config_set)
+            res.content_type = "String"
+            res.status = falcon.HTTP_200
+            return
+
 
 class ContainerManager(object):
     """
     ContainerManager is about taking requests from clients to set up containers
-    
+
     Provides a post request to let master allocate containers
 
     """
@@ -287,7 +311,7 @@ class ContainerManager(object):
             else:
                 format_response_string(res, falcon.HTTP_200, "Containers for specified image available.")
             return
-        return 
+        return
 
     def on_post(self, req, res):
         # check token and request type is provided
@@ -307,7 +331,7 @@ class ContainerManager(object):
 
         # request to create new container
         if req.params['type'] == 'new_container':
-            new_container(req_data) 
+            new_container(req_data)
             format_response_string(res, falcon.HTTP_200, "Containers queued for creation!")
             return
 

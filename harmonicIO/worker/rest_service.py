@@ -10,12 +10,12 @@ import json
 def notify_master_container_finished(container, csid):
     from urllib.request import urlopen, Request
     from urllib.error import HTTPError
-    
+
     notify_url = "http://{}:{}/{}?token=None&{}={}&{}={}".format(
-        Setting.get_master_addr(), 
-        Setting.get_master_port(), 
-        Definition.REST.get_str_status(), 
-        Definition.Docker.get_str_finished(), 
+        Setting.get_master_addr(),
+        Setting.get_master_port(),
+        Definition.REST.get_str_status(),
+        Definition.Docker.get_str_finished(),
         csid,
         Definition.Container.get_str_con_image_name(),
         container
@@ -23,8 +23,8 @@ def notify_master_container_finished(container, csid):
     try:
         req = Request(url=notify_url, method='PUT')
         resp = urlopen(req)
-    
-        if resp.getcode() == 200: 
+
+        if resp.getcode() == 200:
             # container was removed on master
             return True
     except HTTPError as e:
@@ -68,7 +68,7 @@ class ContainerService(object):
             name = req.params.get(Definition.Container.get_str_con_image_name())
             if short_id and name:
                 if not notify_master_container_finished(name, short_id):
-                    res.body = "Could not find requested container running."    
+                    res.body = "Could not find requested container running."
                     res.status = falcon.HTTP_404
                 else:
                     res.body = "ACK: Container terminated, master notified."
@@ -132,11 +132,18 @@ class RequestStatus(object):
         """
         GET: /status?token={None}
         """
+        if "config" in req.params:
+            res.body = Setting.get_config()
+            res.content = "String"
+            res.status = falcon.HTTP_200
+            return
+
         if not Definition.get_str_token() in req.params:
             res.body = "Token is required."
             res.content_type = "String"
             res.status = falcon.HTTP_401
             return
+
 
         if req.params[Definition.get_str_token()] == Setting.get_token():
             s_content = Services.get_machine_status(Setting, CRole.WORKER)

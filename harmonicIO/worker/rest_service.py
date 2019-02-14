@@ -133,7 +133,7 @@ class RequestStatus(object):
         GET: /status?token={None}
         """
         if "config" in req.params:
-            res.body = Setting.get_config()
+            res.body = json.dumps(Setting.get_setting())
             res.content = "String"
             res.status = falcon.HTTP_200
             return

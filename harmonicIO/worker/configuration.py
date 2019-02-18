@@ -22,7 +22,8 @@ class Setting(object):
                 "node_addr": Setting.get_node_addr(),
                 "node_port": Setting.get_node_port(),
                 "node_data_port_range": "{}-{}".format(Setting.get_data_port_start(), Setting.get_data_port_stop()),
-                "container_idle_timeout": Setting.get_container_idle_timeout()
+                "container_idle_timeout": Setting.get_container_idle_timeout(),
+                "report_interval": Setting.get_report_interval()
             }
         }
 

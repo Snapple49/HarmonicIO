@@ -17,12 +17,12 @@ from .configuration import Setting, IRMSetting
 BinStatus = Bin.ContainerBinStatus
 
 class ContainerQueue():
-    
+
     def __init__(self, ttl, queue_cap=0):
         self.__queue = queue.Queue(maxsize=queue_cap)
         self.container_queue_lock = threading.Lock()
         self.initial_TTL = ttl
-        
+
     def queue_lock(self):
         self.container_queue_lock.acquire()
         #SysOut.debug_string("Acquired container queue lock! I am {}".format(threading.current_thread()))
@@ -33,7 +33,7 @@ class ContainerQueue():
 
     def view_queue(self):
         return self.__queue.queue
-        
+
     def update_containers(self, c_image, update_data):
         self.queue_lock()
         try:
@@ -53,7 +53,7 @@ class ContainerQueue():
                 if size_data:
                     size_data = size_data.get(Definition.get_str_size_desc())
                 container_data[Definition.get_str_size_desc()] = size_data
-            
+
             ttl = container_data.get("TTL")
             if ttl == None:
                 container_data["TTL"] = self.initial_TTL
@@ -63,7 +63,7 @@ class ContainerQueue():
                 del container_data
                 container_data = False
                 SysOut.debug_string("Dropped container, TTL 0")
-            
+
             if container_data:
                 self.__queue.put(container_data)
 
@@ -83,7 +83,7 @@ class ContainerQueue():
             pass
         finally:
             self.queue_unlock()
-        return current_list 
+        return current_list
 
 
 class ContainerAllocator():
@@ -93,7 +93,7 @@ class ContainerAllocator():
 
         self.target_worker_number = 0
         self.container_q = ContainerQueue(ttl=config.ttl)
-        self.packing_algorithm = packing_algo 
+        self.packing_algorithm = packing_algo
         self.allocation_q = queue.Queue()
         self.allocation_lock = threading.Lock()
         self.bins = []
@@ -115,7 +115,7 @@ class ContainerAllocator():
         bin_packing_manager.daemon=True
         bin_packing_manager.start()
 
-        for _ in range(4):            
+        for _ in range(4):
             queue_manager_thread = threading.Thread(target=self.queue_manager)
             queue_manager_thread.daemon=True
             queue_manager_thread.start()
@@ -127,7 +127,7 @@ class ContainerAllocator():
     def bin_unlock(self):
         self.bin_layout_lock.release()
         #SysOut.debug_string("Released bin lock! I am {}".format(threading.current_thread()))
-    
+
     def queue_lock(self):
         self.allocation_lock.acquire()
         #SysOut.debug_string("Acquired allocation queue lock! I am {}".format(threading.current_thread()))
@@ -152,10 +152,10 @@ class ContainerAllocator():
                 continue
             finally:
                 self.queue_unlock()
-                
-            
+
+
             if container_data["bin_status"] in [BinStatus.QUEUED, BinStatus.REQUEUED]:
-                
+
                 for worker in workers:
                     if workers[worker].get("bin_index", -99) == container_data["bin_index"]:
                         target_worker = (workers[worker][Definition.get_str_node_addr()], workers[worker][Definition.get_str_node_port()])
@@ -165,7 +165,7 @@ class ContainerAllocator():
                         sid = self.start_container_on_worker(target_worker, container_data)
                     except HTTPError as h:
                         SysOut.debug_string(h.msg)
-                
+
                 if sid and not sid == deleteflag:
                     container_data[Definition.Container.Status.get_str_sid()] = sid
                     container_data["bin_status"] = BinStatus.RUNNING
@@ -173,15 +173,15 @@ class ContainerAllocator():
                     #SysOut.debug_string("Added container with sid {}".format(sid))
 
                 else:
-                    self.bin_lock() 
+                    self.bin_lock()
                     try:
 
                         #SysOut.debug_string("Could not start container on target worker! Requeueing as failed!\n")
                         container_data[Definition.Container.Status.get_str_sid()] = deleteflag
-                        
+
                         # ensure fresh copy of data is requeued and remove item from bins
                         new_container_data = copy.deepcopy(container_data)
-                        
+
                         self.bins[container_data["bin_index"]].remove_item_in_bin(Definition.Container.Status.get_str_sid(), deleteflag)
                         #SysOut.debug_string("Tried to delete container {} from bins, result: {}".format(container_data, deleted))
                         for field in ["bin_index", "bin_status", Definition.Container.Status.get_str_sid()]:
@@ -218,7 +218,7 @@ class ContainerAllocator():
                         SysOut.debug_string("Container {} added size".format(cont))
                 bins_layout = self.packing_algorithm(container_list, self.bins, self.size_descriptor)
                 self.bins = bins_layout
-            
+
                 for bin_ in self.bins:
                     for item in bin_.items:
                         if item.data["bin_status"] == BinStatus.PACKED:
@@ -311,8 +311,8 @@ class ContainerAllocator():
         cont = dict(container)
         cont[Definition.Container.get_str_cpu_share()] = container[self.size_descriptor]
         worker_url = "http://{}:{}/docker?token=None&command=create".format(target_worker[0], target_worker[1])
-        req_data = bytes(json.dumps(cont), 'utf-8') 
-        resp = urlopen(worker_url, req_data) 
+        req_data = bytes(json.dumps(cont), 'utf-8')
+        resp = urlopen(worker_url, req_data)
 
         if resp.getcode() == 200: # container was created
             sid = str(resp.read(), 'utf-8')
@@ -324,12 +324,13 @@ class ContainerAllocator():
 
 
 class WorkerProfiler():
-    
+
     def __init__(self, cq, ca, interval):
         self.c_queue = cq
         self.c_allocator = ca
         self.update_interval = interval
-        self.update_fields = [Definition.Container.get_str_container_os, "bin_status", "bin_index", ca.size_descriptor]
+        #NOTE: update fields not used, fix and start using? Can't recall why container os string is included...
+        #self.update_fields = [Definition.Container.get_str_container_os, "bin_status", "bin_index", ca.size_descriptor]
 
         self.updater_thread = threading.Thread(target=self.update_container_information)
         self.updater_thread.daemon=True
@@ -353,7 +354,7 @@ class WorkerProfiler():
                 # container queue
                 self.c_queue.update_containers(container_image, container_data)
                 #SysOut.debug_string("Updated container queue")
-                    
+
                 # allocation queue
                 self.c_allocator.update_queued_containers(container_image, container_data)
                 #SysOut.debug_string("Updated allocation queue")
@@ -361,7 +362,7 @@ class WorkerProfiler():
                 # bins
                 self.c_allocator.update_binned_containers(container_data)
                 #SysOut.debug_string("Updated bins")
-    
+
     def gather_container_metadata(self):
         """
         transfers data from individual containers in metadata to container image-based metadata which is more interesting
@@ -386,7 +387,7 @@ class WorkerProfiler():
 
 
 class LoadPredictor():
-    
+
     def __init__(self, cm, step, lower, upper, minimum, q_size_limit, waiting_time, large, small):
         self.c_manager = cm
         self.step_length = step
@@ -412,7 +413,7 @@ class LoadPredictor():
             else:
                 self.image_data[image]["roc"] = int((current_queue[image] - self.image_data[image]["previous"]) / self.step_length)
                 self.image_data[image]["previous"] = current_queue[image]
-                
+
     def queue_container(self, container_data):
         self.c_manager.container_q.put_container(container_data)
 
@@ -446,6 +447,6 @@ class LoadPredictor():
                     if increment > 0:
                         for _ in range(increment):
                             self.queue_container({Definition.Container.get_str_con_image_name() : image, "volatile" : True})
-                        self.image_data[image]["last_start"] = int(time.time()) 
+                        self.image_data[image]["last_start"] = int(time.time())
 
 

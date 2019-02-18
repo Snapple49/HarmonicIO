@@ -13,6 +13,7 @@ class Setting(object):
     __node_external_addr = None
     __node_internal_addr = None
     __container_idle_timeout = None
+    __report_interval = None
 
     @staticmethod
     def get_setting():
@@ -101,6 +102,11 @@ class Setting(object):
         return Setting.__container_idle_timeout
 
     @staticmethod
+    def get_report_interval():
+        return Setting.__report_interval
+
+
+    @staticmethod
     def read_cfg_from_file():
         from harmonicIO.general.services import Services
         if not Services.is_file_exist('harmonicIO/worker/configuration.json'):
@@ -179,3 +185,4 @@ class Setting(object):
                 Setting.__container_idle_timeout = params.get(Definition.get_str_container_idle_timeout(), 60)
                 Setting.__node_data_port_start = params[Definition.get_str_data_port_range()][0]
                 Setting.__node_data_port_stop = params[Definition.get_str_data_port_range()][1]
+                Setting.__report_interval = params.get("report_interval", 5)

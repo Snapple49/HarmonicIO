@@ -56,7 +56,7 @@ def update_worker_status():
             break
         except Exception as e:
             SysOut.err_string("Encountered exception! {}".format(e))
-        
+
         s_content = bytes(json.dumps(content), 'utf-8')
 
         html = urllib3.PoolManager()
@@ -74,8 +74,8 @@ def update_worker_status():
         except Exception as e:
             SysOut.err_string("Master is not available!")
             print(e)
-        
-        time.sleep(5)
+
+        time.sleep(Setting.get_report_interval())
 
 
 

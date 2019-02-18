@@ -1,4 +1,5 @@
 {
   "node_data_port_range": [9000, 9010],
-  "container_idle_timeout": 60
+  "container_idle_timeout": 60,
+  "report_interval" : 1
 }

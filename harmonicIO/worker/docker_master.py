@@ -89,7 +89,7 @@ class DockerMaster(object):
         local_imgs = []
         for img in imgs:
             local_imgs += img.tags
-        
+
         return local_imgs
 
     def delete_container(self, cont_shortid):
@@ -123,21 +123,21 @@ class DockerMaster(object):
             if not name in deb_individual_cpu:
                 deb_individual_cpu[name] = []
             deb_individual_cpu[name].append(cpu)
-                
+
 
         for container in sum_of_cpu:
             containers[container] = {Definition.get_str_size_desc() : sum_of_cpu[container]/counters[container]}
-        
+
         containers["DEBUG"] = deb_individual_cpu
 
         SysOut.debug_string("CPU per container: {}".format(containers))
         return containers
-            
+
 
     def calculate_cpu_usage(self, container):
         """
         calculate given container stats
-        Returns CPU usage of container across instances on current worker as a fraction of maximum cpu usage (1.0). 
+        Returns CPU usage of container across instances on current worker as a fraction of maximum cpu usage (1.0).
         Based on discussion here: https://stackoverflow.com/questions/30271942/get-docker-container-cpu-usage-as-percentage
         """
 
@@ -158,10 +158,11 @@ class DockerMaster(object):
                 cpu_delta = stats["cpu_stats"]["cpu_usage"]["total_usage"] - stats["precpu_stats"]["cpu_usage"]["total_usage"]
                 # calculate the change for the entire system between readings
                 system_delta = stats["cpu_stats"]["system_cpu_usage"] - stats["precpu_stats"]["system_cpu_usage"]
-                
-                #if system_delta > 0.0 and cpu_delta > 0.0:
-                current_CPU = (cpu_delta / system_delta) # Num of cpu's: len(stats["cpu_stats"]["cpu_usage"]["percpu_usage"])
-            
+
+                if system_delta > 0.0 and cpu_delta > 0.0:
+                    # divide by num of cpu's:
+                    current_CPU = (cpu_delta / system_delta) / len(stats["cpu_stats"]["cpu_usage"]["percpu_usage"])
+
             except (KeyError, JSONDecodeError):
                 current_CPU = None
 

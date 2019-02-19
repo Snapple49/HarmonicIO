@@ -159,9 +159,8 @@ class DockerMaster(object):
                 # calculate the change for the entire system between readings
                 system_delta = stats["cpu_stats"]["system_cpu_usage"] - stats["precpu_stats"]["system_cpu_usage"]
 
-                if system_delta > 0.0 and cpu_delta > 0.0:
-                    # divide by num of cpu's:
-                    current_CPU = (cpu_delta / system_delta) / len(stats["cpu_stats"]["cpu_usage"]["percpu_usage"])
+                #if system_delta > 0.0 and cpu_delta > 0.0:
+                current_CPU = (cpu_delta / system_delta) # Num of cpu's: len(stats["cpu_stats"]["cpu_usage"]["percpu_usage"])
 
             except (KeyError, JSONDecodeError):
                 current_CPU = None

@@ -380,7 +380,7 @@ class WorkerProfiler():
                     for local in current_workers[worker][Definition.REST.get_str_docker()]:
                         if local[Definition.Container.Status.get_str_image()] == container_name:
                             local_counter +=1
-                    avg_sum += current_workers[worker]["local_image_stats"][container_name][self.c_allocator.size_descriptor] * local_counter
+                    avg_sum += current_workers[worker]["local_image_stats"][container_name][self.c_allocator.size_descriptor] * float(local_counter)
                 total_counter += local_counter
             if total_counter:
                 LookUpTable.ImageMetadata.push_metadata(container_name, {self.c_allocator.size_descriptor : avg_sum/total_counter})

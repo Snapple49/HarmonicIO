@@ -48,6 +48,10 @@ class DockerMaster(object):
 
         self.__available_port = available_port
 
+        # For docker stats measurements
+        self.__previous_cpu = float(0.0)
+        self.__previous_system = float(0.0)
+
     def __get_available_port(self):
         for item in self.__ports:
             if item.status == CStatus.AVAILABLE:
@@ -103,8 +107,7 @@ class DockerMaster(object):
 
     def cpu_per_container(self):
         containers = {}
-        sum_of_cpu = {}
-        counters = {}
+        container_cpus = {}
 
         try:
             conts_to_check = self.__client.containers.list(all=False)
@@ -117,16 +120,24 @@ class DockerMaster(object):
         deb_individual_cpu = {}
         for container in conts_to_check:
             name = (str(container.image)).split('\'')[1]
+
+            # add entry for this image if not already existing
+            if not container_cpus.get(name):
+                container_cpus[name] = []
+
+            # append cpu of current container to entry for image
             cpu = self.calculate_cpu_usage(container)
-            sum_of_cpu[name] = sum_of_cpu.get(name, 0) + cpu if cpu else 0
-            counters[name] = counters.get(name, 0) + 1
+            if not cpu == None: # alternatively if cpu > 0.0
+                container_cpus[name].append(cpu)
+
+            # debugging additional data
             if not name in deb_individual_cpu:
                 deb_individual_cpu[name] = []
             deb_individual_cpu[name].append(cpu)
 
 
-        for container in sum_of_cpu:
-            containers[container] = {Definition.get_str_size_desc() : sum_of_cpu[container]/counters[container]}
+        for container in container_cpus:
+            containers[container] = {Definition.get_str_size_desc() : sum(container_cpus[container])/len(container_cpus[container])}
 
         containers["DEBUG"] = deb_individual_cpu
 
@@ -155,15 +166,17 @@ class DockerMaster(object):
         if stats:
             try:
                 # calculate the change for the cpu usage of the container in between readings
-                cpu_delta = stats["cpu_stats"]["cpu_usage"]["total_usage"] - stats["precpu_stats"]["cpu_usage"]["total_usage"]
+                cpu_delta = float(stats["cpu_stats"]["cpu_usage"]["total_usage"]) - self.__previous_cpu
                 # calculate the change for the entire system between readings
-                system_delta = stats["cpu_stats"]["system_cpu_usage"] - stats["precpu_stats"]["system_cpu_usage"]
-
+                system_delta = float(stats["cpu_stats"]["system_cpu_usage"]) - self.__previous_system
                 #if system_delta > 0.0 and cpu_delta > 0.0:
                 current_CPU = (cpu_delta / system_delta) # Num of cpu's: len(stats["cpu_stats"]["cpu_usage"]["percpu_usage"])
 
             except (KeyError, JSONDecodeError):
                 current_CPU = None
+
+        self.__previous_cpu = cpu_delta
+        self.__previous_system = system_delta
 
         return current_CPU
 

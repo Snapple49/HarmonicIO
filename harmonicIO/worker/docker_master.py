@@ -1,5 +1,6 @@
 import socket
 import docker
+import copy
 from .configuration import Setting
 from harmonicIO.general.definition import CStatus, Definition
 from harmonicIO.general.services import SysOut
@@ -154,11 +155,11 @@ class DockerMaster(object):
 
         SysOut.debug_string("Calculating cpu usage for container {}".format(container))
 
-        current_CPU = None
+        current_cpu_percent = None
 
         # get worker stats via docker api
         try:
-            stats = self.__client.api.stats(container.name, stream=False)
+            stats = copy.deepcopy(self.__client.api.stats(container.name, stream=False))
         except (NotFound, HTTPError):
             stats = None
 
@@ -166,19 +167,21 @@ class DockerMaster(object):
         if stats:
             try:
                 # calculate the change for the cpu usage of the container in between readings
-                cpu_delta = float(stats["cpu_stats"]["cpu_usage"]["total_usage"]) - self.__previous_cpu
+                current_cpu = float(stats["cpu_stats"]["cpu_usage"]["total_usage"])
+                cpu_delta = current_cpu - self.__previous_cpu
                 # calculate the change for the entire system between readings
-                system_delta = float(stats["cpu_stats"]["system_cpu_usage"]) - self.__previous_system
+                current_system = float(stats["cpu_stats"]["system_cpu_usage"])
+                system_delta = current_system - self.__previous_system
                 #if system_delta > 0.0 and cpu_delta > 0.0:
-                current_CPU = (cpu_delta / system_delta) # Num of cpu's: len(stats["cpu_stats"]["cpu_usage"]["percpu_usage"])
+                current_cpu_percent = (cpu_delta / system_delta) # Num of cpu's: len(stats["cpu_stats"]["cpu_usage"]["percpu_usage"])
+
+                self.__previous_cpu = current_cpu
+                self.__previous_system = current_system
 
             except (KeyError, JSONDecodeError):
-                current_CPU = None
+                current_cpu_percent = None
 
-        self.__previous_cpu = cpu_delta
-        self.__previous_system = system_delta
-
-        return current_CPU
+        return current_cpu_percent
 
 
     def run_container(self, container_name, cpu_share=0.5, volatile=False):

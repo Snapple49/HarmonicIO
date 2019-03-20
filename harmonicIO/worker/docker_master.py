@@ -49,10 +49,6 @@ class DockerMaster(object):
 
         self.__available_port = available_port
 
-        # For docker stats measurements
-        self.__previous_cpu = float(0.0)
-        self.__previous_system = float(0.0)
-
     def __get_available_port(self):
         for item in self.__ports:
             if item.status == CStatus.AVAILABLE:
@@ -167,16 +163,11 @@ class DockerMaster(object):
         if stats:
             try:
                 # calculate the change for the cpu usage of the container in between readings
-                current_cpu = float(stats["cpu_stats"]["cpu_usage"]["total_usage"])
-                cpu_delta = current_cpu - self.__previous_cpu
+                cpu_delta = float(stats["cpu_stats"]["cpu_usage"]["total_usage"]) - float(stats["precpu_stats"]["cpu_usage"]["total_usage"])
                 # calculate the change for the entire system between readings
-                current_system = float(stats["cpu_stats"]["system_cpu_usage"])
-                system_delta = current_system - self.__previous_system
+                system_delta = float(stats["cpu_stats"]["system_cpu_usage"]) - float(stats["precpu_stats"]["system_cpu_usage"])
                 #if system_delta > 0.0 and cpu_delta > 0.0:
                 current_cpu_percent = (cpu_delta / system_delta) # Num of cpu's: len(stats["cpu_stats"]["cpu_usage"]["percpu_usage"])
-
-                self.__previous_cpu = current_cpu
-                self.__previous_system = current_system
 
             except (KeyError, JSONDecodeError):
                 current_cpu_percent = None

@@ -134,7 +134,9 @@ class DockerMaster(object):
 
 
         for container in container_cpus:
-            containers[container] = {Definition.get_str_size_desc() : sum(container_cpus[container])/len(container_cpus[container])}
+            curr_containers = container_cpus[container]
+            if len(curr_containers) > 0:
+                containers[container] = {Definition.get_str_size_desc() : sum(curr_containers)/len(curr_containers )}
 
         containers["DEBUG"] = deb_individual_cpu
 
